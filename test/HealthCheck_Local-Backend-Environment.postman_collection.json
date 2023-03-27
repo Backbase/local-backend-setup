@@ -1,0 +1,391 @@
+{
+	"info": {
+		"_postman_id": "746c8ad2-b678-4f48-8f1c-26c2ee142b21",
+		"name": "HealthCheck Local Backend Environment",
+		"description": "Specs for Message Service API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Token-converter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Token Converter is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"UP\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/token-converter/actuator/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"token-converter",
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Identity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Identity is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"backbase\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{identityUrl}}/auth/realms/backbase/.well-known/openid-configuration",
+							"host": [
+								"{{identityUrl}}"
+							],
+							"path": [
+								"auth",
+								"realms",
+								"backbase",
+								".well-known",
+								"openid-configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Access Control",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Token Converter is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"<status>UP</status>\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{registryUrl}}/eureka/apps/access-control",
+							"host": [
+								"{{registryUrl}}"
+							],
+							"path": [
+								"eureka",
+								"apps",
+								"access-control"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Arrangement Manager",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Token Converter is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"<status>UP</status>\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{registryUrl}}/eureka/apps/arrangement-manager",
+							"host": [
+								"{{registryUrl}}"
+							],
+							"path": [
+								"eureka",
+								"apps",
+								"arrangement-manager"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Manager",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Token Converter is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"<status>UP</status>\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{registryUrl}}/eureka/apps/user-manager",
+							"host": [
+								"{{registryUrl}}"
+							],
+							"path": [
+								"eureka",
+								"apps",
+								"user-manager"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Identity Integration Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Token Converter is ready\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.text()).to.include(\"<status>UP</status>\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{registryUrl}}/eureka/apps/identity-integration-service",
+							"host": [
+								"{{registryUrl}}"
+							],
+							"path": [
+								"eureka",
+								"apps",
+								"identity-integration-service"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status is 200\", function() {",
+							"  pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"XSRF Token Cookie returned\", function () {",
+							"    var cookie = postman.getResponseCookie(\"XSRF-TOKEN\");",
+							"    pm.expect(cookie).to.be.not.null;",
+							"    if (cookie && cookie.value) {",
+							"        postman.setGlobalVariable(\"X-CSRF-TOKEN\", cookie.value);",
+							"    }",
+							"});",
+							"",
+							"//for auth read cookie",
+							"var authCookie = postman.getResponseCookie(\"AuthToken\");",
+							"if (authCookie && authCookie.value) {",
+							"  postman.setGlobalVariable(\"authToken\", authCookie.value);",
+							"}",
+							"",
+							"//for identity read json",
+							"if (responseBody) {",
+							"  var jsonData = JSON.parse(responseBody);",
+							"  postman.setGlobalVariable(\"authToken\", jsonData.access_token);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//clear Auth and CSRF",
+							"postman.setGlobalVariable(\"authToken\"); "
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWRtaW46YWRtaW4="
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "bb-tooling-client",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
+					"host": [
+						"{{identityUrl}}"
+					],
+					"path": [
+						"auth",
+						"realms",
+						"backbase",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Context Service Agreements",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status is 200\", function() {",
+							"  pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context/service-agreements",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"access-control",
+						"client-api",
+						"v3",
+						"accessgroups",
+						"user-context",
+						"service-agreements"
+					]
+				},
+				"description": "Returns current user's service agreements"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
