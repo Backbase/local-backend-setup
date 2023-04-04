@@ -17,7 +17,7 @@ x-common-variables: &common-variables
   spring.cloud.config.enabled: false
   backbase.audit.enabled: false
   backbase.security.public.paths: /integration-api/**
-  backbase.security.mtls.enabled: false  
+  backbase.security.mtls.enabled: false
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -250,7 +250,9 @@ services:
       - bootstrap
     environment:
       <<: *common-variables
-      spring.profiles.include: "moustache-bank"
+      spring.config.additional-location: file:/tmp/ingestion.yml
+    volumes:
+      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
     depends_on:
       token-converter:
         condition: service_healthy
@@ -264,7 +266,9 @@ services:
       - bootstrap
     environment:
       <<: *common-variables
-      spring.profiles.include: "moustache-bank,moustache-bank-subsidiaries"
+      spring.config.additional-location: file:/tmp/ingestion.yml
+    volumes:
+      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
     depends_on:
       token-converter:
         condition: service_healthy
@@ -295,6 +299,7 @@ services:
   postman-health-check:
     container_name: health_checks
     image: postman/newman
+    platform: linux/amd64
     command:
       run /etc/newman/postman_collection.json --environment="/etc/newman/postman_environment.json"
     volumes:
