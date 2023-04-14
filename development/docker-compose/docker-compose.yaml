@@ -1,4 +1,3 @@
-version: "3.9"
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
@@ -15,6 +14,7 @@ x-common-variables: &common-variables
   spring.main.banner-mode: off
   spring.zipkin.enabled: false
   spring.cloud.config.enabled: false
+  spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
   backbase.security.public.paths: /integration-api/**
   backbase.security.mtls.enabled: false
