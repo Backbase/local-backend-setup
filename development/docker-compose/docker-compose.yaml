@@ -4,6 +4,7 @@ x-common-variables: &common-variables
   JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=DEBUG
   SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
+  server.shutdown: graceful
   eureka.client.serviceUrl.defaultZone: http://registry:8080/eureka
   eureka.client.healthcheck.enabled: true
   eureka.instance.non-secure-port: 8080
@@ -45,6 +46,10 @@ volumes:
 networks:
   default:
     name: backbase_default
+
+secrets:
+  npm:
+    file: ${HOME}/.npmrc
 
 services:
   mysql:
@@ -328,3 +333,79 @@ services:
   #     test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
   #   links:
   #     - registry
+
+  employee-app:
+    container_name: employee_app
+    image: harbor.backbase.eu/development/employee-web-app-essentials:2023.01
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    build:
+      context: ../images/employee-web-app-essentials
+      secrets:
+        - npm
+    environment:
+      AUTH_URL: http://localhost:8180/auth/
+      API_ROOT: http://localhost:9090/api/
+      PORT: 9090
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+    healthcheck:
+      disable: true
+    links:
+      - edge
+
+  business-app:
+    container_name: business_app
+    image: harbor.backbase.eu/development/business-banking-app-universal:2023.02-LTS
+    profiles:
+      - business
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    build:
+      context: ../images/business-banking-app-universal
+      secrets:
+        - npm
+    environment:
+      API_ROOT: http://localhost:7070/api/
+      AUTH_URL: http://host.docker.internal:8180/auth/realms/mastercard
+      PORT: 7070
+    ports:
+      - "7070:7070"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+    healthcheck:
+      disable: true
+    links:
+      - edge
+
+  retail-app:
+    container_name: retail_app
+    image: harbor.backbase.eu/development/retail-banking-app-usa:2023.02-LTS
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    build:
+      context: ../images/retail-banking-app-usa
+      secrets:
+        - npm
+    environment:
+      API_ROOT: http://localhost:8080/api/
+      AUTH_URL: http://host.docker.internal:8180/auth/realms/mastercard
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+    healthcheck:
+      disable: true
+    links:
+      - edge
