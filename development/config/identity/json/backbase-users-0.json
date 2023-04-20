@@ -1,0 +1,119 @@
+{
+    "realm": "backbase",
+    "users": [
+        {
+            "username": "admin",
+            "firstName": "test",
+            "lastName": "admin",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_ADMIN",
+                "ROLE_group_admin(ADMIN)"
+            ]
+        },
+        {
+            "username": "user",
+            "firstName": "test",
+            "lastName": "user",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "user",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_group_user(USER)"
+            ]
+        },
+        {
+            "username": "designer",
+            "firstName": "test",
+            "lastName": "designer",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "designer",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_group_designer(DESIGNER)"
+            ]
+        },
+        {
+            "username": "manager",
+            "firstName": "test",
+            "lastName": "manager",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "manager",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_group_manager(MANAGER)"
+            ]
+        },
+        {
+            "username": "rc_admin",
+            "firstName": "test",
+            "lastName": "rc_admin",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "rc_admin",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_REMOTE_CONFIG_ADMIN",
+                "ROLE_ADMIN"
+            ]
+        },
+        {
+            "username": "rc_manager",
+            "firstName": "test",
+            "lastName": "rc_manager",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "rc_manager",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_REMOTE_CONFIG_MANAGER"
+            ]
+        },
+        {
+            "username": "rc_developer",
+            "firstName": "test",
+            "lastName": "rc_developer",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "rc_developer",
+                    "temporary": "false"
+                }
+            ],
+            "realmRoles": [
+                "ROLE_REMOTE_CONFIG_DEVELOPER"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+bb-fuel:
+  platform:
+    infra: http://edge:8080
+    identity: http://backbase-identity:8080
+    registry: ${bb-fuel.platform.infra}/registry/eureka
+    gateway: ${bb-fuel.platform.infra}/api
+    auth: ${bb-fuel.platform.gateway}/auth/login
+    tokenconverter: ${bb-fuel.platform.infra}/bb-authentication-token-converter-service
+  dbs:
+    accessgroup: http://accessgroup-integration-service:8080
+    account-statement: http://account-statement:8080/service-api
+    accounts: http://accounts:8080/service-api
+    approvals: http://approvals:8080/integration-api
+    arrangements: http://arrangement-manager:8080/integration-api
+    billpay: http://billpay-integrator:8080/client-api
+    contactmanager: http://contact-manager:8080/integration-api
+    contentservices: http://content-services:8080/client-api
+    legalentity: http://legalentity-integration-service:8080
+    pockets: http://pocket-tailor:8080/client-api
+    transactions: http://transaction-manager:8080/integration-api
+    user-profile-manager: http://user-profile-manager:8080/integration-api
+    user: http://user-manager:8080/integration-api
+  dbs-service-names:
+    accessgroup: access-control
+    actions: action-service
+    arrangements: arrangements-manager
+    billpay: billpay-integrator
+    contentservices: contentservices
+    legalentity: access-control
+    limits: limit
+    messages: messages-service
+    notifications: notifications-service
+    payments: payment-order-service
+    pfm: transaction-category-collector
+    positivePay: positive-pay-check
+    products: arrangement-manager
+    user: user-manager

@@ -1,15 +1,15 @@
 
 # Set up Backbase local environment
 
-This guide shows you how to create a lightweight Backbase setup using a Docker Compose file.
+This guide shows you how to create a Retail App Backend Setup with a Docker Compose file.
 
 ## Contents
 - [Prerequisites](#prerequisites)
 - [Set up the Backbase local environment](#set-up-the-backbase-local-environment)
   - [Initial set up](#initial-set-up)
   - [Set up the local environment](#set-up-the-local-environment)
-  - [Add services](#add-services)
   - [Ingest data](#ingest-data)
+  - [Add services](#add-services)
 - [Health check](#health-check)
 - [Upgrade your environment](#upgrade-your-environment)
 - [Debug custom applications](#debug-custom-applications)
@@ -17,6 +17,7 @@ This guide shows you how to create a lightweight Backbase setup using a Docker C
   - [Debug remotely](#debug-remotely)
 - [Troubleshooting](#troubleshooting)
   - [General issues](#general-issues)
+  - [Useful Information](#useful-information)
   - [Colima](#colima)
 
 ## Prerequisites
@@ -33,9 +34,14 @@ For the setup, you must have the following:
 1. Install Colima to run Docker and work with Docker Compose:
     ```shell
     brew install colima docker docker-compose docker-credential-helper
-    colima start --cpu 4 --memory 16
+    colima start --cpu 8 --memory 24
     ```
-   > **NOTE**: Installing Colima is only for macOS. For Windows-based systems, you can install Docker Desktop and run it to start the Docker service before going to the next step.
+    > **Note 1**: Installing Colima is only for macOS. For Windows-based systems, you can install Docker Desktop and run it to start the Docker service before going to the next step.
+    
+    > **Note 2**: Running all the services requires around 20-24 GB of memory. If you allocate less resources, some containers would intermittently drop.
+    
+    > **Note 3**: If you use `colima`, then the following Docker compose commands (`docker compose`) should be replaced with `docker-compose`.
+
 2. Log in to the Backbase repo:
     ```shell
     docker login repo.backbase.com
@@ -47,59 +53,108 @@ For the setup, you must have the following:
     ```shell
     docker ps
     ```
-2. To set the Docker image for the version of Edge you are running, replace `2022.09.1` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase-rnd/local-backend-setup/blob/main/development/docker-compose/.env) file.:
+   
+2. To set the backend bundle version, replace `2023.02.5-LTS` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase-rnd/local-backend-setup/blob/main/development/docker-compose/.env) file.
+
+3. From the Docker Compose directory ([development/docker-compose/]()), you need to boot up the following core containers:
+   1. Start up the `foundation` containers:
+      ```shell
+      docker compose --profile foundation up -d
+      ```
+      
+   2. Start up the `iam` containers:
+      1. Find out your local IP address on the local network. Use `ifconfig` for `MacOS`, and not the localhost address, `127.0.0.1`, but something like `192.168.1.99`.
+      
+      2. Replace the `BACKBASE_OIDCTOKENCONVERTER_WHITELISTEDDOMAINS_1_ISSUERHOST` property in the `backbase-identity` service inside the `docker-compose.yaml` file.
+      3. Start up the `iam` containers:
+          ```shell
+          docker compose --profile iam up -d
+          ```
+      4. Afterwards, you should have 4 pre-configured IAM users:
+      
+         | UserName  | Password  |
+         |-----------|-----------|
+         | admin     | admin     |
+         | manager   | manager   |
+         | user      | user      |
+         | designer  | designer  |
+
+4. Then, spin the following Banking Services up:
     ```shell
-    docker pull repo.backbase.com/backbase-docker-releases/edge:`2022.09.1`
+    docker compose --profile products --profile transactions --profile pfm --profile payments up -d
     ```
 
-3. From the Docker Compose directory, start up the environment:
-    ```shell
-    docker compose up -d
-    ```
-   > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
+### Ingest data
 
-4. Add the `bootstrap` profile on the first run to ingest data into Banking Services:
-    ```shell
-    docker compose --profile=bootstrap up -d
-    ```
-5. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
-    ```shell
-    docker compose logs -f
-    ```
-6. To access your environment, use the following endpoints:
-    - **Identity**: http://localhost:8180/auth
-      * **Realm Admin Credentials**: `admin` / `admin`
-    - **Edge Gateway**: http://localhost:8280/api
-    - **Registry**: http://localhost:8761
-7. Verify the health of your environment to ensure services are running: 
-    ```shell
-    docker compose ps
-    ```
-    For a more detailed check of your environment, use the Postman collection from the `./test` directory. For more information, see [Health check](#health-check).
+It is time to ingest some data to our local environment. Run the following command to ingest data into the services:
+```shell
+docker compose --profile bootstrap up
+```
 
-8. If you want to stop or kill containers, use one of the following:
-    - Stop and remove containers in the Docker Compose file:
-        ```shell
-        docker compose down
-        ```
-    - Kill all running containers in the host:
-        ```shell
-        docker kill $(docker ps -q)
-        ```
+The data ingestion above uses `BB Fuel` under the hood and run parameters can be configured via [execute-bb-fuel.sh](./scripts/bbFuel/execute-bb-fuel.sh)
+
+### Configure Mobile Authentication
+
+Before continuing, you need to run the Android application at least once to retrieve the FacetID from the log.
+Follow the steps in the other guide, copy the FacetID (it won't change after that) and come back here...
+
+In order to be able to login using the mobile app, you need to create the application inside Identity and store the facetId of your app on it. This can be done following these steps:
+
+1) Get an authentication token using this command:
+```bash
+curl --location --request POST 'http://localhost:7777/api/token-converter/oauth/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=bb-client' \
+--data-urlencode 'client_secret=bb-secret' \
+--data-urlencode 'grant_type=client_credentials' \
+--data-urlencode 'scope=api:service'
+```
+Store the value of the `access_token` for the next command. The token expires after few minutes, so if you need to run the same commands again, make sure you get a new token first.
+
+2) Create the application in the fido-service:
+```
+curl --location --request POST 'http://fido-service:8080/service-api/v1/applications/' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer {{ACCESS_TOKEN}}' \
+--data-raw '{
+	"appKey": "retail",
+    "appId": "http://{{YOUR_IP}}:8180/auth/realms/backbase/protocol/fido-uaf/applications/retail/facets",
+    "trustedFacetIds": [
+    	"android:app-key-hash:com.backbase.examplebanking",
+    	"android:apk-key-hash:{{FACET_ID}}",
+        "ios:bundle-id:com.backbase.start"
+    ]
+}'
+```
+
+Replace `{{ACCESS_TOKEN}}` with the value obtained in the first step
+Replace `{{YOUR_IP}}` in the appId with your IP address (not the localhost address `127.0.0.1` but the real IP address on your network)
+Replace `{{FACET_ID}}` with the facetId generated for your app e.g. `Fy0Dsi2q1B475nH3o16I6ZDXjTY`
+
+After that you will be able to login in your mobile app with the following users: "user", "designer", "manager", "admin".
 
 ### Add services
 
-By default, the following Backbase services are available:
+With the setup above, the following Backbase services are available:
 
 - Edge
 - Registry
+- Fido Service
 - Identity Server
   * With `backbase` realm included.
 - Identity Integration
 - Token Converter
 - Access Control
 - Arrangement Manager
+- Budget Planner
+- Payment Order Options
+- Payment Order Service
+- Pocket Tailor
+- Transaction Manager
+- Transaction Enricher
+- Transaction Category Collector
 - User Manager
+- User Profile Manager
 
 To add more services in the environment, insert their configuration into the `docker-compose.yaml` file.
 
@@ -133,14 +188,6 @@ The following is an example configuration:
     links:
       - registry
 ```
-
-### Ingest data
-
-The following tasks ingest data:
-- Product catalog task
-- Legal entity bootstrap task
-
-   > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` profiles are [enabled and pre-configured](https://github.com/Backbase/stream-services/blob/master/stream-legal-entity/legal-entity-bootstrap-task/src/main/resources/application.yml#L24) in the Stream services.
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
@@ -221,7 +268,6 @@ To debug your Docker image remotely inside the local environment, do the followi
     ```
    To enable a Java agent on port 5005, add it to `JAVA_TOOL_OPTIONS`. If you are debugging multiple applications at the same time, use different debug ports for each application.
 
-
 3. Create a Remote JVM Debug run configuration in your IDE and specify the port and arguments for each service added. The following example is for the IntelliJ IDE:
 
     ![ide2](docs/ide2.png)
@@ -244,8 +290,59 @@ If the environment is not working, or if some or all of its services are not in 
   telnet localhost 3306
   ```
 - Check the Registry service in the browser [http://localhost:8761](http://localhost:8761).
-- Check the Edge routes [http://localhost:8280/actuator/gateway/routes](http://localhost:8280/actuator/gateway/routes).
-- If the health check task fails and you are operating in a new environment, ensure that you include `--profile=bootstrap` in your command.
+- Check the Edge routes [http://localhost:7777/actuator/gateway/routes](http://localhost:7777/actuator/gateway/routes).
+- If the health check task fails and you are operating in a new environment, ensure that you include `--profile bootstrap` in your command.
+
+- Intermittently, some containers might drop and they should be spawned again. To do that, you can use the following command:
+  ```shell
+  docker compose --profile \* up <service-name> -d
+  ```
+
+### Useful information
+
+1. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
+    ```shell
+    docker compose logs -f
+    ```
+   
+2. To access your environment, use the following endpoints:
+    - **Identity**: http://localhost:8180/auth
+      * **Realm Admin Credentials**: `admin` / `admin`
+    - **Edge Gateway**: http://localhost:8280/api
+    - **Registry**: http://localhost:8761
+
+3. The `health` indication on the containers could very well be false-negative. Please check them via the [Eureka Service Registry](http://localhost:8761/) if they are up or not.
+    - For a more detailed check of your environment, use the Postman collection from the `./test` directory. For more information, see [Health check](#health-check).    
+
+4. If you want to stop or kill containers, use one of the following:
+    - Stop and remove containers in the Docker Compose file:
+        ```shell
+        docker compose down
+        ```
+    - Stop and only some containers, provide comma-separated list of containers
+        ```shell
+        docker compose down remote-config,transaction-enricher
+        ```
+    - Kill all running containers in the host:
+        ```shell
+        docker kill $(docker ps -q)
+        ```
+    - Display resource utilization per each container:
+        ```shell
+        docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.CPUPerc}}" | sort -k 2 -hr
+        ```
+
+5. At `2023.03` and onwards, `backbase-identity` service uses a different image and requires a non-trivial set of changes in the application configuration. If you plan to change the version, you can change the image name from the [environment variables](.env).
+
+6. If it is required to start-over, the databases also could be needed to be cleaned up sometimes. In order to do that, run the following command to delete **ALL** the databases in the MySQL server. **Please use this with caution.**
+    ```shell
+    docker compose --profile clean-up-db up
+    ```
+   
+7. If any of the service is not able to communicate with another one for some reason, and if the configuration are proper, then it is good to inspect the Docker network, if both the services are connected to the network. Make sure that both of the services are listed in the resulting response.
+    ```shell
+    docker network inspect backbase_default
+    ```
 
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker. 
