@@ -65,7 +65,7 @@ For the setup, you must have the following:
    2. Start up the `iam` containers:
       1. Find out your local IP address on the local network. Use `ifconfig` for `MacOS`, and not the localhost address, `127.0.0.1`, but something like `192.168.1.99`.
       
-      2. Replace the `BACKBASE_OIDCTOKENCONVERTER_WHITELISTEDDOMAINS_1_ISSUERHOST` property in the `backbase-identity` service inside the `docker-compose.yaml` file.
+      2. Set the `LOCAL_NETWORK_IP` environment variable in the [.env]() file.
       3. Start up the `iam` containers:
           ```shell
           docker compose --profile iam up -d
