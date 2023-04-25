@@ -8,7 +8,7 @@ Set up a Docker local environment on your laptop by running these commands in th
 
 1. Clone the repository:
     ```
-    git clone git@github.com:backbase-rnd/local-backend-setup.git
+    git clone git@github.com:backbase/local-backend-setup.git
     ```
 2. Switch to the Docker Compose directory:
     ```
@@ -21,10 +21,12 @@ Set up a Docker local environment on your laptop by running these commands in th
 
    Once all the required services have started, you can view the health check results in your terminal. To check the status of the services, open the [Registry](http://localhost:8761) in your web browser. Additionally, you can import the [Postman collection](test/HealthCheck_Local-Backend-Environment.postman_collection.json) to perform a more comprehensive health check on your environment using Postman.  
    &nbsp;  
-   For more information, see [Set up Backbase local environment](https://github.com/backbase-rnd/local-backend-setup/tree/main/development/docker-compose#set-up-backbase-local-environment).
+   For more information, see [Set up Backbase local environment](https://github.com/backbase/local-backend-setup/tree/main/development/docker-compose#set-up-backbase-local-environment).
 
 
 ## Create a new service
+
+**NB:** EMU account required to access (https://github.com/baas-devops-reference)
 
 To create custom services in the Backbase ecosystem, Backbase recommends to use [ModelBank templates](https://github.com/baas-devops-reference?q=template&type=all&sort=). 
 
