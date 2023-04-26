@@ -42,6 +42,8 @@ For the setup, you must have the following:
     
     > **Note 3**: If you use `colima`, then the following Docker compose commands (`docker compose`) should be replaced with `docker-compose`.
 
+    > **Note 4**: Make sure to have `docker-compose : 2.16.0` as the version, instead of `2.17.0+` since it contains a problem with referencing shared properties, a.k.a `<< *`.
+
 2. Log in to the Backbase repo:
     ```shell
     docker login repo.backbase.com
@@ -81,10 +83,12 @@ For the setup, you must have the following:
 
 4. Then, spin the following Banking Services up:
     ```shell
-    docker compose --profile products --profile transactions --profile pfm --profile payments up -d
+    docker compose --profile product-summary --profile transactions --profile pfm --profile payments up -d
     ```
 
 ### Ingest data
+
+**IMPORTANT NOTE:** Please wait for all the services to be healthy, when queried with `docker ps`.
 
 It is time to ingest some data to our local environment. Run the following command to ingest data into the services:
 ```shell
@@ -308,7 +312,7 @@ If the environment is not working, or if some or all of its services are not in 
 2. To access your environment, use the following endpoints:
     - **Identity**: http://localhost:8180/auth
       * **Realm Admin Credentials**: `admin` / `admin`
-    - **Edge Gateway**: http://localhost:8280/api
+    - **Edge Gateway**: http://localhost:7777/api
     - **Registry**: http://localhost:8761
 
 3. The `health` indication on the containers could very well be false-negative. Please check them via the [Eureka Service Registry](http://localhost:8761/) if they are up or not.

@@ -405,7 +405,7 @@ services:
       - ./scripts:/tmp/h
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/legalentity-integration-external-mock", "<status>UP</status>" ]
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java" ]
     links:
       - activemq
       - registry
@@ -639,7 +639,7 @@ services:
       - ./scripts:/tmp/h
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/fido-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java" ]
     depends_on:
       mysql:
         condition: service_healthy
