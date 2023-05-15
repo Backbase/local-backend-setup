@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
     plugin = {"pretty", "json:target/cucumber-reports/lbs-report.json", "html:target/cucumber",
         "junit:target/junit-report.xml"},
-    features = "src/test/resources/features/smoketest/accessControl.feature",
+    features = "src/test/resources/features/smoketest/user.feature",
     glue = {"com/backbase/cucumber/steps/smoketest"}
 )
 public class userFeature {
