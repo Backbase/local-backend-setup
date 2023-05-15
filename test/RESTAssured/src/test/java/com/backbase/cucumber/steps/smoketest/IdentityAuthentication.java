@@ -5,7 +5,7 @@ import com.backbase.services.services.Identity;
 public class IdentityAuthentication {
     protected final Identity identity = new Identity();
 
-    public void aUserHasAuthenitcatedToRealm(String realmName, String clientId) {
+    public void aUserHasAuthenticatedToRealm(String realmName, String clientId) {
         identity.aUserHasAuthenticated(realmName, clientId);
     }
 }

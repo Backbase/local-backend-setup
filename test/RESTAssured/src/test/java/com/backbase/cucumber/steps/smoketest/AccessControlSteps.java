@@ -10,9 +10,9 @@ public class AccessControlSteps extends IdentityAuthentication {
 
     private final AccessControl accessControl = new AccessControl();
 
-    @Given("a user has authenitcated for access control")
-    public void aUserHasAuthenitcatedForAccessControl() {
-        aUserHasAuthenitcatedToRealm(Constants.backbaseRealmName, Constants.bbToolingClient);
+    @Given("a user has authenticated for access control")
+    public void aUserHasAuthenticatedForAccessControl() {
+        aUserHasAuthenticatedToRealm(Constants.backbaseRealmName, Constants.bbToolingClient);
     }
 
     @When("the User Requests To Get Data Groups")

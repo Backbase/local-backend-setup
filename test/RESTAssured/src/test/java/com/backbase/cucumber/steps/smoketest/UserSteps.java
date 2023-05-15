@@ -8,21 +8,15 @@ import io.cucumber.java.en.When;
 import org.junit.Test;
 
 public class UserSteps extends IdentityAuthentication {
-    private final Identity identity = new Identity();
 
-    @Given("a user has authenitcated")
-    public void aUserHasAuthenitcated() {
-        aUserHasAuthenitcatedToRealm(Constants.masterRealmName, Constants.adminCliClientId);
+    @Given("a user has authenticated")
+    public void aUserHasAuthenticated() {
+        aUserHasAuthenticatedToRealm(Constants.masterRealmName, Constants.adminCliClientId);
     }
 
     @Given("the User Makes A Create Users Request")
     public void theUserMakesACreateUsersRequest() {
         identity.theUserMakesACreateUserRequest();
-    }
-
-    @Test
-    public void canMakeUserRequests() {
-        identity.aUserHasAuthenticated(Constants.masterRealmName, Constants.adminCliClientId);
     }
 
     @When("the User Makes A Get Users Request")
