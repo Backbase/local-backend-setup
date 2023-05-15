@@ -297,8 +297,8 @@ services:
     command:
       run /etc/newman/postman_collection.json --environment="/etc/newman/postman_environment.json"
     volumes:
-      -  ../../test/HealthCheck_Local-Backend-Environment.postman_collection.json:/etc/newman/postman_collection.json
-      -  ../../test/Docker-Backend-Environment.postman_environment.json:/etc/newman/postman_environment.json
+      -  ../../test/postman/HealthCheck_Local-Backend-Environment.postman_collection.json:/etc/newman/postman_collection.json
+      -  ../../test/postman/Docker-Backend-Environment.postman_environment.json:/etc/newman/postman_environment.json
     depends_on:
       access-control:
         condition: service_healthy
