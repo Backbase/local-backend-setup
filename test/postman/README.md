@@ -18,3 +18,7 @@ HealthCheck Tests run on `docker compose up` are defined in the docker compose f
 - [Postman Health Check](https://github.com/search?q=repo%3ABackbase%2Flocal-backend-setup%20postman-health-check%3A&type=code)
 
 These can be amended or removed using the above file entry, to change or remove what is run on `docker compose up`
+
+## RESTAssured
+These tests have also been duplicated in RESTAssured, if this is your preference.
+Refer to the [RESTAssured README.md](https://github.com/Backbase/local-backend-setup/blob/main/test/RESTAssured/readme.md) for more details.

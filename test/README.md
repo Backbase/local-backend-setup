@@ -13,7 +13,7 @@ The tests come in two flavours:
 
 ## Postman
 
-Refer to the [Postman README.md](https://github.com/Backbase/local-backend-setup/tree/main/test/postman/README.md) for more details
+Refer to the [Postman README.md](https://github.com/Backbase/local-backend-setup/blob/main/test/postman/README.md) for more details.
 
 ### Note: Tests run on `docker compose up`
 HealthCheck Tests run on `docker compose up` are defined in the docker compose file:
@@ -23,7 +23,7 @@ These can be amended or removed using the above file entry, to change or remove 
 
 ## RESTAssured
 
-Refer to the [RESTAssured README.md](https://github.com/Backbase/local-backend-setup/tree/main/test/RESTAssured/README.md) for more details
+Refer to the [RESTAssured README.md](https://github.com/Backbase/local-backend-setup/blob/main/test/RESTAssured/README.md) for more details.
 
 This contains the same Health Check and Smoke Test suites as you will find in the Postman tests.
 However, these also come in two flavours, running the tests directly via the test runner, or as [Feature files via cucumber](https://cucumber.io/docs/gherkin/reference/)
