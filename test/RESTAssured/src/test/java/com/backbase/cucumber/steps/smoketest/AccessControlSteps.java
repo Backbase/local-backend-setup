@@ -17,6 +17,9 @@ public class AccessControlSteps extends IdentityAuthentication {
 
     @When("the User Requests To Get Data Groups")
     public void theUserRequestsToGetDataGroups() {
+        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
+        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
+
         accessControl.theUserRequestsToGetDataGroups(identity.token);
     }
 
@@ -32,6 +35,9 @@ public class AccessControlSteps extends IdentityAuthentication {
 
     @When("the User Requests To Get Function Groups")
     public void theUserRequestsToGetFunctionGroups() {
+        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
+        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
+
         accessControl.theUserRequestsToGetFunctionGroups(identity.token);
     }
 
