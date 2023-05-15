@@ -1,4 +1,4 @@
-@healthcheck @identityconfig
+@healthCheck @identityConfig
 Feature: Identity Config
 
   Scenario: Identity Config Checks Returns as Expected

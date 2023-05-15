@@ -1,4 +1,4 @@
-@healthcheck @actuator
+@healthCheck @registryApp
 Feature: Registry App Checks
 
   Scenario Outline: Registry App Checks Return as Expected

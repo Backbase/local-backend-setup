@@ -1,4 +1,4 @@
-@healthcheck @actuator
+@healthCheck @actuator
 Feature: Actuator HeathChecks
 
   Scenario Outline: HeathChecks Return as Expected
