@@ -12,6 +12,11 @@ Refer to the [Postman README.md](https://github.com/Backbase/local-backend-setup
 The RESTAssured tests also come in two flavours, running the tests directly via the test runner, or as [Feature files via cucumber](https://cucumber.io/docs/gherkin/reference/)
 
 The tests executed via the test runner can be found in the [main test folder](https://github.com/Backbase/local-backend-setup/tree/main/test/RESTAssured/src/test/java/com/backbase)
+These tests can also be run via the command:
+```
+mvn clean test
+```
+
 
 The Feature files can currently be run from [Features test folder](https://github.com/Backbase/local-backend-setup/tree/main/test/RESTAssured/src/test/java/com/backbase/cucmber/features)
 The actual Feature files are in [Features resources folder](https://github.com/Backbase/local-backend-setup/tree/main/test/RESTAssured/src/test/src/test/resources/features)
