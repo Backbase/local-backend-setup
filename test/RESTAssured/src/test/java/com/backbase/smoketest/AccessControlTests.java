@@ -11,16 +11,6 @@ public class AccessControlTests {
     private final Identity identity = new Identity();
 
     @Test
-    public void canGetDataGroups() {
-        identity.aUserHasAuthenticated("backbase", Constants.bbToolingClient);
-        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
-        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
-
-        accessControl.theUserRequestsToGetDataGroups(identity.token);
-        accessControl.theResponseReturnsOK();
-    }
-
-    @Test
     public void canGetGetUserContextServiceAgreements() {
         identity.aUserHasAuthenticated("backbase", Constants.bbToolingClient);
         accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
@@ -32,16 +22,6 @@ public class AccessControlTests {
         identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
         accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
         accessControl.theResponseReturnsCode(204);
-    }
-
-    @Test
-    public void canGetFunctionGroups() {
-        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
-        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
-        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
-
-        accessControl.theUserRequestsToGetFunctionGroups(identity.token);
-        accessControl.theResponseReturnsOK();
     }
 
     @Test

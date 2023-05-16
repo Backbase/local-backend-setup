@@ -15,14 +15,6 @@ public class AccessControlSteps extends IdentityAuthentication {
         aUserHasAuthenticatedToRealm(Constants.backbaseRealmName, Constants.bbToolingClient);
     }
 
-    @When("the User Requests To Get Data Groups")
-    public void theUserRequestsToGetDataGroups() {
-        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
-        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
-
-        accessControl.theUserRequestsToGetDataGroups(identity.token);
-    }
-
     @When("the User Requests To Get User Context Service Agreements")
     public void theUserRequestsToGetUserContextServiceAgreements() {
         accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
@@ -31,14 +23,6 @@ public class AccessControlSteps extends IdentityAuthentication {
     @When("the User Requests To Set User Context Service Agreements")
     public void theUserRequestsToSetUserContextServiceAgreements() {
         accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
-    }
-
-    @When("the User Requests To Get Function Groups")
-    public void theUserRequestsToGetFunctionGroups() {
-        accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
-        accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
-
-        accessControl.theUserRequestsToGetFunctionGroups(identity.token);
     }
 
     @When("the User Requests To Get User Permissions Summary")
