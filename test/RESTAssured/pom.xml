@@ -28,13 +28,11 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <version>${restAssured.version}</version>
-      <scope>compile</scope>
     </dependency>
 
     <!--  Gson: Java to Json conversion -->
@@ -42,7 +40,6 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>${gson.version}</version>
-      <scope>compile</scope>
     </dependency>
 
     <!-- Cucumber dependencies  -->
