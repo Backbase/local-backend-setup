@@ -47,7 +47,7 @@ For the setup, you must have the following:
     ```shell
     docker ps
     ```
-2. To set the Docker image for the version of Edge you are running, replace `2022.09.1` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase-rnd/local-backend-setup/blob/main/development/docker-compose/.env) file.:
+2. To set the Docker image for the version of Edge you are running, replace `2022.09.1` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.:
     ```shell
     docker pull repo.backbase.com/backbase-docker-releases/edge:`2022.09.1`
     ```
@@ -161,7 +161,7 @@ In addition to the default health check that is provided when you use `docker co
 
 To upgrade a service in the environment, change the Docker image tag to the new version. Verify that this version is compatible with the other services in the environment. 
 
-To upgrade all services to a specific Backbase BOM version, change the `BB_VERSION` value in the [development/docker-compose/.env](https://github.com/backbase-rnd/local-backend-setup/blob/main/development/docker-compose/.env) file.
+To upgrade all services to a specific Backbase BOM version, change the `BB_VERSION` value in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.
 
 ## Debug custom applications
 
