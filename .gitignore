@@ -14,3 +14,4 @@ buildNumber.properties
 *.DS_Store
 example-service/example-integration-openapi-spec/src/main/resources/lib
 .vscode
+test/k6/node_modules/*
