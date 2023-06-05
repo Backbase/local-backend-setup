@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7ba8e217-3365-4363-84ed-9fe8eced5d40",
+		"_postman_id": "56abae10-575c-44bb-a6c3-92272c98fc58",
 		"name": "Smoke Test Local Backend Environment",
 		"description": "Specs for Message Service API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -343,7 +343,7 @@
 					"name": "User Accessgroups",
 					"item": [
 						{
-							"name": "Get User Permissions SUmmary",
+							"name": "Get User Permissions Summary",
 							"event": [
 								{
 									"listen": "test",
@@ -459,7 +459,7 @@
 							"response": []
 						},
 						{
-							"name": "Set User Context Service Agreements",
+							"name": "Set User Context",
 							"event": [
 								{
 									"listen": "test",

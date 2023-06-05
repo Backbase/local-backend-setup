@@ -1,15 +1,14 @@
 package com.backbase.cucumber.steps.healthcheck;
 
-import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
 import com.backbase.config.Constants;
-import com.backbase.services.services.AccessControl;
-import com.backbase.services.services.ArrangementManager;
-import com.backbase.services.services.TokenConverter;
-import com.backbase.services.services.UserManager;
+import com.backbase.services.AccessControl;
+import com.backbase.services.ArrangementManager;
+import com.backbase.services.TokenConverter;
+import com.backbase.services.UserManager;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class ActuatorHealthCheckSteps

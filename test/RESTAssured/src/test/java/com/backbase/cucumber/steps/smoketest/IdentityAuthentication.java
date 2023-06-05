@@ -1,6 +1,6 @@
 package com.backbase.cucumber.steps.smoketest;
 
-import com.backbase.services.services.Identity;
+import com.backbase.services.Identity;
 
 public class IdentityAuthentication {
     protected final Identity identity = new Identity();

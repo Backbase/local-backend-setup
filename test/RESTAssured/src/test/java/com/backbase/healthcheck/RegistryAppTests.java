@@ -1,6 +1,6 @@
 package com.backbase.healthcheck;
 
-import com.backbase.services.services.Registry;
+import com.backbase.services.Registry;
 import org.junit.Test;
 
 public class RegistryAppTests

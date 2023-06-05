@@ -1,8 +1,8 @@
 package com.backbase.smoketest;
 
 import com.backbase.config.Constants;
-import com.backbase.services.services.AccessControl;
-import com.backbase.services.services.Identity;
+import com.backbase.services.AccessControl;
+import com.backbase.services.Identity;
 import org.junit.Test;
 
 public class AccessControlTests {
@@ -12,7 +12,7 @@ public class AccessControlTests {
 
     @Test
     public void canGetGetUserContextServiceAgreements() {
-        identity.aUserHasAuthenticated("backbase", Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
         accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
         accessControl.theResponseReturnsOK();
     }

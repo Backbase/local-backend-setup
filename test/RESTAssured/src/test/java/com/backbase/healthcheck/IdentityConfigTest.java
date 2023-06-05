@@ -1,6 +1,6 @@
 package com.backbase.healthcheck;
 
-import com.backbase.services.services.Identity;
+import com.backbase.services.Identity;
 import org.junit.Test;
 
 public class IdentityConfigTest

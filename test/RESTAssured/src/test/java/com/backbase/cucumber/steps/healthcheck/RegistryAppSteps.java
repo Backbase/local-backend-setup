@@ -1,6 +1,6 @@
 package com.backbase.cucumber.steps.healthcheck;
 
-import com.backbase.services.services.Registry;
+import com.backbase.services.Registry;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
