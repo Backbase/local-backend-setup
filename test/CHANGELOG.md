@@ -17,3 +17,7 @@
 ### Added
 - RESTAssured tests for Health Checks and Smoke Tests
 - Cucumber Feature files for Health Checks and Smoke Tests
+
+## [0.0.3]
+### Added
+- k6 performance tests in TypeScript, based on Postman SmokeTest collection, supported via https://github.com/grafana/k6-template-typescript
