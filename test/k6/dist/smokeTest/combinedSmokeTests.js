@@ -79,7 +79,7 @@ function getIdentityAuthUrl(realm) {
 function getUserContextServiceAgreementsUrl() {
   return `${baseUrl}${accessControlPath}/v3/accessgroups/user-context/service-agreements`;
 }
-function urls_getUserContextUrl() {
+function getUserContextUrl() {
   return `${baseUrl}${accessControlPath}/v2/accessgroups/usercontext`;
 } // Arrangement Manager
 
@@ -218,7 +218,7 @@ const userContextSet = 'USER_CONTEXT=eyJraWQiOiJaNXB5dkxcL3FMYUFyR3ZiTkY3Qm11UGV
 function constants_getUserContext() {
   return userContext;
 }
-function constants_getUserContextSet() {
+function getUserContextSet() {
   return userContextSet;
 }
 ;// CONCATENATED MODULE: ./support/api/accessControl.ts
@@ -260,11 +260,11 @@ function setUserContext(access_token, serviceAgreementsResponse) {
   let saCookies = {
     USER_CONTEXT: userContext
   };
-  let response = http.post(url, requestBody, {
+  let response = http_default().post(url, JSON.stringify(requestBody), {
     headers: saHeaders,
     cookies: saCookies
   });
-  check(response, {
+  (0,external_k6_namespaceObject.check)(response, {
     'setUserContext status is 204': () => response.status === 204
   });
 }
@@ -277,7 +277,7 @@ function extractMSAId(serviceAgreementsResponse) {
     let msa_id = jsonData[0].id;
     return msa_id;
   } else {
-    check(null, {
+    (0,external_k6_namespaceObject.check)(null, {
       'Error extracting MSA ID': () => false
     });
   }
@@ -345,9 +345,8 @@ let options = {
 /* harmony default export */ const combinedSmokeTests = (() => {
   const access_token = getAccessToken('backbase', 'bb-tooling-client'); // Access Control tests
 
-  let serviceAgreementsResponse = getUserContextServiceAgreements(access_token); // ToDo - fix the request
-  //setUserContext(access_token, serviceAgreementsResponse);
-  // Arrangement Manager tests
+  let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);
+  setUserContext(access_token, serviceAgreementsResponse); // Arrangement Manager tests
 
   getBalancesAggregations(access_token);
   getProductKinds(access_token);

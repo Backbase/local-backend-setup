@@ -29,7 +29,7 @@ export function setUserContext(access_token, serviceAgreementsResponse) {
     let requestBody = { 'serviceAgreementId': `${msa_id}` };
     let saCookies = { USER_CONTEXT: userContext };
 
-    let response = http.post(url, requestBody, { headers: saHeaders, cookies: saCookies });
+    let response = http.post(url, JSON.stringify(requestBody), { headers: saHeaders, cookies: saCookies });
   
     check(response, {
         'setUserContext status is 204': () => response.status === 204

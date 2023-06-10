@@ -19,14 +19,16 @@ const userContext =
 
 export let options = {
   stages: [
-    { duration: '10s', target: 10 }, 
-    { duration: '10s', target: 100 }, 
-    { duration: '10s', target: 10  }
+    { duration: '1s', target: 1 }, 
+ //   { duration: '10s', target: 10 }, 
+ //   { duration: '10s', target: 100 }, 
+ //   { duration: '10s', target: 10  }
 ]};
 
 export default function() {
   const access_token = getAccessToken('backbase', 'bb-tooling-client');
   let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);
+  setUserContext(access_token, serviceAgreementsResponse);
 
   sleep(1);
 };
@@ -75,12 +77,53 @@ function getUserContextServiceAgreements(access_token) {
   return response;
 }
 
+function setUserContext(access_token, serviceAgreementsResponse) {
+  let msa_id = extractMSAId(serviceAgreementsResponse);
+  let url = getUserContextUrl();
+  let userContext = constants_getUserContext();
+  let saHeaders = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + access_token
+  };
+  let requestBody = {
+    'serviceAgreementId': `${msa_id}`
+  };
+  let saCookies = {
+    USER_CONTEXT: userContext
+  };
+  let response = http.post(url, JSON.stringify(requestBody), {
+    headers: saHeaders,
+    cookies: saCookies
+  });
+  check(response, {
+    'setUserContext status is 204': () => response.status === 204
+  });
+}
+
+function extractMSAId(serviceAgreementsResponse) {
+  let body = serviceAgreementsResponse.body;
+
+  if (body !== undefined && body !== null) {
+    var jsonData = JSON.parse(body);
+    let msa_id = jsonData[0].id;
+    return msa_id;
+  } else {
+    check(null, {
+      'Error extracting MSA ID': () => false
+    });
+  }
+}
+
 function getIdentityAuthUrl(realm) {
   return `${identityUrl}${identityRealmPath}${realm}${identityAuthPath}`;
 }
 
 function getUserContextServiceAgreementsUrl() {
   return `${baseUrl}${accessControlPath}/v3/accessgroups/user-context/service-agreements`;
+}
+
+function getUserContextUrl() {
+  return `${baseUrl}${accessControlPath}/v2/accessgroups/usercontext`;
 }
 
 function constants_getUserContext() {

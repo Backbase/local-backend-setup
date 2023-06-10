@@ -14,9 +14,7 @@ export default () => {
   const access_token = getAccessToken('backbase', 'bb-tooling-client');
 
   let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);
-  
-  // ToDo - fix the request
-  //setUserContext(access_token, serviceAgreementsResponse);
+  setUserContext(access_token, serviceAgreementsResponse);
   
   sleep(1);
 };

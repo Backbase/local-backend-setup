@@ -17,9 +17,7 @@ export default () => {
 
   // Access Control tests
   let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);
-  
-  // ToDo - fix the request
-  //setUserContext(access_token, serviceAgreementsResponse);
+  setUserContext(access_token, serviceAgreementsResponse);
 
   // Arrangement Manager tests
   getBalancesAggregations(access_token);
