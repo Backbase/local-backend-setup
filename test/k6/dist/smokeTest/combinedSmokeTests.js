@@ -120,7 +120,7 @@ function getAccessToken(realm, clientId) {
   return access_token;
 }
 function createUser(access_token, userName) {
-  let url = getidentityUsersPath('backbase');
+  let url = getidentityUsersPath(getBackbaseRealmName());
   let headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer ' + access_token
@@ -210,10 +210,25 @@ function getUserByUsername(access_token, userName) {
   return null;
 }
 ;// CONCATENATED MODULE: ./support/config/constants.ts
-// Client Ids
+// Realm Names
+const backbaseRealmName = 'backbase';
+const masterRealmName = 'master'; // Client Ids
+
 const adminCliClientId = 'admin-cli';
 const bbToolingClient = 'bb-tooling-client';
 const userContext = 'eyJraWQiOiJaNXB5dkxcL3FMYUFyR3ZiTkY3Qm11UGVQU1Q4R0I5UHBPR0RvRnBlbmIxOD0iLCJjdHkiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tMfNToj_V8l223g2qq-vAQ.m_sJ7rkBrFBn9n7FDYpS_AKgeclXISyq0uPjE1-2uIjezFW6KpXahPZzyZnZMsWdCqIC_E9J_Rnw63aAa_l05OLKoh5t8h-Ksa35iJ9tn2NG_Mjl8XHwXNPpYxAe0Rxyp7tHA64E2fICGyW2NEUsa9u_DwLarRumStiZljboI12X0xv0zqN7KVBjSBRS0JrAdJ2pYxVEB-KlXdpWuNIoWwPccY4UVhvr32PPzw8AxpDdys1LDf6fxbLy6S3fy0L4LNkvKIq5gzsWD8kvnducMLIK87u9dysl-MeFrznaiecKEQVgqLFsmwRWShujcXHy.AQhfRyuBuACzuMumtlgEMw';
+function constants_getBackbaseRealmName() {
+  return backbaseRealmName;
+}
+function getMasterRealmName() {
+  return masterRealmName;
+}
+function getAdminCliClientId() {
+  return adminCliClientId;
+}
+function getBbToolingClient() {
+  return bbToolingClient;
+}
 function constants_getUserContext() {
   return userContext;
 }
@@ -326,6 +341,7 @@ function getProductKinds(access_token) {
 
 
 
+
 let options = {
   stages: [{
     duration: '10s',
@@ -339,7 +355,7 @@ let options = {
   }]
 };
 /* harmony default export */ const combinedSmokeTests = (() => {
-  const access_token = getAccessToken('backbase', 'bb-tooling-client'); // Access Control tests
+  const access_token = getAccessToken(constants_getBackbaseRealmName(), getBbToolingClient()); // Access Control tests
 
   let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);
   setUserContext(access_token, serviceAgreementsResponse); // Arrangement Manager tests

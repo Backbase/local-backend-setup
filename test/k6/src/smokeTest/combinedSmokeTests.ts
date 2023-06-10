@@ -3,6 +3,7 @@ import { getAccessToken } from '../support/api/identity';
 import { getUserContextServiceAgreements, setUserContext } from '../support/api/accessControl';
 
 import { getBalancesAggregations, getProductKinds } from '../support/api/arrangementManager';
+import { getBackbaseRealmName, getBbToolingClient } from '../support/config/constants';
 
 export let options = {
   stages: [
@@ -13,7 +14,7 @@ export let options = {
 };
 
 export default () => {
-  const access_token = getAccessToken('backbase', 'bb-tooling-client');
+  const access_token = getAccessToken(getBackbaseRealmName(), getBbToolingClient());
 
   // Access Control tests
   let serviceAgreementsResponse = getUserContextServiceAgreements(access_token);

@@ -1,5 +1,6 @@
 import { sleep } from 'k6';
 import { createUser, deleteUser, getAccessToken, getUsers } from '../support/api/identity';
+import { getAdminCliClientId, getMasterRealmName } from '../support/config/constants';
 
 export let options = {
     stages: [
@@ -12,7 +13,7 @@ export let options = {
   };
   
   export default () => {
-    const access_token = getAccessToken('master', 'admin-cli');
+    const access_token = getAccessToken(getMasterRealmName(), getAdminCliClientId());
     const currentDate = new Date();
     const timestamp = currentDate.getTime();
 

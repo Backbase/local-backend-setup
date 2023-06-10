@@ -1,6 +1,7 @@
 import { sleep } from 'k6';
 import { getAccessToken } from '../support/api/identity';
 import { getBalancesAggregations, getProductKinds } from '../support/api/arrangementManager';
+import { getBackbaseRealmName, getBbToolingClient } from '../support/config/constants';
 
 export let options = {
   stages: [
@@ -11,7 +12,7 @@ export let options = {
 };
 
 export default () => {
-  const access_token = getAccessToken('backbase', 'bb-tooling-client');
+  const access_token = getAccessToken(getBackbaseRealmName(), getBbToolingClient());
   
   getBalancesAggregations(access_token);
   getProductKinds(access_token);

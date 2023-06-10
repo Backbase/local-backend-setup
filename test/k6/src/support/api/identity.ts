@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check } from 'k6';
 import { getIdentityAuthUrl, getidentityUsersPath } from '../config/urls';
-import { getUserContext } from '../config/constants';
+import { getBackbaseRealmName, getUserContext } from '../config/constants';
 
 export function getAccessToken(realm, clientId) {
   let url = getIdentityAuthUrl(realm);
@@ -23,7 +23,7 @@ export function getAccessToken(realm, clientId) {
 
 export function createUser(access_token, userName) {
   
-  let url = getidentityUsersPath('backbase');
+  let url = getidentityUsersPath(getBackbaseRealmName());
   let headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token };
   let userContext = getUserContext();
   let cookies = { USER_CONTEXT: userContext };
