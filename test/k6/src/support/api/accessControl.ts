@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check } from 'k6';
 import { getUserContextServiceAgreementsUrl, getUserContextUrl } from '../config/urls';
-import { getUserContext, getUserContextSet } from '../config/constants';
+import { getUserContext } from '../config/constants';
 
 export function getUserContextServiceAgreements(access_token) {
   let url = getUserContextServiceAgreementsUrl();
@@ -23,7 +23,7 @@ export function setUserContext(access_token, serviceAgreementsResponse) {
     let msa_id = extractMSAId(serviceAgreementsResponse);
     
     let url = getUserContextUrl();
-    let userContext = getUserContextSet();
+    let userContext = getUserContext();
   
     let saHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token };
     let requestBody = { 'serviceAgreementId': `${msa_id}` };

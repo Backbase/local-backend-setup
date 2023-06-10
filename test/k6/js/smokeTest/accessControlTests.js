@@ -19,10 +19,9 @@ const userContext =
 
 export let options = {
   stages: [
-    { duration: '1s', target: 1 }, 
- //   { duration: '10s', target: 10 }, 
- //   { duration: '10s', target: 100 }, 
- //   { duration: '10s', target: 10  }
+    { duration: '10s', target: 10 }, 
+    { duration: '10s', target: 100 }, 
+    { duration: '10s', target: 10  }
 ]};
 
 export default function() {
