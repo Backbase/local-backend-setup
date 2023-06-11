@@ -9,7 +9,6 @@ module.exports = {
   entry: {
     'smokeTest/accessControlTests': './smokeTest/accessControlTests.ts',
     'smokeTest/arrangementManagerTests': './smokeTest/arrangementManagerTests.ts',
-    'smokeTest/combinedSmokeTests': './smokeTest/combinedSmokeTests.ts',
     'smokeTest/userTests': './smokeTest/userTests.ts',
   },
   output: {
