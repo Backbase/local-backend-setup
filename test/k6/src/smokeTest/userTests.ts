@@ -4,11 +4,9 @@ import { getAdminCliClientId, getMasterRealmName, getUserNamePrefix } from '../s
 
 export let options = {
     stages: [
-      { duration: '1s', target: 1 },
-    // ToDo: Make the test safe for multiple VUs
-    //  { duration: '10s', target: 10 },
-    //  { duration: '10s', target: 100 },
-    //  { duration: '10s', target: 10 },
+      { duration: '10s', target: 10 },
+      { duration: '10s', target: 100 },
+      { duration: '10s', target: 10 },
     ],
   };
   

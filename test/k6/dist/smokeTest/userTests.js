@@ -250,13 +250,15 @@ function deleteUser(access_token, userId) {
 
 let options = {
   stages: [{
-    duration: '1s',
-    target: 1
-  } // ToDo: Make the test safe for multiple VUs
-  //  { duration: '10s', target: 10 },
-  //  { duration: '10s', target: 100 },
-  //  { duration: '10s', target: 10 },
-  ]
+    duration: '10s',
+    target: 10
+  }, {
+    duration: '10s',
+    target: 100
+  }, {
+    duration: '10s',
+    target: 10
+  }]
 };
 /* harmony default export */ const userTests = (() => {
   let access_token = getAccessToken(getMasterRealmName(), getAdminCliClientId());
