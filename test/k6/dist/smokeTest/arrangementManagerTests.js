@@ -147,8 +147,8 @@ function createUser(access_token, userName) {
     'createUser response status code is 201': () => response.status === 201
   });
 }
-function getUsers(access_token) {
-  let url = getidentityUsersPath('backbase');
+function getUsers(access_token, userName) {
+  let url = getidentityUsersPath(getBackbaseRealmName());
   let userContext = getUserContext();
   let headers = {
     'Accept': '*/*',
@@ -165,11 +165,41 @@ function getUsers(access_token) {
   check(response, {
     'getUsers response status code is 200': () => response.status === 200
   });
+  let body = response?.body?.toString();
+
+  if (body !== undefined && body !== null) {
+    check(response, {
+      'getUsers response contains userName': () => String(body).includes(userName)
+    });
+  } else {
+    check(null, {
+      'Error extracting Users': () => false
+    });
+  }
+
   return response;
 }
-function deleteUser(access_token, userName) {
-  let userToDelete = getUserByUsername(access_token, userName);
-  let url = `${getidentityUsersPath('backbase')}/${userToDelete.id}`;
+function getUserIdByUsername(getUsersResponse, userName) {
+  let body = getUsersResponse.body.toString();
+
+  if (body !== undefined && body !== null) {
+    let users = JSON.parse(body);
+    let userFilter = users.filter(u => u.username == userName);
+    let user = JSON.parse(JSON.stringify(userFilter))[0];
+    check(user, {
+      'User Found': () => user !== undefined && user !== null && user.username == userName
+    });
+    return user.id;
+  } else {
+    check(null, {
+      'Error extracting Users': () => false
+    });
+  }
+
+  return null;
+}
+function deleteUser(access_token, userId) {
+  let url = `${getidentityUsersPath('backbase')}/${userId}`;
   let userContext = getUserContext();
   let headers = {
     'Accept': '*/*',
@@ -187,28 +217,6 @@ function deleteUser(access_token, userName) {
     'deleteUser response status code is 204': () => response.status === 204
   });
 }
-
-function getUserByUsername(access_token, userName) {
-  let response = getUsers(access_token);
-  let body = response?.body.toString();
-
-  if (body !== undefined && body !== null) {
-    let users = JSON.parse(body); //ToDo get user by username, rather than getting last used by default return order in response
-    //let user = users.filter(u => u.username == userName);
-
-    let user = users[users.length - 1];
-    check(user, {
-      'User Found': () => user !== undefined && user !== null
-    });
-    return user;
-  } else {
-    check(null, {
-      'Error extracting Users': () => false
-    });
-  }
-
-  return null;
-}
 ;// CONCATENATED MODULE: ./support/config/constants.ts
 // Realm Names
 const backbaseRealmName = 'backbase';
@@ -217,6 +225,7 @@ const masterRealmName = 'master'; // Client Ids
 const adminCliClientId = 'admin-cli';
 const bbToolingClient = 'bb-tooling-client';
 const userContext = 'eyJraWQiOiJaNXB5dkxcL3FMYUFyR3ZiTkY3Qm11UGVQU1Q4R0I5UHBPR0RvRnBlbmIxOD0iLCJjdHkiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tMfNToj_V8l223g2qq-vAQ.m_sJ7rkBrFBn9n7FDYpS_AKgeclXISyq0uPjE1-2uIjezFW6KpXahPZzyZnZMsWdCqIC_E9J_Rnw63aAa_l05OLKoh5t8h-Ksa35iJ9tn2NG_Mjl8XHwXNPpYxAe0Rxyp7tHA64E2fICGyW2NEUsa9u_DwLarRumStiZljboI12X0xv0zqN7KVBjSBRS0JrAdJ2pYxVEB-KlXdpWuNIoWwPccY4UVhvr32PPzw8AxpDdys1LDf6fxbLy6S3fy0L4LNkvKIq5gzsWD8kvnducMLIK87u9dysl-MeFrznaiecKEQVgqLFsmwRWShujcXHy.AQhfRyuBuACzuMumtlgEMw';
+const userNamePrefix = 'zz_k6user_';
 function constants_getBackbaseRealmName() {
   return backbaseRealmName;
 }
@@ -231,6 +240,9 @@ function getBbToolingClient() {
 }
 function constants_getUserContext() {
   return userContext;
+}
+function getUserNamePrefix() {
+  return userNamePrefix;
 }
 ;// CONCATENATED MODULE: ./support/api/arrangementManager.ts
 

@@ -48,9 +48,9 @@ export function createUser(access_token, userName) {
   });
 }
 
-export function getUsers(access_token) {
+export function getUsers(access_token, userName) {
   
-  let url = getidentityUsersPath('backbase');
+  let url = getidentityUsersPath(getBackbaseRealmName());
   let userContext = getUserContext();
 
   let headers = { 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + access_token };
@@ -62,13 +62,50 @@ export function getUsers(access_token) {
     'getUsers response status code is 200': () => response.status === 200
   });
 
+  let body = response?.body?.toString();
+
+  if (body !== undefined && body !== null) {
+    check(response, {
+      'getUsers response contains userName': () => String(body).includes(userName)
+    });
+  } else {
+    check(null, {
+      'Error extracting Users': () => false
+    });
+  }
+
   return response;
 }
 
-export function deleteUser(access_token, userName) {
+
+export function getUserIdByUsername(getUsersResponse, userName) {
   
-  let userToDelete = getUserByUsername(access_token, userName);
-  let url = `${getidentityUsersPath('backbase')}/${userToDelete.id}`;
+  let body = getUsersResponse.body.toString();
+  
+  if (body !== undefined && body !== null) {
+    
+    let users = JSON.parse(body);
+    let userFilter = users.filter(u => u.username == userName);
+    let user = JSON.parse(JSON.stringify(userFilter))[0];
+
+    check(user, {
+      'User Found': () => user !== undefined && user !== null && user.username == userName
+    });
+
+    return user.id;
+
+  } else {
+    check(null, {
+        'Error extracting Users': () => false
+    });
+  }
+
+  return null;
+}
+
+export function deleteUser(access_token, userId) {
+  
+  let url = `${getidentityUsersPath('backbase')}/${userId}`;
   let userContext = getUserContext();
 
   let headers = { 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + access_token };
@@ -81,29 +118,3 @@ export function deleteUser(access_token, userName) {
   });
 }
 
-function getUserByUsername(access_token, userName) {
-  let response = getUsers(access_token);
-
-  let body = response?.body.toString();
-  
-  if (body !== undefined && body !== null) {
-    
-    let users = JSON.parse(body);
-    //ToDo get user by username, rather than getting last used by default return order in response
-    //let user = users.filter(u => u.username == userName);
-    let user = users[users.length - 1];
-
-    check(user, {
-      'User Found': () => user !== undefined && user !== null
-    });
-
-    return user
-
-  } else {
-    check(null, {
-        'Error extracting Users': () => false
-    });
-  }
-
-  return null;
-}

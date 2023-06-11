@@ -15,22 +15,25 @@ const userContext =
   'eyJraWQiOiJaNXB5dkxcL3FMYUFyR3ZiTkY3Qm11UGVQU1Q4R0I5UHBPR0RvRnBlbmIxOD0iLCJjdHkiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tMfNToj_V8l223g2qq-vAQ.m_sJ7rkBrFBn9n7FDYpS_AKgeclXISyq0uPjE1-2uIjezFW6KpXahPZzyZnZMsWdCqIC_E9J_Rnw63aAa_l05OLKoh5t8h-Ksa35iJ9tn2NG_Mjl8XHwXNPpYxAe0Rxyp7tHA64E2fICGyW2NEUsa9u_DwLarRumStiZljboI12X0xv0zqN7KVBjSBRS0JrAdJ2pYxVEB-KlXdpWuNIoWwPccY4UVhvr32PPzw8AxpDdys1LDf6fxbLy6S3fy0L4LNkvKIq5gzsWD8kvnducMLIK87u9dysl-MeFrznaiecKEQVgqLFsmwRWShujcXHy.AQhfRyuBuACzuMumtlgEMw';
 
 export let options = {
-  stages: [
-    { duration: '1s', target: 1 }
-  // ToDo: Requires getting user id by username to run multiple VUs
+  stages: [{
+    duration: '1s',
+    target: 1
+  } // ToDo: Make the test safe for multiple VUs
   //  { duration: '10s', target: 10 },
   //  { duration: '10s', target: 100 },
   //  { duration: '10s', target: 10 },
-]};
+  ]
+};
 
 export default function() {
   const access_token = getAccessToken('master', 'admin-cli');
-  const currentDate = new Date();
-  const timestamp = currentDate.getTime();
-  const userName = 'ZZ_k6User_' + timestamp + Math.random();
+  let currentDate = new Date();
+  let timestamp = currentDate.getTime();
+  let userName = 'zz_k6user_' + timestamp + Math.random();
   createUser(access_token, userName);
-  getUsers(access_token);
-  deleteUser(access_token, userName);
+  let users = getUsers(access_token, userName);
+  let userId = getUserIdByUsername(users, userName);
+  deleteUser(access_token, userId);
   sleep(1);
 };
 
@@ -55,18 +58,6 @@ function getAccessToken(realm, clientId) {
     'access_token is not empty': () => access_token !== undefined
   });
   return access_token;
-}
-
-function getIdentityAuthUrl(realm) {
-  return `${identityUrl}${identityRealmPath}${realm}${identityAuthPath}`;
-}
-
-function getidentityUsersPath(realm) {
-  return `${identityUrl}/auth/admin/realms/${realm}/users`;
-}
-
-function getUserContext() {
-  return userContext;
 }
 
 function createUser(access_token, userName) {
@@ -98,7 +89,7 @@ function createUser(access_token, userName) {
   });
 }
 
-function getUsers(access_token) {
+function getUsers(access_token, userName) {
   let url = getidentityUsersPath('backbase');
   let userContext = getUserContext();
   let headers = {
@@ -116,12 +107,43 @@ function getUsers(access_token) {
   check(response, {
     'getUsers response status code is 200': () => response.status === 200
   });
+  let body = response.body.toString();
+
+  if (body !== undefined && body !== null) {
+    check(response, {
+      'getUsers response contains userName': () => String(body).includes(userName)
+    });
+  } else {
+    check(null, {
+      'Error extracting Users': () => false
+    });
+  }
+
   return response;
 }
 
-function deleteUser(access_token, userName) {
-  let userToDelete = getUserByUsername(access_token, userName);
-  let url = `${getidentityUsersPath('backbase')}/${userToDelete.id}`;
+function getUserIdByUsername(getUsersResponse, userName) {
+  let body = getUsersResponse.body.toString();
+
+  if (body !== undefined && body !== null) {
+    let users = JSON.parse(body);
+    let userFilter = users.filter(u => u.username == userName);
+    let user = JSON.parse(JSON.stringify(userFilter))[0];
+
+    check(user, {
+      'User Found': () => user !== undefined && user !== null && user.username == userName
+    });
+    return user.id;
+  } else {
+    check(null, {
+      'Error extracting Users': () => false
+    });
+  }
+
+  return null;
+}
+function deleteUser(access_token, userId) {
+  let url = `${getidentityUsersPath('backbase')}/${userId}`;
   let userContext = getUserContext();
   let headers = {
     'Accept': '*/*',
@@ -140,25 +162,14 @@ function deleteUser(access_token, userName) {
   });
 }
 
-function getUserByUsername(access_token, userName) {
-  let response = getUsers(access_token);
-  let body = response.body.toString();
+function getIdentityAuthUrl(realm) {
+  return `${identityUrl}${identityRealmPath}${realm}${identityAuthPath}`;
+}
 
-  if (body !== undefined && body !== null) {
-    let users = JSON.parse(body); 
-    //ToDo get user by username, rather than getting last used by default return order in response
-    //let user = users.filter(u => u.username == userName);
+function getidentityUsersPath(realm) {
+  return `${identityUrl}/auth/admin/realms/${realm}/users`;
+}
 
-    let user = users[users.length - 1];
-    check(user, {
-      'User Found': () => user !== undefined && user !== null
-    });
-    return user;
-  } else {
-    check(null, {
-      'Error extracting Users': () => false
-    });
-  }
-
-  return null;
+function getUserContext() {
+  return userContext;
 }
