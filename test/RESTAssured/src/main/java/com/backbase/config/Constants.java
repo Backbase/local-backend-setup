@@ -2,11 +2,11 @@ package com.backbase.config;
 
 public class Constants {
 
-    // Health Checks
     public static final String baseUrl = "http://localhost:8280";
     public static final String identityUrl = "http://localhost:8180";
     public static final String registryUrl = "http://localhost:8761";
 
+    // Health Checks
     public static final String edgeActuatorHealthPath = "/actuator/health";
     public static final String upHealthCheckResponseBody = "{\"status\":\"UP\",\"groups\":[\"liveness\",\"readiness\"]}";
 

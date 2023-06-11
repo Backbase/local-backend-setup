@@ -1,11 +1,9 @@
 package com.backbase.cucumber.steps.smoketest;
 
 import com.backbase.config.Constants;
-import com.backbase.services.services.Identity;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.junit.Test;
 
 public class UserSteps extends IdentityAuthentication {
 

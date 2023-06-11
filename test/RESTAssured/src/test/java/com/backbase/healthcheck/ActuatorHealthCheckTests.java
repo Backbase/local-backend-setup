@@ -1,9 +1,9 @@
 package com.backbase.healthcheck;
 
-import com.backbase.services.services.AccessControl;
-import com.backbase.services.services.ArrangementManager;
-import com.backbase.services.services.TokenConverter;
-import com.backbase.services.services.UserManager;
+import com.backbase.services.AccessControl;
+import com.backbase.services.ArrangementManager;
+import com.backbase.services.TokenConverter;
+import com.backbase.services.UserManager;
 import org.junit.Test;
 
 public class ActuatorHealthCheckTests
