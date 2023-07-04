@@ -46,6 +46,8 @@ networks:
   default:
     name: backbase_default
 
+name: pictet
+
 services:
   mysql:
     container_name: mysql
@@ -74,6 +76,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   registry:
     container_name: registry
@@ -237,94 +263,22 @@ services:
       - registry
       - backbase-identity
 
-  product-catalog-task:
-    container_name: product_catalog_task
-    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
-    profiles:
-      - bootstrap
+  entitlements-integration-service:
+    container_name: entitlements_integration_service
+    image: cr.pictet.io/dcp/entitlements-integration-service:1.0.0-SNAPSHOT
+    ports:
+      - "8090:8080"
     environment:
       <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
+      eureka.client.enabled: true
+      spring.kafka.security.protocol: PLAINTEXT
+      spring.kafka.ssl.trust-store-location: ''
+      spring.kafka.ssl.key-store-location: ''
+      spring.kafka.bootstrap-servers: kafka:9092
     volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-    depends_on:
-      token-converter:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-
-  legal-entity-bootstrap-task:
-    container_name: legal_entity_bootstrap_task
-    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
-    profiles:
-      - bootstrap
-    environment:
-      <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
-    volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-    depends_on:
-      token-converter:
-        condition: service_healthy
-      access-control:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-      user-manager:
-        condition: service_healthy
-      identity-integration-service:
-        condition: service_healthy
-      backbase-identity:
-        condition: service_healthy
-      product-catalog-task:
-        condition: service_completed_successfully
-
-  wiremock:
-    container_name: wiremock
-    image: wiremock/wiremock:2.32.0
-    profiles:
-      - with-mocks
-    command:
-      - --global-response-templating
-      - --verbose
-    volumes:
-      - ./stubs:/home/wiremock
-
-  postman-health-check:
-    container_name: health_checks
-    image: postman/newman
-    platform: linux/amd64
-    command:
-      run /etc/newman/postman_collection.json --environment="/etc/newman/postman_environment.json"
-    volumes:
-      -  ../../test/postman/HealthCheck_Local-Backend-Environment.postman_collection.json:/etc/newman/postman_collection.json
-      -  ../../test/postman/Docker-Backend-Environment.postman_environment.json:/etc/newman/postman_environment.json
-    depends_on:
-      access-control:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-      backbase-identity:
-        condition: service_healthy
-      identity-integration-service:
-        condition: service_healthy
-      token-converter:
-        condition: service_healthy
-      user-manager:
-        condition: service_healthy
-
-  # <EXAMPLE-SERVICE-NAME>:
-  #   container_name: example_service
-  #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
-  #   ports:
-  #     - "8090:8080"
-  #   environment:
-  #     <<: *common-variables
-  #     eureka.client.enabled: 'true'
-  #   volumes:
-  #     - ./scripts:/tmp/h
-  #   healthcheck:
-  #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
-  #   links:
-  #     - registry
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/entitlements-integration", "<status>UP</status>" ]
+    links:
+      - registry
