@@ -8,6 +8,7 @@ x-common-variables: &common-variables
   eureka.client.healthcheck.enabled: true
   eureka.instance.non-secure-port: 8080
   eureka.instance.initialStatus: STARTING
+  management.endpoint.health.show-details: always
   management.endpoints.web.exposure.include: '*'
   management.endpoints.enabled-by-default: true
   management.security.roles: ANONYMOUS,ACTUATOR,USER
@@ -28,9 +29,10 @@ x-database-variables: &database-variables
   spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
 
 x-message-broker-variables: &message-broker-variables
-  spring.activemq.broker-url: tcp://activemq:61616
-  spring.activemq.user: admin
-  spring.activemq.password: admin
+  backbase.activemq.enabled: false
+  spring.cloud.stream.defaultBinder: kafka
+  spring.kafka.bootstrap-servers: kafka:9092
+  spring.kafka.security.protocol: PLAINTEXT
 
 x-healthcheck-defaults: &healthcheck-defaults
   start_period: 60s
@@ -64,19 +66,6 @@ services:
       timeout: 5s
       retries: 5
 
-  activemq:
-    container_name: activemq
-    image: symptoma/activemq:5.17.3
-    privileged: true
-    ports:
-      - "61616:61616"
-      - "8161:8161"
-    healthcheck:
-      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   zookeeper:
     container_name: zookeeper
     image: confluentinc/cp-zookeeper:latest
@@ -100,6 +89,11 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   registry:
     container_name: registry
@@ -195,7 +189,7 @@ services:
       mysql:
         condition: service_healthy
     links:
-      - activemq
+      - kafka
       - registry
 
   arrangement-manager:
@@ -215,7 +209,7 @@ services:
       mysql:
         condition: service_healthy
     links:
-      - activemq
+      - kafka
       - registry
 
   user-manager:
@@ -239,7 +233,7 @@ services:
       mysql:
         condition: service_healthy
     links:
-      - activemq
+      - kafka
       - registry
 
   identity-integration-service:
@@ -269,12 +263,9 @@ services:
     ports:
       - "8090:8080"
     environment:
-      <<: *common-variables
-      eureka.client.enabled: true
-      spring.kafka.security.protocol: PLAINTEXT
+      <<: [*common-variables, *message-broker-variables]
       spring.kafka.ssl.trust-store-location: ''
       spring.kafka.ssl.key-store-location: ''
-      spring.kafka.bootstrap-servers: kafka:9092
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -282,3 +273,6 @@ services:
       test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/entitlements-integration", "<status>UP</status>" ]
     links:
       - registry
+    depends_on:
+      kafka:
+        condition: service_healthy
