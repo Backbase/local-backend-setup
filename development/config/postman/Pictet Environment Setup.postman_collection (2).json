@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "85edd81b-dcd9-4515-9241-0dd51acde6c0",
+		"name": "Pictet Environment Setup",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3724692"
+	},
+	"item": [
+		{
+			"name": "1. Get access token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = JSON.parse(responseBody); ",
+							"pm.collectionVariables.set('access_token', res.access_token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "api:service",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "bb-client",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "bb-secret",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:7779/oauth/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "7779",
+					"path": [
+						"oauth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Ingest initial product catalog",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/entitlements/v1/ingest/product-catalog",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"entitlements",
+						"v1",
+						"ingest",
+						"product-catalog"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Ingest initial legal entity",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/v1/ingest/legal-entity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"v1",
+						"ingest",
+						"legal-entity"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "access_token",
+			"value": ""
+		}
+	]
+}
