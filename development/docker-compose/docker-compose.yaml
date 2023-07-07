@@ -13,7 +13,11 @@ x-common-variables: &common-variables
   management.endpoints.enabled-by-default: true
   management.security.roles: ANONYMOUS,ACTUATOR,USER
   spring.main.banner-mode: off
-  spring.zipkin.enabled: false
+  spring.zipkin.enabled: true
+  spring.zipkin.base-url: http://jaeger:9411/
+  spring.sleuth.sampler.probability: "1.0"
+  spring.sleuth.messaging.enabled: false
+  spring.sleuth.function.enabled: false
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
@@ -154,6 +158,13 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: "root"
       QUARKUS_DATASOURCE_DRIVER: "com.mysql.cj.jdbc.Driver"
       QUARKUS_LOG_FILE_ENABLE: "false"
+      QUARKUS_LOG_LEVEL: "INFO"
+      QUARKUS_LOG_CONSOLE_FORMAT: "%d{yyy:MM:dd HH:mm:ss.SSS} %-5p [%X{traceId},%X{spanId},%X{sampled}] %i --- [%t] %c{2.} : %m%n"
+      QUARKUS_JAEGER_PROPAGATION: "b3"
+      QUARKUS_JAEGER_SERVICE_NAME: "backbase-identity"
+      QUARKUS_JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      QUARKUS_JAEGER_SAMPLER_TYPE: "const"
+      QUARKUS_JAEGER_SAMPLER_PARAM: "1"
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       KEYCLOAK_HOME_DIR: "/"
@@ -276,3 +287,11 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
