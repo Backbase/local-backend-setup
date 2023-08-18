@@ -179,8 +179,9 @@ The following is an example configuration:
 ```
 -Deureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
 -Dbackbase.communication.http.discoverable-access-token-service=false
--Dbackbase.communication.http.access-token-uri=http://localhost:8080/api/token-converter/oauth/token
+-Dbackbase.communication.http.access-token-uri=http://localhost:7779/oauth/token
 -Dspring.activemq.broker-url=tcp://localhost:61616
+-Deureka.instance.hostname=host.docker.internal
 ```
 To start an application in debug mode using, for example, IntelliJ IDE, do the following:
 
@@ -271,5 +272,22 @@ If the environment is not working, or if some or all of its services are not in 
   # Run (for example):
   colima start --cpu 8 --memory 16 --with-kubernetes --mount-type 9p
   ```
+
+## Useful Hints
+
+### Configuring CORS in Edge
+In order to configure CORS in Edge, you can set the `SPRING_APPLICATION_JSON` in docker-compose.yaml file. A very common example is connecting a webapp from a different domain (or locally from a different port) to the local backend setup. In this case, the edge should be configured to allow from all origins. Following is such a configuration:
+
+```yaml
+  edge:
+    image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
+    ports:
+      - "8280:8080"
+    environment:
+      <<: *common-variables
+      gateway.actuator.security.enabled: false
+      gateway.csrf.enabled: false
+      SPRING_APPLICATION_JSON: '{ "gateway": { "csrf": { "enabled": false } }, "spring": { "cloud": { "gateway": { "globalcors": { "corsConfigurations": { "[/**]": { "allowedOriginPatterns": "*", "exposedHeaders": "*", "allowedHeaders": "*", "allowedMethods": [ "GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE" ] } } } } } } }'
+```
 
 
