@@ -33,3 +33,8 @@ To create custom services in the Backbase ecosystem, Backbase recommends to use 
 Use these templates to develop your own service, and use the Backbase local environment to test and run your code. 
 
 For more information, see [ModelBank organization](https://github.com/baas-devops-reference).
+
+## Release Policy
+
+We release this repository for every Backbase LTS release. Each LTS release is compatible with all the Backbase versions down to the previous LTS version. For example, with the `2022.02-LTS` release, you can use any Backbase version <ins>higher</ins> than `2022.08-LTS` up to `2023.02-LTS`.
+Any other interim release will be compatible up to the next LTS Backbase version.
