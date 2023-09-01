@@ -36,5 +36,5 @@ For more information, see [ModelBank organization](https://github.com/baas-devop
 
 ## Release Policy
 
-We release this repository for every Backbase LTS release. Each LTS release is compatible with all the Backbase versions down to the previous LTS version. For example, with the `2022.02-LTS` release, you can use any Backbase version <ins>higher</ins> than `2022.08-LTS` up to `2023.02-LTS`.
-Any other interim release will be compatible up to the next LTS Backbase version.
+We release this repository after every Backbase Breaking Changes release. Each release is compatible with all the Backbase versions until its next LTS version.
+For example, with the `2022.03` release, you can use any Backbase version <ins>Higher</ins> than `2022.03` up to `2023.09-LTS`.
