@@ -28,9 +28,9 @@ Set up a Docker local environment on your laptop by running these commands in th
 
 **NB:** EMU account required to access (https://github.com/baas-devops-reference)
 
-To create custom services in the Backbase ecosystem, Backbase recommends to use [ModelBank templates](https://github.com/baas-devops-reference?q=template&type=all&sort=). 
+To create custom services in the Backbase ecosystem, Backbase recommends using [ModelBank templates](https://github.com/baas-devops-reference?q=template&type=all&sort=). If you don't have an EMU account, you can find detailed instructions on creating a service using the service SDK (core-service-archetype) in the [create a service guidelines]([insert-link-here](https://backbase.io/developers/documentation/backend-devkit/latest/development/create-a-service/)).
 
-Use these templates to develop your own service, and use the Backbase local environment to test and run your code. 
+Use these guidelines to develop your own service, and use the Backbase local environment to test and run your code. 
 
 For more information, see [ModelBank organization](https://github.com/baas-devops-reference).
 
