@@ -1,4 +1,4 @@
-package com.backbase.services.services;
+package com.backbase.services;
 
 import com.backbase.config.Constants;
 import com.backbase.util.ApplicationHttpUtils;

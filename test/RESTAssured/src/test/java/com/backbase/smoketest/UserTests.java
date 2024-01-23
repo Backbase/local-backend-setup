@@ -1,7 +1,7 @@
 package com.backbase.smoketest;
 
 import com.backbase.config.Constants;
-import com.backbase.services.services.Identity;
+import com.backbase.services.Identity;
 import org.junit.Test;
 
 public class UserTests extends Identity {

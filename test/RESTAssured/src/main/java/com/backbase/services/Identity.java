@@ -1,4 +1,4 @@
-package com.backbase.services.services;
+package com.backbase.services;
 
 import static java.util.stream.Collectors.toList;
 
@@ -11,7 +11,6 @@ import io.restassured.http.Header;
 import java.net.HttpCookie;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
@@ -80,7 +79,7 @@ public class Identity extends BaseService {
         Assert.assertNotNull(response);
         String responseBody = ApplicationHttpUtils.getResponseBody(response);
         Assert.assertEquals(200, response.statusCode());
-        Assert.assertTrue(responseBody.contains("backbase"));
+        Assert.assertTrue(responseBody.contains(Constants.backbaseRealmName));
     }
 
     public void UserHasTokensStored() {

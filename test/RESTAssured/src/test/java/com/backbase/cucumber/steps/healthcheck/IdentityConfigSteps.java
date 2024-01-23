@@ -4,7 +4,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
-import com.backbase.services.services.Identity;
+import com.backbase.services.Identity;
 
 public class IdentityConfigSteps
 {
