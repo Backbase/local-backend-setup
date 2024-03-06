@@ -1,13 +1,18 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=DEBUG
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
   SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   server.shutdown: graceful
+  server.max-http-header-size: 64KB
+  server.forward-headers-strategy: framework
   eureka.client.serviceUrl.defaultZone: http://registry:8080/eureka
+  eureka.client.registry-fetch-interval-seconds: 15
+  eureka.client.instance-info-replication-interval-seconds: 15
   eureka.client.healthcheck.enabled: true
   eureka.instance.non-secure-port: 8080
+  eureka.instance.prefer-ip-address: true
   eureka.instance.initialStatus: STARTING
   management.endpoints.web.exposure.include: '*'
   management.endpoints.enabled-by-default: true
@@ -19,6 +24,9 @@ x-common-variables: &common-variables
   backbase.audit.enabled: false
   backbase.security.public.paths: /integration-api/**
   backbase.security.mtls.enabled: false
+  backbase.http.request-logging-filter.max-payload-length: 5000
+  logging.level.com.backbase: DEBUG
+  logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -39,6 +47,8 @@ x-healthcheck-defaults: &healthcheck-defaults
   timeout: 5s
   retries: 15
 
+name: backbase
+
 volumes:
   backbase_mysql_data:
     driver: local
@@ -53,7 +63,6 @@ secrets:
 
 services:
   mysql:
-    container_name: mysql
     image: mysql:8.0.31
     ports:
       - "3306:3306"
@@ -68,7 +77,6 @@ services:
       retries: 5
 
   activemq:
-    container_name: activemq
     image: symptoma/activemq:5.17.3
     privileged: true
     ports:
@@ -92,7 +100,6 @@ services:
       test: [ "CMD", "java", "/tmp/HealthCheck.java" ]
 
   edge:
-    container_name: edge
     image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
     ports:
       - "8280:8080"
@@ -110,7 +117,6 @@ services:
       - token-converter
 
   token-converter:
-    container_name: token_converter
     image: repo.backbase.com/backbase-docker-releases/oidc-token-converter-service:${BB_VERSION}
     ports:
       - "7779:8080"
@@ -129,7 +135,6 @@ services:
       - backbase-identity
 
   backbase-identity:
-    container_name: backbase_identity
     image: auth-server:${BB_VERSION}
     build:
       context: ../images/auth-server
@@ -162,7 +167,6 @@ services:
         condition: service_healthy
 
   access-control:
-    container_name: access_control
     image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
     ports:
       - "8040:8080"
@@ -182,7 +186,6 @@ services:
       - registry
 
   arrangement-manager:
-    container_name: arrangement_manager
     image: repo.backbase.com/backbase-docker-releases/arrangement-manager:${BB_VERSION}
     ports:
       - "8050:8080"
@@ -202,7 +205,6 @@ services:
       - registry
 
   user-manager:
-    container_name: user_manager
     image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
     ports:
       - "8060:8080"
@@ -226,7 +228,6 @@ services:
       - registry
 
   identity-integration-service:
-    container_name: identity_integration_service
     image: repo.backbase.com/backbase-docker-releases/identity-integration-service:${BB_VERSION}
     ports:
       - "8070:8080"
@@ -247,7 +248,6 @@ services:
       - backbase-identity
 
   product-catalog-task:
-    container_name: product_catalog_task
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
     profiles:
       - bootstrap
@@ -263,7 +263,6 @@ services:
         condition: service_healthy
 
   legal-entity-bootstrap-task:
-    container_name: legal_entity_bootstrap_task
     image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
     profiles:
       - bootstrap
@@ -289,7 +288,6 @@ services:
         condition: service_completed_successfully
 
   wiremock:
-    container_name: wiremock
     image: wiremock/wiremock:2.32.0
     profiles:
       - with-mocks
@@ -300,7 +298,6 @@ services:
       - ./stubs:/home/wiremock
 
   postman-health-check:
-    container_name: health_checks
     image: postman/newman
     platform: linux/amd64
     command:
@@ -323,7 +320,6 @@ services:
         condition: service_healthy
 
   # <EXAMPLE-SERVICE-NAME>:
-  #   container_name: example_service
   #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
   #   ports:
   #     - "8090:8080"
