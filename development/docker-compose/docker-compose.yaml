@@ -244,7 +244,7 @@ services:
       - backbase-identity
 
   contact-manager:
-    image: repo.backbase.com/backbase-docker-releases/contact-manager:${BB_VERSION}
+    image: contact-manager-ext:2023.10-1.1.0-SNAPSHOT
     ports:
       - "8080:8080"
     environment:
