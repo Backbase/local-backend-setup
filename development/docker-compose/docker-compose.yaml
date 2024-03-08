@@ -243,6 +243,21 @@ services:
       - registry
       - backbase-identity
 
+  contact-manager:
+    image: repo.backbase.com/backbase-docker-releases/contact-manager:${BB_VERSION}
+    ports:
+      - "8080:8080"
+    environment:
+      <<: [*common-variables, *message-broker-variables, *database-variables]
+      spring.datasource.url: jdbc:mysql://mysql:3306/contact-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/contact-manager", "<status>UP</status>" ]
+    links:
+      - registry
+
   product-catalog-task:
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
     profiles:

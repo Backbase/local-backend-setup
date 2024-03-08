@@ -116,6 +116,13 @@ bootstrap:
                 privileges:
                   - privilege: "view"
                   - privilege: "edit"
+              - functionId: "1005"
+                name: "Contacts"
+                privileges:
+                  - privilege: "view"
+                  - privilege: "create"
+                  - privilege: "edit"
+                  - privilege: "delete"
     users:
       - user:
           externalId: "admin"
