@@ -250,8 +250,10 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/contact-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      spring.config.additional-location: file:/tmp/contacts-model-extension.yaml
     volumes:
       - ./scripts:/tmp/h
+      - ../config/contacts/contacts-model-extension.yaml:/tmp/contacts-model-extension.yaml
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/contact-manager", "<status>UP</status>" ]

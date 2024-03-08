@@ -1,0 +1,18 @@
+backbase:
+  api:
+    extensions:
+      classes:
+        com.backbase.dbs.contactmanager.rest.spec.client.v2.model.ContactsPostRequestBody: custom-data
+        com.backbase.dbs.contactmanager.rest.spec.client.v2.model.ContactPutRequestBody: custom-data
+        com.backbase.dbs.contactmanager.rest.spec.client.v2.model.AccountInformation: custom-data
+        com.backbase.dbs.contactmanager.rest.spec.persistence.service.v2.model.PartyDto: custom-data
+        com.backbase.dbs.contactmanager.rest.spec.persistence.service.v2.model.AccountInformation: custom-data
+      property-sets:
+        custom-data:
+          properties:
+            - property-name: custom-text
+              type: string
+            - property-name: custom-number
+              type: number
+
+              
