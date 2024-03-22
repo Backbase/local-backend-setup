@@ -1,0 +1,139 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- The simplest way to build a service with service-sdk-starter-core 
+        is to use it as a parent in your project’s POM file, alternatively if you 
+        don’t want to use service-sdk-starter-core as your project’s parent, you 
+        can declare it as a dependency instead, see pom-as-dependency.xml -->
+    <parent>
+        <groupId>com.backbase.buildingblocks</groupId>
+        <version>15.2.4</version>
+        <artifactId>service-sdk-starter-core</artifactId>
+        <relativePath />
+    </parent>
+
+    <groupId>com.backbase.rch</groupId>
+    <artifactId>kafka-message-producer</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Backbase :: kafka-message-producer</name>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+        <dependencies>
+            <dependency>
+                <groupId>com.backbase.buildingblocks</groupId>
+                <artifactId>events</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>com.backbase.buildingblocks</groupId>
+                <artifactId>communication</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>com.backbase.buildingblocks</groupId>
+                <artifactId>production-support</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.backbase.buildingblocks</groupId>
+                <artifactId>service-sdk-starter-test</artifactId>
+                <scope>test</scope>
+            </dependency>
+            
+           <!-- Add dependencies for your services, e.g. API Specs, integration clients -->
+
+           <!-- Uncomment the following dependency if DBS inter-service communication is needed -->
+           <!--
+             <dependency>
+                <groupId>com.backbase.buildingblocks</groupId>
+                <artifactId>communication</artifactId>
+             </dependency>
+           -->
+        </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>com.backbase.codegen</groupId>
+                <artifactId>jsonschema-events-maven-plugin</artifactId>
+                <version>15.2.4</version>
+                <executions>
+                    <execution>
+                        <id>generate-ingress-events</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>events-generation</goal>
+                        </goals>
+                        <configuration>
+                            <packageVersion>1</packageVersion>
+                            <useJavaTime>true</useJavaTime>
+                            <outputFile>${project.basedir}/target/generated-sources/jsonschema-events</outputFile>
+                            <inputFile>${project.basedir}/src/main/resources/events/ingress</inputFile>
+                            <!-- The packageName should not contain com.backbase as that is already the default value of the basePackageName -->
+                            <packageName>stream.compositions.events.ingress</packageName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-egress-events</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>events-generation</goal>
+                        </goals>
+                        <configuration>
+                            <packageVersion>1</packageVersion>
+                            <useJavaTime>true</useJavaTime>
+                            <outputFile>${project.basedir}/target/generated-sources/jsonschema-events</outputFile>
+                            <inputFile>${project.basedir}/src/main/resources/events/egress</inputFile>
+                            <!-- The packageName should not contain com.backbase as that is already the default value of the basePackageName -->
+                            <packageName>stream.compositions.events.egress</packageName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/annotations</source>
+                                <source>${project.build.directory}/generated-sources/jsonschema-events</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-resource</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/generated-resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
