@@ -1,0 +1,23 @@
+backbase:
+  payments:
+    limits:
+      enabled: false
+    types:
+      INTERNATIONAL:
+        validation:
+          rules:
+#            - has-charge-bearer
+#            - has-target-currency
+        business-function: P2P Transfer
+    rules:
+      has-charge-bearer:
+        type: mandatory-field
+        attribute: transferTransactionInformation.chargeBearer
+        when:
+          - pre-enrich
+      has-target-currency:
+        type: mandatory-field
+        attribute: transferTransactionInformation.targetCurrency
+        when:
+          - pre-enrich
+          - post-enrich

@@ -123,6 +123,15 @@ bootstrap:
                   - privilege: "create"
                   - privilege: "edit"
                   - privilege: "delete"
+              - functionId: "1070"
+                name: "P2P Transfer"
+                privileges:
+                  - privilege: "view"
+                  - privilege: "create"
+                  - privilege: "edit"
+                  - privilege: "approve"
+                  - privilege: "cancel"
+                  - privilege: "delete"
     users:
       - user:
           externalId: "admin"

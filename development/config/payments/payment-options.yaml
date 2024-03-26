@@ -1,0 +1,14 @@
+backbase:
+  payments:
+    international-payment-option-types-settings:
+      types:
+        - payment-type: INTERNATIONAL
+          business-functions:
+            - P2P Transfer
+          business-function-payment-type:
+            US_DOMESTIC_WIRE: US Domestic Wire
+#          options:
+#            - instruction-priority: HIGH
+#              transfer-fee:
+#                amount: 7.00
+#                currency-code: USD
