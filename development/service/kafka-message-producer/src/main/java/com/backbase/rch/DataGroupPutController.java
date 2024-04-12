@@ -1,8 +1,8 @@
 package com.backbase.rch;
 
+import com.backbase.accesscontrol.event.event.spec.v1.PutDataGroupsEvent;
 import com.backbase.buildingblocks.backend.communication.event.EnvelopedEvent;
 import com.backbase.buildingblocks.backend.communication.event.proxy.EventBus;
-import com.backbase.stream.compositions.events.ingress.event.spec.v1.LegalEntityBatchPushEvent;
 import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,22 +15,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @Slf4j
-public class LegalEntityBatchUpsertController {
+public class DataGroupPutController {
 
     private final EventBus eventBus;
 
     @PostMapping(path = "")
     @RequestMapping(
-        method = RequestMethod.POST,
-        value = "/legal-entity/batch/upsert",
-        produces = { "application/json" },
-        consumes = { "application/json" }
+        method = RequestMethod.PUT,
+        value = "/data-group",
+        produces = {"application/json"},
+        consumes = {"application/json"}
     )
-    public void batchUpsert(@Valid @RequestBody LegalEntityBatchPushEvent legalEntityBatchPushEvent) {
+    public void updateDataGroups(@Valid @RequestBody PutDataGroupsEvent putDataGroupsEvent) {
 
-        EnvelopedEvent<LegalEntityBatchPushEvent> eventWrapper = new EnvelopedEvent<>();
-        eventWrapper.setEvent(legalEntityBatchPushEvent);
-        log.info("Emitting a LegalEntityPushEvent {}", legalEntityBatchPushEvent);
+        EnvelopedEvent<PutDataGroupsEvent> eventWrapper = new EnvelopedEvent<>();
+        eventWrapper.setEvent(putDataGroupsEvent);
+        log.info("Emitting a putDataGroupsEvent {}", putDataGroupsEvent);
         eventBus.emitEvent(eventWrapper);
 
     }

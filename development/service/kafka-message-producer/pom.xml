@@ -97,6 +97,21 @@
                             <packageName>stream.compositions.events.egress</packageName>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>generate-dbs-events</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>events-generation</goal>
+                        </goals>
+                        <configuration>
+                            <packageVersion>1</packageVersion>
+                            <useJavaTime>true</useJavaTime>
+                            <outputFile>${project.basedir}/target/generated-sources/jsonschema-events</outputFile>
+                            <inputFile>${project.basedir}/src/main/resources/events/dbs</inputFile>
+                            <!-- The packageName should not contain com.backbase as that is already the default value of the basePackageName -->
+                            <packageName>accesscontrol.event</packageName>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
