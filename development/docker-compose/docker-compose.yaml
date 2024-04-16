@@ -47,7 +47,7 @@ x-healthcheck-defaults: &healthcheck-defaults
   timeout: 5s
   retries: 15
 
-name: backbase
+name: danske
 
 volumes:
   backbase_mysql_data:
@@ -55,7 +55,7 @@ volumes:
 
 networks:
   default:
-    name: backbase_default
+    name: danske_default
 
 services:
   mysql:
