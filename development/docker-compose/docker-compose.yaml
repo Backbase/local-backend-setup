@@ -103,6 +103,7 @@ services:
       <<: *common-variables
       gateway.actuator.security.enabled: false
       gateway.csrf.enabled: false
+      "SPRING_APPLICATION_JSON": '{"spring":{"cloud":{"globalcors":{"corsConfigurations":{"[/**]":{"allowedOriginPatterns":"http://localhost:*","exposedHeaders":"*","allowedHeaders":"X-Requested-With,Origin,Content-Type,Accept,Authorization,x-xsrf-token,X-XSRF-TOKEN,x-total-count","allowedMethods":["GET","POST","OPTIONS","PUT","PATCH","DELETE"]}}}}}}'
     volumes:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
@@ -141,7 +142,7 @@ services:
     environment:
       QUARKUS_HTTP_CORS: "true"
       QUARKUS_HTTP_CORS_EXPOSED_HEADERS: "Location"
-      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080,http://localhost:9090,http://localhost:4200"
+      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080,http://localhost:9090,http://localhost:4200,http://localhost:7070"
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       KC_DB_URL: "jdbc:mysql://mysql:3306/backbase_identity?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
@@ -455,11 +456,13 @@ services:
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-prospect:${ONBOARDING_VERSION}
     environment:
       FLOW_NAME: "retail-onboarding"
-      API_SERVICE_NAME: "retail-onboarding-service"
-      BASE_HREF: /retail-onboarding/
-      PATHNAME: /retail-onboarding/
+      "BASE_HREF": "/retail-onboarding-prospect/"
+      PATHNAME: "/"
       PORT: 7070
-      API_ROOT: http://localhost:8080/api
+      #API_ROOT: http://localhost:8091
+      #API_SERVICE_NAME: ""
+      API_SERVICE_NAME: "retail-onboarding-service"
+      API_ROOT: /api/
     ports:
       - "7070:7070"
     volumes:
