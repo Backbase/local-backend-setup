@@ -256,7 +256,7 @@ services:
       - "8091:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.url: jdbc:mysql://mysql:3306/retail-onboarding-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      spring.datasource.url: jdbc:mysql://mysql:3306/retail-onboarding-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true&characterEncoding=UTF-8&characterSetResults=utf8mb4&connectionCollation=utf8mb4_unicode_ci
       server.port: 8080
       "spring.application.name": "retail-onboarding-service"
       SPRING_PROFILES_ACTIVE: eureka,dbs-audit,dbs-entitlements,identity,cxs-cs
@@ -314,6 +314,7 @@ services:
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/party-profile", "<status>UP</status>" ]
+      disable: true
     links:
       - registry
       - activemq
@@ -517,7 +518,48 @@ services:
     links:
       - edge
 
-#  remote-config:
+  identity-proxy:
+    image: crbackbasesharedprd874.azurecr.io/stable/identity-proxy-service:${ONBOARDING_VERSION}
+    profiles:
+      - retail-onboarding
+    ports:
+      - "8098:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables ]
+      "backbase.identity-proxy-service.flow.customer.default-realm": "customer"
+      "backbase.identity-proxy-service.identity.password": "admin"
+      "backbase.identity-proxy-service.identity.username": "admin"
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/identity-proxy", "<status>UP</status>" ]
+    links:
+      - registry
+      - backbase-identity
+
+  content-service:
+    image: crbackbasesharedprd874.azurecr.io/stable/contentservices:${BB_VERSION}
+    profiles:
+      - retail-onboarding
+    ports:
+      - "8097:8080"
+    environment:
+      <<: [*common-variables, *database-variables, *message-broker-variables]
+      spring.datasource.url: jdbc:mysql://mysql:3306/content-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "contentservices.storage.defaultImplementation": "DB"
+      "contentservices.whitelist.allowedContentTypes": "image/jpeg,image/pjpeg,image/gif,image/png,image/svg+xml,application/pdf,application/json,application/zip,application/rtf,text/plain,text/html,text/csv,application/octet-stream,text/x-handlebars-template"
+      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/content-service", "<status>UP</status>" ]
+    links:
+      - registry
+      - backbase-identity
+
+  #  remote-config:
 #    image: crbackbasesharedprd874.azurecr.io/stable/remote-config:2024.03-LTS
 #    ports:
 #      - "8097:8080"
