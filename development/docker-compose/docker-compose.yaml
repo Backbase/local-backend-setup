@@ -139,6 +139,9 @@ services:
     ports:
       - '8180:8080'
     environment:
+      QUARKUS_HTTP_CORS: "true"
+      QUARKUS_HTTP_CORS_EXPOSED_HEADERS: "Location"
+      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080,http://localhost:9090,http://localhost:4200"
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       KC_DB_URL: "jdbc:mysql://mysql:3306/backbase_identity?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
@@ -151,7 +154,7 @@ services:
       KC_SPI_USER_MANAGER_CLIENT_DEFAULT_URL: "http://user-manager:8080"
       KC_SPI_CONNECTIONS_JPA_LEGACY_INITIALIZE_EMPTY: "true"
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
-      JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
+      JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=INFO \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
       - ./scripts:/tmp/h
@@ -270,6 +273,14 @@ services:
       "backbase.flow.integrations.identity.username": "admin"
       #  Disabled connectors for Retail Onboarding
       "backbase.flow.integrations.global.mode": "mock"
+      backbase.flow.integrations.twilio.one-time-password.mode: "mock"
+      backbase.flow.integrations.payveris.account-funding.mode: "mock"
+      "backbase.flow.integrations.yodlee.account-verification.client.clientId": "none"
+      "backbase.flow.integrations.yodlee.account-verification.client.secret": "none"
+      "backbase.flow.integrations.yodlee.account-verification.client.fastlinkUrl": "none"
+      "backbase.flow.integrations.yodlee.account-verification.client.fastlinkConfigName": "none"
+      "backbase.flow.integrations.yodlee.account-verification.client.serviceUrl": "none"
+      "backbase.flow.integrations.yodlee.account-verification.client.apiVersion": "none"
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -484,12 +495,15 @@ services:
   retail-app:
     image: crreference914.azurecr.io/retail-usa:${RETAIL_APP_VERSION}
     environment:
-      AUTH_REDIRECT_PAGE: "redirect"
-      AUTH_REALM: "customer"
       AUTH_URL: http://localhost:8180/auth/
-      API_ROOT: /api/
-      BASE_HREF: /
       PORT: 9090
+      "API_ROOT": /api/
+      "AUTH_CLIENT_ID": "bb-web-client"
+      "AUTH_LANDING_PAGE": "select-context"
+      "AUTH_REALM": "customer"
+      "AUTH_REDIRECT_PAGE": "redirect"
+      "AUTH_SCOPE": "openid"
+      "BASE_HREF": /
     ports:
       - "9090:9090"
     volumes:
@@ -499,6 +513,28 @@ services:
       disable: true
     links:
       - edge
+
+#  remote-config:
+#    image: crbackbasesharedprd874.azurecr.io/stable/remote-config:2024.03-LTS
+#    ports:
+#      - "8097:8080"
+#    environment:
+#      <<: [*common-variables, *database-variables, *message-broker-variables]
+#      spring.datasource.url: jdbc:mysql://mysql:3306/remote-config?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+#      "backbase.access-control.enabled": "true"
+#      "backbase.audit.enabled": "true"
+#      "backbase.remote-config.features.configuration-drafts": "true"
+#      "spring.autoconfigure.exclude": ""
+#      "spring.cloud.features.enabled": "false"
+#      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
+#    volumes:
+#      - ./scripts:/tmp/h
+#    healthcheck:
+#      <<: *healthcheck-defaults
+#      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/remote-config", "<status>UP</status>" ]
+#    links:
+#      - registry
+#      - backbase-identity
 
   # <EXAMPLE-SERVICE-NAME>:
   #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
