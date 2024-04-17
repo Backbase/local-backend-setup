@@ -505,6 +505,7 @@ services:
       AUTH_CLIENT_ID: bb-web-client
       AUTH_LANDING_PAGE: select-context
       AUTH_REDIRECT_PAGE: redirect
+      RO_SERVICE_NAME: retail-onboarding
     ports:
       - "8080:8080"
     volumes:
