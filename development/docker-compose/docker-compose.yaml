@@ -327,6 +327,7 @@ services:
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_FUNCTIONID: "1150"
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_BUSINESSFUNCTION: "Manage Applications"
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_PRIVILEGES_0: view
+      logging.level.root: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
