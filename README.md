@@ -14,16 +14,24 @@ Set up a Docker local environment on your laptop by running these commands in th
     ```
     cd local-backend-setup/development/docker-compose
     ```
-3. Start the health checks and ensure that all services are running: 
-    ```
-    docker compose --profile=bootstrap up
-    ```
+3. Start the retail onboarding services
+   
+  If first time then run with b
+   ```
+   docker-compose --profile=bootstrap up -d
+   ```
+   otherwise, run without any profile
+   ```
+   docker-compose up -d
+   ```
+4. In case you want to reset your local env and start fresh, run following script
+   ```shell
+   ./development/docker-compose/scripts/reset-env.sh
+   ```
+
    In case the bootstrap fails due to some error, please restart the service 2-3 times using above command, it will run successfully, i will fix that issue later.
 
-4. Start the retail onboarding services
-   ```
-   docker-compose --profile=retail-onboarding up -d
-   ```
+
 
    Once all the required services have started, you can view the health check results in your terminal. To check the status of the services, open the [Registry](http://localhost:8761) in your web browser. Additionally, you can import the [Postman collection](test/postman/HealthCheck_Local-Backend-Environment.postman_collection.json) to perform a more comprehensive health check on your environment using Postman.  
    &nbsp;  

@@ -1518,39 +1518,40 @@ bootstrap:
                     currency: "GBP"
                     creditAccount: "true"
                     debitAccount: "true"
-          - name: "Bob"
-            realmName: "customer"
-            externalId: "bob"
-            legalEntityType: "CUSTOMER"
-            users:
-              - user:
-                  externalId: "bob"
-                  fullName: "Bob Park"
-                  identityLinkStrategy: "CREATE_IN_IDENTITY"
-                  emailAddress:
-                    address: "bob@email.com"
-                  mobileNumber:
-                    number: "0123456789"
-                referenceJobRoleNames:
-                  - "Retail User"
-            productGroups:
-              - name: "bob-arrangements"
-                description: "Product group containing bob arrangements"
-                currentAccounts:
-                  - externalId: "bob-curr-001"
-                    IBAN: "NL02NJNL6718580759"
-                    name: "FermiumBank Account 2"
-                    accountHolderName: "Holder Name Personal Inc"
-                    productTypeExternalId: "current-account"
-                    currency: "EUR"
-                    creditAccount: "true"
-                    debitAccount: "true"
-                loans:
-                  - externalId: "bob-loan-001"
-                    IBAN: "NL20YNAN6609190089"
-                    name: "FermiumBank Account 1"
-                    accountHolderName: "Holder Name Personal Inc"
-                    productTypeExternalId: "loan"
-                    currency: "EUR"
-                    creditAccount: "true"
-                    debitAccount: "true"
+            subsidiaries:
+              - name: "Bob"
+                realmName: "customer"
+                externalId: "bob"
+                legalEntityType: "CUSTOMER"
+                users:
+                  - user:
+                      externalId: "bob"
+                      fullName: "Bob Park"
+                      identityLinkStrategy: "CREATE_IN_IDENTITY"
+                      emailAddress:
+                        address: "bob@email.com"
+                      mobileNumber:
+                        number: "0123456789"
+                    referenceJobRoleNames:
+                      - "Retail User"
+                productGroups:
+                  - name: "bob-arrangements"
+                    description: "Product group containing bob arrangements"
+                    currentAccounts:
+                      - externalId: "bob-curr-001"
+                        IBAN: "NL02NJNL6718580759"
+                        name: "FermiumBank Account 2"
+                        accountHolderName: "Holder Name Personal Inc"
+                        productTypeExternalId: "current-account"
+                        currency: "EUR"
+                        creditAccount: "true"
+                        debitAccount: "true"
+                    loans:
+                      - externalId: "bob-loan-001"
+                        IBAN: "NL20YNAN6609190089"
+                        name: "FermiumBank Account 1"
+                        accountHolderName: "Holder Name Personal Inc"
+                        productTypeExternalId: "loan"
+                        currency: "EUR"
+                        creditAccount: "true"
+                        debitAccount: "true"

@@ -194,6 +194,7 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      logging.level.root: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -231,8 +232,7 @@ services:
 
   user-lifecycle:
     image: repo.backbase.com/backbase-docker-releases/user-lifecycle:${BB_VERSION}
-    profiles:
-      - retail-onboarding
+
     ports:
       - "8071:8080"
     environment:
@@ -250,8 +250,7 @@ services:
       - backbase-identity
 
   retail-onboarding:
-    profiles:
-      - retail-onboarding
+
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-service:2024.03-digital-sales
     ports:
       - "8091:8080"
@@ -285,6 +284,7 @@ services:
       "backbase.flow.integrations.yodlee.account-verification.client.serviceUrl": "none"
       "backbase.flow.integrations.yodlee.account-verification.client.apiVersion": "none"
       "backbase.flow.integrations.product-selection.file-config.image-url-prefix": "{BB_GATEWAY_URL}/retail-onboarding/assets/product-selection/"
+      logging.level.root: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -298,8 +298,6 @@ services:
       - activemq
 
   party-profile:
-    profiles:
-      - retail-onboarding
     image: crbackbasesharedprd874.azurecr.io/stable/party-profile-service:${ONBOARDING_VERSION}
     ports:
       - "8092:8080"
@@ -342,8 +340,7 @@ services:
       - activemq
 
   customer-integration-service:
-    profiles:
-      - retail-onboarding
+
     image: harbor.backbase.eu/development/customer-integration-outbound-mock:1.1.0
     ports:
       - "9367:8080"
@@ -364,8 +361,7 @@ services:
 
   deposit-account-integration-service:
     image: harbor.backbase.eu/development/deposit-account-integration-outbound-mock:latest
-    profiles:
-      - retail-onboarding
+
     ports:
       - "9366:8080"
     environment:
@@ -476,8 +472,7 @@ services:
         condition: service_healthy
 
   retail-onboarding-prospect:
-    profiles:
-      - retail-onboarding
+
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-prospect:${ONBOARDING_VERSION}
     environment:
       FLOW_NAME: "retail-onboarding"
@@ -543,8 +538,7 @@ services:
 
   identity-proxy:
     image: crbackbasesharedprd874.azurecr.io/stable/identity-proxy-service:${ONBOARDING_VERSION}
-    profiles:
-      - retail-onboarding
+
     ports:
       - "8098:8080"
     environment:
@@ -578,8 +572,7 @@ services:
 
   content-service:
     image: crbackbasesharedprd874.azurecr.io/stable/contentservices:${BB_VERSION}
-    profiles:
-      - retail-onboarding
+
     ports:
       - "8097:8080"
     environment:
