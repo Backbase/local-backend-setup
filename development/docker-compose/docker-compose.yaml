@@ -284,6 +284,7 @@ services:
       "backbase.flow.integrations.yodlee.account-verification.client.fastlinkConfigName": "none"
       "backbase.flow.integrations.yodlee.account-verification.client.serviceUrl": "none"
       "backbase.flow.integrations.yodlee.account-verification.client.apiVersion": "none"
+      "backbase.flow.integrations.product-selection.file-config.image-url-prefix": "{BB_GATEWAY_URL}/retail-onboarding/assets/product-selection/"
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -479,7 +480,7 @@ services:
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-prospect:${ONBOARDING_VERSION}
     environment:
       FLOW_NAME: "retail-onboarding"
-      "BASE_HREF": "/retail-onboarding-prospect/"
+      "BASE_HREF": "/retail-onboarding/"
       PATHNAME: "/"
       PORT: 7070
       API_SERVICE_NAME: "retail-onboarding"
