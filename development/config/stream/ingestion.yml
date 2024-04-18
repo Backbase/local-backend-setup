@@ -1457,13 +1457,16 @@ bootstrap:
             productGroupType: CUSTOM
             customDataGroupItems:
               - internalId: case-definition:onboarding
-              - internalId: process-definition:us-onboarding
+              - internalId: process-definition:application
+              - internalId: process-definition:init_co_applicant
+              - internalId: process-definition:terminate
+              - internalId: process-definition:new-to-bank-app
               - internalId: process-definition:aml
+              - internalId: process-definition:pdf-generation
               - internalId: process-definition:idv
-              - internalId: process-definition:archive-case
+              - internalId: process-definition:aan-process
               - internalId: process-definition:citizenship
-              - internalId: process-definition:data-gat-complete
-              - internalId: process-definition:co-applicant
+              - internalId: process-definition:econsent
               - internalId: decision-definition:age-verification
               - internalId: decision-definition:aml-check
               - internalId: decision-definition:idv-check-full
