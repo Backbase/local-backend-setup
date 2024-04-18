@@ -238,7 +238,7 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       backbase_provision_config_realms_0_bank-external-id: "danske-bank-denmark"
-      BACKBASE_PROVISION_CONFIG_REALMS_0_NAME: "backbase"
+      BACKBASE_PROVISION_CONFIG_REALMS_0_NAME: "customer"
       BACKBASE_PROVISION_CONFIG_REALMS_0_ASPECTS_CUSTOMER_0: "Retail User"
       logging.level.com.backbase: DEBUG
       logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
@@ -252,7 +252,6 @@ services:
       - backbase-identity
 
   retail-onboarding:
-
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-service:2024.03-digital-sales
     ports:
       - "8091:8080"
@@ -286,6 +285,7 @@ services:
       "backbase.flow.integrations.yodlee.account-verification.client.serviceUrl": "none"
       "backbase.flow.integrations.yodlee.account-verification.client.apiVersion": "none"
       "backbase.flow.integrations.product-selection.file-config.image-url-prefix": "{BB_GATEWAY_URL}/retail-onboarding/assets/product-selection/"
+      "backbase.flow.integrations.customer-and-account-creation.mode": "direct"
       logging.level.com.backbase: DEBUG
       logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
@@ -311,6 +311,7 @@ services:
       spring.application.name: party-profile
       server.port: 8080
       backbase.communication.services.integration.deposit-account.service-id: deposit-account-integration-service
+      backbase.communication.services.integration.customer.service-id: customer-integration-service
       backbase.party-profile.customer.document-type: SOCIAL
       backbase.party-profile.deactivate-created-credentials: false
       backbase.party-profile.flow.customer.default-realm: customer
@@ -344,7 +345,6 @@ services:
       - activemq
 
   customer-integration-service:
-
     image: harbor.backbase.eu/development/customer-integration-outbound-mock:1.1.0
     ports:
       - "9367:8080"
@@ -354,6 +354,8 @@ services:
       spring.application.name: 'customer-integration-service'
       backbase.security.public.paths: /service-api/**,/integration-api/**
       backbase.security.service.enabled: false
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -374,6 +376,8 @@ services:
       spring.application.name: 'deposit-account-integration-service'
       backbase.security.public.paths: /service-api/**,/integration-api/**
       backbase.security.service.enabled: false
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -519,7 +523,6 @@ services:
         condition: service_healthy
 
   retail-onboarding-prospect:
-
     image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-prospect:${ONBOARDING_VERSION}
     environment:
       FLOW_NAME: "retail-onboarding"
