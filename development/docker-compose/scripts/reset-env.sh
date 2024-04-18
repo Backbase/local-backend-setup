@@ -9,4 +9,4 @@ colima stop
 colima start --cpu 4 --memory 16 --disk 100
 
 # start the service with bootstrap profile
-docker-compose --profile=bootstrap up -d --remove-orphans
+docker-compose --profile=backbase-bootstrap up -d --remove-orphans

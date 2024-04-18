@@ -240,6 +240,8 @@ services:
       backbase_provision_config_realms_0_bank-external-id: "danske-bank-denmark"
       BACKBASE_PROVISION_CONFIG_REALMS_0_NAME: "backbase"
       BACKBASE_PROVISION_CONFIG_REALMS_0_ASPECTS_CUSTOMER_0: "Retail User"
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -284,7 +286,8 @@ services:
       "backbase.flow.integrations.yodlee.account-verification.client.serviceUrl": "none"
       "backbase.flow.integrations.yodlee.account-verification.client.apiVersion": "none"
       "backbase.flow.integrations.product-selection.file-config.image-url-prefix": "{BB_GATEWAY_URL}/retail-onboarding/assets/product-selection/"
-      logging.level.root: DEBUG
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -325,7 +328,8 @@ services:
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_FUNCTIONID: "1150"
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_BUSINESSFUNCTION: "Manage Applications"
       BACKBASE_PARTYPROFILE_PERMISSIONS_1_PRIVILEGES_0: view
-      logging.level.root: DEBUG
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -402,7 +406,7 @@ services:
   product-catalog-task:
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
     profiles:
-      - bootstrap
+      - stream-bootstrap
     environment:
       <<: *common-variables
       spring.config.additional-location: file:/tmp/ingestion.yml
@@ -417,7 +421,7 @@ services:
   legal-entity-bootstrap-task:
     image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
     profiles:
-      - bootstrap
+      - stream-bootstrap
     environment:
       <<: *common-variables
       spring.config.additional-location: file:/tmp/ingestion.yml
@@ -438,6 +442,49 @@ services:
         condition: service_healthy
       product-catalog-task:
         condition: service_completed_successfully
+
+  backbase-bootstrap-task:
+    image: crreference914.azurecr.io/backbase-bootstrap-task:${BACKBASE_BOOTSTRAP_TASK_VERSION}
+    profiles:
+      - backbase-bootstrap
+    environment:
+      <<: [ *common-variables, *message-broker-variables ]
+      "backbase.stream.limits.worker.enabled": "false"
+      #"environment.installation": "gc"
+      #"environment.runtime": "local"
+      "LOGGING_LEVEL_COM_BACKBASE": "DEBUG"
+      # Enable/Disable product catalog ingestion
+      "backbase.stream.bootstrap.product-catalog.bootstrapResourcesEnabled": "true"
+      "backbase.stream.bootstrap.product-catalog.location": "file:/tmp/product-catalog.yml"
+      #Enable/Disable LE ingestion
+      "backbase.stream.bootstrap.legal-entity.bootstrapResourcesEnabled": "true"
+      "backbase.stream.bootstrap.legal-entity.location": "file:/tmp/base-legal-entity.yml"
+      # Admin Password override Enable/Disable
+      "admin.bootstrapManualStepsEnabled": "true"
+      "admin.baseUrl": "http://backbase-identity:8080/auth"
+      "admin.username": "admin"
+      "admin.password": "admin"
+      "admin.defaultUserPassword": "Pass1234"
+    volumes:
+      - ../config/stream/product-catalog.yml:/tmp/product-catalog.yml
+      - ../config/stream/base-legal-entity.yml:/tmp/base-legal-entity.yml
+    depends_on:
+      token-converter:
+        condition: service_healthy
+      access-control:
+        condition: service_healthy
+      arrangement-manager:
+        condition: service_healthy
+      user-manager:
+        condition: service_healthy
+      identity-integration-service:
+        condition: service_healthy
+      backbase-identity:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+      - backbase-identity
 
   wiremock:
     image: wiremock/wiremock:2.32.0

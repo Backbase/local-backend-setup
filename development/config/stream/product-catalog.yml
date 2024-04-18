@@ -1,0 +1,25 @@
+{
+    "productTypes": [
+        {
+            "productKindName": "currentAccount",
+            "productTypeName": "current-account",
+            "typeName": "Current Accounts",
+            "externalProductKindId": "kind1",
+            "externalProductId": "current-account"
+        },
+        {
+            "productKindName": "savingsAccount",
+            "productTypeName": "savings-account",
+            "typeName": "Savings Accounts",
+            "externalProductKindId": "kind2",
+            "externalProductId": "savings-account"
+        },
+        {
+            "productKindName": "loan",
+            "productTypeName": "loan",
+            "typeName": "Loans",
+            "externalProductKindId": "kind5",
+            "externalProductId": "loan"
+        }
+    ]
+}
