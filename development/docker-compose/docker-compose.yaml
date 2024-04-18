@@ -448,14 +448,14 @@ services:
         condition: service_completed_successfully
 
   backbase-bootstrap-task:
-    image: crreference914.azurecr.io/backbase-bootstrap-task:${BACKBASE_BOOTSTRAP_TASK_VERSION}
+    image: repo.backbase.com/backbase-bootstrap-task:0.29.0-SNAPSHOT-7
     profiles:
       - backbase-bootstrap
     environment:
       <<: [ *common-variables, *message-broker-variables ]
       "backbase.stream.limits.worker.enabled": "false"
-      #"environment.installation": "gc"
-      #"environment.runtime": "local"
+      environment.installation: ""
+      environment.runtime: ""
       "LOGGING_LEVEL_COM_BACKBASE": "DEBUG"
       # Enable/Disable product catalog ingestion
       "backbase.stream.bootstrap.product-catalog.bootstrapResourcesEnabled": "true"
