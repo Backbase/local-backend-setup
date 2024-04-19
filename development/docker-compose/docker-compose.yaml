@@ -82,7 +82,6 @@ services:
       retries: 5
 
   registry:
-    container_name: registry
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
       - "8761:8080"
