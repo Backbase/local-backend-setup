@@ -128,7 +128,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
     links:
       - registry
       - backbase-identity
@@ -163,7 +163,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -179,7 +179,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -198,7 +198,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -221,7 +221,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -244,7 +244,7 @@ services:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
     links:
       - registry
       - backbase-identity
@@ -332,7 +332,7 @@ services:
   #     - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
   #   healthcheck:
   #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
+  #     test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
   #   links:
   #     - registry
 
