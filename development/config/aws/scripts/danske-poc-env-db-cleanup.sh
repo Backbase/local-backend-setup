@@ -37,6 +37,7 @@ pod_criteria=("access-control" "backbase-identity-backbaseidentity" "retail-onbo
 for criteria in "${pod_criteria[@]}"; do
     # Get the first pod matching the criteria and delete it
     kubectl get pods | grep "$criteria" | awk 'NR==1 {print $1}' | xargs -I {} kubectl delete pod {} &
+    echo "Deleted pod $criteria"
 done
 
 # Wait for pod deletions to finish
