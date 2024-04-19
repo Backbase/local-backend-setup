@@ -1,0 +1,1568 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: le-configmap
+  namespace: default
+data:
+  bootstrap-task.yml: |-
+    bootstrap:
+      # Used by product-catalog-task
+      productCatalog:
+        productTypes:
+          - productKindName: "currentAccount"
+            productTypeName: "current-account"
+            typeName: "Current Accounts"
+            externalProductKindId: "kind1"
+            externalProductId: "current-account"
+          - productKindName: "savingsAccount"
+            productTypeName: "savings-account"
+            typeName: "Savings Accounts"
+            externalProductKindId: "kind2"
+            externalProductId: "savings-account"
+          - productKindName: "loan"
+            productTypeName: "loan"
+            typeName: "Loans"
+            externalProductKindId: "kind5"
+            externalProductId: "loan"
+      # Used by legal-entity-bootstrap-task
+      legalEntity:
+        name: "Danske Bank"
+        realmName: "employee"
+        externalId: "danske-bank"
+        legalEntityType: "BANK"
+        users:
+          - user:
+              externalId: "admin"
+              fullName: "Backbase Root Admin"
+              identityLinkStrategy: "CREATE_IN_IDENTITY"
+              emailAddress:
+                address: "bbadmin@email.com"
+              mobileNumber:
+                number: "1234567890"
+            referenceJobRoleNames:
+              - "Entitlements - Manager"
+              - "Administrator"
+        referenceJobRoles:
+          - name: "Entitlements - Manager"
+            description: "Full Entitlements administration."
+            functionGroups:
+              - name: "Manage Entitlements"
+                functions:
+                  - functionId: "1019"
+                    name: "Manage Data Groups"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                  - functionId: "1020"
+                    name: "Manage Function Groups"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                  - functionId: "1010"
+                    name: "Manage Users"
+                    privileges:
+                      - privilege: "view"
+                  - functionId: "1009"
+                    name: "Assign Permissions"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                  - functionId: "1028"
+                    name: "Manage Service Agreements"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                  - functionId: "1119"
+                    name: "Manage Self-approve Permissions"
+                    privileges:
+                      - privilege: "view"
+                  - functionId: "1007"
+                    name: "Assign Users"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                  - functionId: "1035"
+                    name: "Manage User Profiles"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "edit"
+                  - functionId: "1011"
+                    name: "Manage Legal Entities"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                  - functionId: "1034"
+                    name: "Manage Identities"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                  - functionId: "1049"
+                    name: "Lock User"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                  - functionId: "1050"
+                    name: "Unlock User"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                  - functionId: "1084"
+                    name: "Revoke access"
+                    privileges:
+                      - privilege: "create"
+          - name: "Retail User"
+            description: "Retail User Permissions"
+            functionGroups:
+              - name: "Products and Payments"
+                functions:
+                  - functionId: "1006"
+                    name: "Product Summary"
+                    functionCode: "product.summary"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "edit"
+                  - functionId: "1035"
+                    name: "Manage User Profiles"
+                    functionCode: "manage.user.profiles"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "edit"
+                  - functionId: "1005"
+                    name: "Contacts"
+                    functionCode: "contacts"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                  - functionId: "1053"
+                    name: "A2A Transfer"
+                    functionCode: "a2a.transfer"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                      - privilege: "cancel"
+                  - functionId: "1002"
+                    name: "SEPA CT"
+                    functionCode: "payments.sepa"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+                      - privilege: "cancel"
+                  - functionId: "1071"
+                    name: "Payment Templates"
+                    functionCode: "payment.templates"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "create"
+                      - privilege: "edit"
+                      - privilege: "delete"
+          - name: "Administrator"
+            description: "Administrator Permissions"
+            functionGroups:
+              - name: "Administrator Function Group"
+                functions:
+                  - functionId: '1053'
+                    name: A2A Transfer
+                    functionCode: a2a.transfer
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1027'
+                    name: Access Actions History
+                    functionCode: access.actions.history
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1058'
+                    name: Access Case Changelog
+                    functionCode: flow.case.changelog
+                    privileges:
+                      - privilege: view
+                  - functionId: '1059'
+                    name: Access Case Statistics
+                    functionCode: flow.case.statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1077'
+                    name: Access Collections
+                    functionCode: flow.collection
+                    privileges:
+                      - privilege: view
+                  - functionId: '1061'
+                    name: Access Journey Definitions
+                    functionCode: flow.journey.definitions
+                    privileges:
+                      - privilege: create
+                      - privilege: view
+                  - functionId: '1060'
+                    name: Access Journey Statistics
+                    functionCode: flow.journey.statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1072'
+                    name: Access Task Statistics
+                    functionCode: flow.task.statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1041'
+                    name: ACH Credit Transfer
+                    functionCode: ach.credit.transfer
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1046'
+                    name: ACH Debit
+                    functionCode: ach.debit
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1134'
+                    name: ACH Positive Pay - Exceptions
+                    functionCode: ach.positive.pay.exceptions
+                    privileges:
+                      # - privilege: approve
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1133'
+                    name: ACH Positive Pay - Rules
+                    functionCode: ach.positive.pay.rules
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1076'
+                    name: Act on behalf of
+                    functionCode: act.on.behalf.of
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1155'
+                    name: Appointments Administration
+                    functionCode: appointments.administration
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1055'
+                    name: Archive Case
+                    functionCode: flow.case.archive
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1032'
+                    name: Assign Approval Policies
+                    functionCode: assign.approval.policies
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1009'
+                    name: Assign Permissions
+                    functionCode: assign.permissions
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1062'
+                    name: Assign Task
+                    functionCode: flow.task.assign
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1007'
+                    name: Assign Users
+                    functionCode: assign.users
+                    privileges:
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1104'
+                    name: Audiences
+                    functionCode: audiences
+                    privileges:
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1013'
+                    name: Audit
+                    functionCode: audit
+                    privileges:
+                      - privilege: create
+                      - privilege: view
+                  - functionId: '1092'
+                    name: Audit Emulation
+                    functionCode: audit.emulation
+                    privileges:
+                      - privilege: view
+                  - functionId: '1067'
+                    name: Batch - ACH Credit
+                    functionCode: batch.ach.credit
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1069'
+                    name: Batch - ACH Debit
+                    functionCode: batch.ach.debit
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1124'
+                    name: Batch - ACH Reversal
+                    functionCode: batch.ach.reversal
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1079'
+                    name: Batch - Intracompany Payments
+                    functionCode: batch.intracompany.payments
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1098'
+                    name: Batch - List Confidential
+                    functionCode: batch.list.confidential
+                    privileges:
+                      - privilege: view
+                  - functionId: '1099'
+                    name: Batch - Manage Confidential
+                    functionCode: batch.manage.confidential
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1037'
+                    name: Batch - SEPA CT
+                    functionCode: batch.sepa
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1158'
+                    name: Batch - SEPA DD
+                    functionCode: batch.sepa.dd
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: view
+                  - functionId: '1095'
+                    name: Batch Templates
+                    functionCode: batch.templates
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1115'
+                    name: Batch Upload Mappings
+                    functionCode: batch.upload.mappings
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1120'
+                    name: Billpay SSO
+                    functionCode: billpay.sso
+                    privileges:
+                      - privilege: create
+                  - functionId: '1142'
+                    name: Cards - Activate
+                    functionCode: cards.activate
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1149'
+                    name: Cards - Block & Unblock
+                    functionCode: cards.block.unblock
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1143'
+                    name: Cards - Lock & Unlock
+                    functionCode: cards.lock.unlock
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1144'
+                    name: Cards - Manage Limits
+                    functionCode: cards.manage.limits
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1145'
+                    name: Cards - Order Replacement
+                    functionCode: cards.order.replacement
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1138'
+                    name: Cards - View
+                    functionCode: cards.view
+                    privileges:
+                      - privilege: view
+                  - functionId: '1068'
+                    name: Cash Flow Forecasting
+                    functionCode: cash.flow.forecasting
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1141'
+                    name: Change Own Username
+                    functionCode: change.own.username
+                    privileges:
+                      - privilege: edit
+                  - functionId: '1140'
+                    name: Change Username
+                    functionCode: change.username
+                    privileges:
+                      - privilege: edit
+                  - functionId: '1135'
+                    name: Check Positive Pay - Checks
+                    functionCode: check.positive.pay.checks
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1136'
+                    name: Check Positive Pay - Exceptions
+                    functionCode: check.positive.pay.exceptions
+                    privileges:
+                      # - privilege: approve
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1005'
+                    name: Contacts
+                    functionCode: contacts
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1125'
+                    name: Conversation History
+                    functionCode: conversation.history
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1126'
+                    name: Conversation History Configuration
+                    functionCode: conversation.history.configuration
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1132'
+                    name: Conversation History Export
+                    functionCode: conversation.history.export
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1131'
+                    name: Conversation History Insights
+                    functionCode: conversation.history.insights
+                    privileges:
+                      - privilege: view
+                  - functionId: '1137'
+                    name: Credit Score SSO
+                    functionCode: credit.score.sso
+                    privileges:
+                      - privilege: create
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1105'
+                    name: Custom Engagements
+                    functionCode: custom.engagements
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1109'
+                    name: Customer Support - Live Chat
+                    functionCode: cs.live.chat
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1111'
+                    name: Customer Support - Video Call
+                    functionCode: cs.video.call
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1110'
+                    name: Customer Support - Voice Call
+                    functionCode: cs.voice.call
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1139'
+                    name: Direct Deposit Switch
+                    functionCode: direct.deposit.switch
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1075'
+                    name: Emulate
+                    functionCode: emulate
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1113'
+                    name: Financial Insights
+                    functionCode: financial.insights
+                    privileges:
+                      - privilege: view
+                  - functionId: '1107'
+                    name: General Notification Preferences
+                    functionCode: general.notification.preferences
+                    privileges:
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1106'
+                    name: General Notifications
+                    functionCode: general.notifications
+                    privileges:
+                      # - privilege: approve
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1093'
+                    name: Identity Impersonation
+                    functionCode: identity.impersonation
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1102'
+                    name: Loans Advance
+                    functionCode: loans.advance
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1101'
+                    name: Loans Payment
+                    functionCode: loans.payment
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1049'
+                    name: Lock User
+                    functionCode: lock.user
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1097'
+                    name: Manage Account Reconciliation
+                    functionCode: manage.account.reconciliation
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1096'
+                    name: Manage ACH Positive Pay
+                    functionCode: manage.ach.positive.pay
+                    privileges:
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1029'
+                    name: Manage Action Recipes
+                    functionCode: manage.actions.recipes
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1094'
+                    name: Manage Aggregate Portfolio
+                    functionCode: manage.aggregate.portfolio
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1150'
+                    name: Manage Applications
+                    functionCode: manage.applications
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1154'
+                    name: Manage Appointments
+                    functionCode: manage.appointments
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1033'
+                    name: Manage Approval Policy and Level
+                    functionCode: manage.approval.policy.level
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1128'
+                    name: Manage Approval Policy Global Restrictions
+                    functionCode: manage.approval.policy.global.restrictions
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1127'
+                    name: Manage Approval Policy Restrictions
+                    functionCode: manage.approval.policy.restrictions
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1082'
+                    name: Manage Arrangement Alias
+                    functionCode: manage.arrangement.alias
+                    privileges:
+                      - privilege: edit
+                  - functionId: '1078'
+                    name: Manage Authorized Users
+                    functionCode: manage.authorized.users
+                    privileges:
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1047'
+                    name: Manage Budgets
+                    functionCode: manage.budgets
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1130'
+                    name: Manage Business Functions
+                    functionCode: manage.business.functions
+                    privileges:
+                      - privilege: view
+                  - functionId: '1089'
+                    name: Manage Cards
+                    functionCode: manage.cards
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1054'
+                    name: Manage Case
+                    functionCode: flow.case
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1057'
+                    name: Manage Case Comments
+                    functionCode: flow.case.comment
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1056'
+                    name: Manage Case Documents
+                    functionCode: flow.case.document
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: view
+                  - functionId: '1122'
+                    name: Manage Chat Queue Assignments
+                    functionCode: manage.chat.queue.assignments
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1121'
+                    name: Manage Chat Queues
+                    functionCode: manage.chat.queues
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1117'
+                    name: Manage Configurations
+                    functionCode: manage.configurations
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: view
+                  - functionId: '1100'
+                    name: Manage Content
+                    functionCode: manage.content
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1151'
+                    name: Manage Customer
+                    functionCode: manage.customer
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1152'
+                    name: Manage Customer Profile
+                    functionCode: manage.customer.profile
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1019'
+                    name: Manage Data Groups
+                    functionCode: manage.data.groups
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1051'
+                    name: Manage Devices
+                    functionCode: manage.devices
+                    privileges:
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1080'
+                    name: Manage Employee Comments
+                    functionCode: manage.employee.comments
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1086'
+                    name: Manage Engagement Events
+                    functionCode: manage.engagement.events
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1118'
+                    name: Manage External Accounts
+                    functionCode: manage.external.accounts
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: view
+                  - functionId: '1020'
+                    name: Manage Function Groups
+                    functionCode: manage.function.groups
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1040'
+                    name: Manage Global Limits
+                    functionCode: manage.global.limits
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1034'
+                    name: Manage Identities
+                    functionCode: manage.identities
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1011'
+                    name: Manage Legal Entities
+                    functionCode: manage.legalentities
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1012'
+                    name: Manage Limits
+                    functionCode: manage.limits
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1038'
+                    name: Manage Messages
+                    functionCode: manage.messages
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1030'
+                    name: Manage Notifications
+                    functionCode: manage.notifications
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1088'
+                    name: Manage Order
+                    functionCode: manage.order
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1066'
+                    name: Manage Other User's Devices
+                    functionCode: manage.other.users.devices
+                    privileges:
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1108'
+                    name: Manage Own Profile
+                    functionCode: manage.own.profile
+                    privileges:
+                      # - privilege: approve
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1083'
+                    name: Manage Pockets
+                    functionCode: manage.pockets
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1087'
+                    name: Manage Portfolio
+                    functionCode: manage.portfolio
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1081'
+                    name: Manage Positive Pay
+                    functionCode: manage.positive.pay
+                    privileges:
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1116'
+                    name: Manage Projects, Apps, Releases
+                    functionCode: manage.projects.apps.releases
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1157'
+                    name: Manage Rollouts
+                    functionCode: manage.rollouts
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1048'
+                    name: Manage Saving Goals
+                    functionCode: manage.saving.goals
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1119'
+                    name: Manage Self-approve Permissions
+                    functionCode: manage.self.approve.permissions
+                    privileges:
+                      # - privilege: approve
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1028'
+                    name: Manage Service Agreements
+                    functionCode: manage.service.agreements
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1014'
+                    name: Manage Shadow Limits
+                    functionCode: manage.shadow.limits
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1016'
+                    name: Manage Statements
+                    functionCode: manage.statements
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1064'
+                    name: Manage Task
+                    functionCode: flow.task
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1063'
+                    name: Manage Task Dates
+                    functionCode: flow.task.dates
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1156'
+                    name: Manage Team Appointments
+                    functionCode: manage.team.appointments
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1031'
+                    name: Manage Topics
+                    functionCode: manage.topics
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1035'
+                    name: Manage User Profiles
+                    functionCode: manage.user.profiles
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1010'
+                    name: Manage Users
+                    functionCode: manage.users
+                    privileges:
+                      - privilege: view
+                  - functionId: '1129'
+                    name: Messages
+                    functionCode: messages
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1070'
+                    name: P2P Transfer
+                    functionCode: p2p.transfer
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1071'
+                    name: Payment Templates
+                    functionCode: payment.templates
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1090'
+                    name: Places
+                    functionCode: places
+                    privileges:
+                      - privilege: view
+                  - functionId: '1006'
+                    name: Product Summary
+                    functionCode: product.summary
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1085'
+                    name: Product Summary Limited View
+                    functionCode: product.summary.limited.view
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1114'
+                    name: Quick User Setup
+                    functionCode: quick.user.setup
+                    privileges:
+                      # - privilege: approve
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1091'
+                    name: Remote Deposit Capture
+                    functionCode: remote.deposit.capture
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1084'
+                    name: Revoke access
+                    functionCode: revoke.access
+                    privileges:
+                      - privilege: create
+                  - functionId: '1112'
+                    name: RTC Support Request
+                    functionCode: rts.support.request
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1002'
+                    name: SEPA CT
+                    functionCode: payments.sepa
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1052'
+                    name: SEPA CT - closed
+                    functionCode: sepa.credit.transfer.closed
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1043'
+                    name: SEPA CT - Intracompany
+                    functionCode: sepa.credit.transfer.intc
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1065'
+                    name: Stop Checks
+                    functionCode: stop.checks
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1039'
+                    name: Supervise Messages
+                    functionCode: supervise.messages
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1036'
+                    name: Support Access for Payments
+                    functionCode: support.access.payments
+                    privileges:
+                      - privilege: create
+                      - privilege: view
+                  - functionId: '1003'
+                    name: Transactions
+                    functionCode: transactions
+                    privileges:
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1123'
+                    name: Transfer Chat
+                    functionCode: transfer.chat
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1050'
+                    name: Unlock User
+                    functionCode: unlock.user
+                    privileges:
+                      # - privilege: approve
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1023'
+                    name: US Billpay Accounts
+                    functionCode: us.billpay.accounts
+                    privileges:
+                      - privilege: view
+                  - functionId: '1026'
+                    name: US Billpay Enrolment
+                    functionCode: us.billpay.enrolment
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1022'
+                    name: US Billpay Payees
+                    functionCode: us.billpay.payees
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1024'
+                    name: US Billpay Payees-Search
+                    functionCode: us.billpay.payees.search
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1025'
+                    name: US Billpay Payees-Summary
+                    functionCode: us.billpay.payees.summary
+                    privileges:
+                      - privilege: view
+                  - functionId: '1021'
+                    name: US Billpay Payments
+                    functionCode: us.billpay.payments
+                    privileges:
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1017'
+                    name: US Domestic Wire
+                    functionCode: us.domestic.wire
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1044'
+                    name: US Domestic Wire - Intracompany
+                    functionCode: us.domestic.wire.intc
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1018'
+                    name: US Foreign Wire
+                    functionCode: us.foreign.wire
+                    privileges:
+                      # - privilege: approve
+                      - privilege: cancel
+                      - privilege: create
+                      - privilege: delete
+                      - privilege: edit
+                      - privilege: view
+                  - functionId: '1153'
+                    name: Validate Beneficiary
+                    functionCode: validate.beneficiary
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1147'
+                    name: Video Call Recording
+                    functionCode: video.call.recording
+                    privileges:
+                      - privilege: view
+                  - functionId: '1148'
+                    name: View All Chats History
+                    functionCode: view.all.chats.history
+                    privileges:
+                      - privilege: view
+                  - functionId: '1146'
+                    name: Voice Call Recording
+                    functionCode: voice.call.recording
+                    privileges:
+                      - privilege: view
+          - name: Case Manager - All permissions
+            description: Case Manager - All permissions
+            functionGroups:
+              - name: Case Manager - All permissions
+                functions:
+                  - functionId: '1035'
+                    name: Manage User Profiles
+                    privileges:
+                      - privilege: view
+                  - functionId: '1054'
+                    name: Manage Case
+                    privileges:
+                      - privilege: view
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: delete
+                  - functionId: '1055'
+                    name: Archive Case
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1056'
+                    name: Manage Case Documents
+                    privileges:
+                      - privilege: view
+                      - privilege: create
+                      - privilege: delete
+                  - functionId: '1057'
+                    name: Manage Case Comments
+                    privileges:
+                      - privilege: view
+                      - privilege: create
+                      - privilege: edit
+                      - privilege: delete
+                  - functionId: '1058'
+                    name: Access Case Changelog
+                    privileges:
+                      - privilege: view
+                  - functionId: '1059'
+                    name: Access Case Statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1060'
+                    name: Access Journey Statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1061'
+                    name: Access Journey Definitions
+                    privileges:
+                      - privilege: view
+                      - privilege: create
+                  - functionId: '1062'
+                    name: Assign Task
+                    privileges:
+                      - privilege: execute
+                  - functionId: '1063'
+                    name: Manage Task Dates
+                    privileges:
+                      - privilege: view
+                      - privilege: edit
+                      - privilege: create
+                      - privilege: delete
+                  - functionId: '1064'
+                    name: Manage Task
+                    privileges:
+                      - privilege: execute
+                      - privilege: view
+                  - functionId: '1072'
+                    name: Access Task Statistics
+                    privileges:
+                      - privilege: view
+                  - functionId: '1077'
+                    name: Access Collections
+                    privileges:
+                      - privilege: view
+        subsidiaries:
+          - name: "Danske Bank - Denmark"
+            realmName: "employee"
+            externalId: "danske-bank-denmark"
+            legalEntityType: "BANK"
+            administrators:
+              - externalId: fib1sa01
+                fullName: Lisa Morelli
+                identityLinkStrategy: CREATE_IN_IDENTITY
+                emailAddress:
+                  address: fib1sa01@email.com
+                mobileNumber:
+                  number: '1234567890'
+              - externalId: fib1sa02
+                fullName: Bert Right
+                identityLinkStrategy: CREATE_IN_IDENTITY
+                emailAddress:
+                  address: fib1sa02@email.com
+                mobileNumber:
+                  number: '1234567890'
+            users:
+              - user:
+                  externalId: fib1sa01
+                  fullName: Lisa Morelli
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1sa01@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: fib1sa02
+                  fullName: Bert Right
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1sa02@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: jbranch
+                  fullName: Jane Branch
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: jbranch@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: pwilcox
+                  fullName: Paul Wilcox
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: pwilcox@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: pduke
+                  fullName: Philip Duke
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: pduke@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: gmorrison
+                  fullName: Gayle Morrison
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: gmorrison@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: fib1sarah
+                  fullName: Sarah White
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1sarah@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: fib1chris
+                  fullName: Chris Taylor
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1chris@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: fib1taylor
+                  fullName: Taylor Anderson
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1taylork@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+              - user:
+                  externalId: fib1jordan
+                  fullName: Jordan Mitchell
+                  identityLinkStrategy: CREATE_IN_IDENTITY
+                  emailAddress:
+                    address: fib1jordan@email.com
+                  mobileNumber:
+                    number: '1234567890'
+                referenceJobRoleNames:
+                  - Case Manager - All permissions
+            productGroups:
+              - name: Retail Onboarding - Definitions
+                description: Retail Onboarding - Definitions
+                productGroupType: CUSTOM
+                customDataGroupItems:
+                  - internalId: case-definition:onboarding
+                  - internalId: process-definition:application
+                  - internalId: process-definition:init_co_applicant
+                  - internalId: process-definition:terminate
+                  - internalId: process-definition:new-to-bank-app
+                  - internalId: process-definition:aml
+                  - internalId: process-definition:pdf-generation
+                  - internalId: process-definition:idv
+                  - internalId: process-definition:aan-process
+                  - internalId: process-definition:citizenship
+                  - internalId: process-definition:econsent
+                  - internalId: decision-definition:age-verification
+                  - internalId: decision-definition:aml-check
+                  - internalId: decision-definition:idv-check-full
+                  - internalId: decision-definition:idv-check-id
+                  - internalId: decision-definition:kyx-check-full
+                  - internalId: decision-definition:kyx-check-id
+            subsidiaries:
+              - name: "Sara"
+                realmName: "customer"
+                externalId: "sara"
+                legalEntityType: "CUSTOMER"
+                users:
+                  - user:
+                      externalId: "sara"
+                      fullName: "Sara Jones"
+                      identityLinkStrategy: "CREATE_IN_IDENTITY"
+                      emailAddress:
+                        address: "sara@email.com"
+                      mobileNumber:
+                        number: "1234567890"
+                    referenceJobRoleNames:
+                      - "Retail User"
+                productGroups:
+                  - name: "sara-arrangements"
+                    description: "Product group containing user arrangements"
+                    currentAccounts:
+                      - externalId: "sara-curr-001"
+                        bankBranchCode: "597926"
+                        BBAN: "142576387"
+                        name: "SandboxASPSP1 Account 1"
+                        accountHolderName: "Holder Name 1 Personal Inc"
+                        productTypeExternalId: "current-account"
+                        currency: "GBP"
+                        creditAccount: "true"
+                        debitAccount: "true"
+                    savingAccounts:
+                      - externalId: "sara-sav-001"
+                        bankBranchCode: "607926"
+                        BBAN: "242576387"
+                        name: "SandboxASPSP1 Account 2"
+                        accountHolderName: "Holder Name 2 Business Inc"
+                        productTypeExternalId: "savings-account"
+                        currency: "GBP"
+                        creditAccount: "true"
+                        debitAccount: "true"
+                      - externalId: "sara-sav-002"
+                        bankBranchCode: "617926"
+                        BBAN: "342576387"
+                        name: "SandboxASPSP1 Account 3"
+                        accountHolderName: "Holder Name 3 Personal Inc"
+                        productTypeExternalId: "savings-account"
+                        currency: "GBP"
+                        creditAccount: "true"
+                        debitAccount: "true"
+                subsidiaries:
+                  - name: "Bob"
+                    realmName: "customer"
+                    externalId: "bob"
+                    legalEntityType: "CUSTOMER"
+                    users:
+                      - user:
+                          externalId: "bob"
+                          fullName: "Bob Park"
+                          identityLinkStrategy: "CREATE_IN_IDENTITY"
+                          emailAddress:
+                            address: "bob@email.com"
+                          mobileNumber:
+                            number: "0123456789"
+                        referenceJobRoleNames:
+                          - "Retail User"
+                    productGroups:
+                      - name: "bob-arrangements"
+                        description: "Product group containing bob arrangements"
+                        currentAccounts:
+                          - externalId: "bob-curr-001"
+                            IBAN: "NL02NJNL6718580759"
+                            name: "FermiumBank Account 2"
+                            accountHolderName: "Holder Name Personal Inc"
+                            productTypeExternalId: "current-account"
+                            currency: "EUR"
+                            creditAccount: "true"
+                            debitAccount: "true"
+                        loans:
+                          - externalId: "bob-loan-001"
+                            IBAN: "NL20YNAN6609190089"
+                            name: "FermiumBank Account 1"
+                            accountHolderName: "Holder Name Personal Inc"
+                            productTypeExternalId: "loan"
+                            currency: "EUR"
+                            creditAccount: "true"
+                            debitAccount: "true"
+

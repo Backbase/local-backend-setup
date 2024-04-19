@@ -1,0 +1,4 @@
+kubectl get job product-catalog-task-backbase-bootstrap-task -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels)' > product-catalog-task-backbase-bootstrap-task.yaml
+kubectl delete job product-catalog-task-backbase-bootstrap-task
+kubectl apply -f product-catalog-task-backbase-bootstrap-task.yaml
+rm product-catalog-task-backbase-bootstrap-task.yaml
