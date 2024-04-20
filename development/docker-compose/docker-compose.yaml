@@ -55,10 +55,10 @@ x-healthcheck-defaults: &healthcheck-defaults
   timeout: 5s
   retries: 15
 
-name: backbase
+name: rch-poc
 
 volumes:
-  backbase_mysql_data:
+  rch-poc_mysql_data:
     driver: local
   zookeeper-data:
     driver: local
@@ -71,7 +71,7 @@ networks:
   kafka-net:
     driver: bridge
   default:
-    name: backbase_default
+    name: rch-poc_default
 
 services:
   mysql:
@@ -81,7 +81,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
     volumes:
-      - backbase_mysql_data:/var/lib/mysql
+      - rch-poc_mysql_data:/var/lib/mysql
     healthcheck:
       test: mysqladmin ping --silent
       interval: 10s
@@ -101,7 +101,6 @@ services:
 #      retries: 5
 
   registry:
-    container_name: registry
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
       - "8761:8080"
@@ -180,7 +179,7 @@ services:
 
   access-control:
     #image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
-    image: repo.backbase.com/access-control-extension:2023.10-0.0.1
+    image: repo.backbase.com/access-control-extension:2023.10-0.0.2
     ports:
       - "8040:8080"
     environment:

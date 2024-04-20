@@ -16,7 +16,7 @@ Set up a Docker local environment on your laptop by running these commands in th
     ```
 3. Start the health checks and ensure that all services are running: 
     ```
-    docker compose --profile=bootstrap up
+    docker-compose --profile=bootstrap up
     ```
 
    Once all the required services have started, you can view the health check results in your terminal. To check the status of the services, open the [Registry](http://localhost:8761) in your web browser. Additionally, you can import the [Postman collection](test/postman/HealthCheck_Local-Backend-Environment.postman_collection.json) to perform a more comprehensive health check on your environment using Postman.  
