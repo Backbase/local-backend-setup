@@ -179,13 +179,18 @@ services:
 
   access-control:
     #image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
-    image: repo.backbase.com/access-control-extension:2023.10-0.0.2
+    image: repo.backbase.com/access-control-extension:2023.10-0.0.4
     ports:
       - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-      waiting: 15000
+      waiting: 1000
+      "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
+      SPRING_CLOUD_FUNCTION_DEFINITION: updateDataGroup
+      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: PutDataGroupsEvent
+      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: PutDataGroupsSuccessEvent
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
