@@ -1,0 +1,158 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.backbase.buildingblocks</groupId>
+        <artifactId>backbase-service-extension-starter-parent</artifactId>
+        <version>16.0.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.backbase.dbs.accesscontrol</groupId>
+    <artifactId>access-control-extension</artifactId>
+    <packaging>jar</packaging>
+    <version>0.0.2</version>
+
+    <properties>
+        <java.version>17</java.version>
+        <docker.distroless.jar.latest.skip>true</docker.distroless.jar.latest.skip>
+
+        <!-- docker configuration -->
+        <!--suppress UnresolvedMavenProperty -->
+        <docker.repo.url>repo.backbase.com</docker.repo.url>
+        <docker.image.name>${docker.repo.url}/${project.artifactId}</docker.image.name>
+        <docker.image.tag>${project.version}</docker.image.tag>
+        <jib.to.image>${docker.image.name}:${backbase-bom.version}-${project.version}</jib.to.image>
+
+        <!-- Dependencies -->
+        <backbase-bom.version>2023.10</backbase-bom.version>
+
+        <!-- Plugin version -->
+        <gitflow-maven-plugin.version>1.19.0</gitflow-maven-plugin.version>
+
+        <!-- base image TODO change it to desired capability -->
+        <docker.base.name>repo.backbase.com/backbase-docker-releases/access-control</docker.base.name>
+        <docker.base.tag>2023.10</docker.base.tag>
+
+        <!-- Sonar -->
+        <!--suppress UnresolvedMavenProperty -->
+        <sonar.projectKey>${SONAR_PROJECT_KEY}</sonar.projectKey>
+        <!--suppress UnresolvedMavenProperty -->
+        <sonar.organization>${SONAR_ORGANIZATION}</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.backbase</groupId>
+                <artifactId>backbase-bom</artifactId>
+                <version>${backbase-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <!-- TODO Replace with desired capability -->
+        <dependency>
+            <groupId>com.backbase.dbs.accesscontrol</groupId>
+            <artifactId>access-control</artifactId>
+            <classifier>classes</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.backbase.buildingblocks</groupId>
+            <artifactId>events</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.backbase.buildingblocks</groupId>
+            <artifactId>communication</artifactId>
+        </dependency>
+
+        <!-- Lombok and Mapstruct -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.backbase.buildingblocks</groupId>
+            <artifactId>service-sdk-starter-mapping</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>com.backbase.buildingblocks</groupId>
+            <artifactId>service-sdk-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.backbase.codegen</groupId>
+                <artifactId>jsonschema-events-maven-plugin</artifactId>
+                <version>16.0.1</version>
+                <executions>
+                    <execution>
+                        <id>generate-ingress-events</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>events-generation</goal>
+                        </goals>
+                        <configuration>
+                            <packageVersion>1</packageVersion>
+                            <useJavaTime>true</useJavaTime>
+                            <outputFile>${project.basedir}/target/generated-sources/jsonschema-events</outputFile>
+                            <inputFile>${project.basedir}/src/main/resources/events</inputFile>
+                            <!-- The packageName should not contain com.backbase as that is already the default value of the basePackageName -->
+                            <packageName>accesscontrol.event</packageName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/annotations</source>
+                                <source>${project.build.directory}/generated-sources/jsonschema-events</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-resource</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/generated-resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

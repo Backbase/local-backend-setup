@@ -334,8 +334,6 @@ services:
 
   legal-entity-composition-service:
      image: repo.backbase.com/backbase-stream-images/legal-entity-composition-service:3.72.1
-     profiles:
-       - rch-poc
      ports:
        - "8090:8080"
      environment:

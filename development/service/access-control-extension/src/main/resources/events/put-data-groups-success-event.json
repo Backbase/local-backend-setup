@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "dataGroupIdentifier": {
+      "type": "object",
+      "properties": {
+        "idIdentifier": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "idIdentifier"
+      ]
+    },
+    "action": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "dataItems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "dataGroupIdentifier",
+    "action",
+    "type",
+    "dataItems"
+  ]
+}
