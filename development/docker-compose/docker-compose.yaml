@@ -667,19 +667,19 @@ services:
       - edge
 
   application-center:
-    image: repo.backbase.com/backbase-docker-releases/application-center-ang:${WEB_APP_CENTER_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/application-center-ang:${BB_VERSION}
+    #image: harbor.backbase.eu/stable/application-center-ang:0.114.0
+    ports:
+      - "6060:6060"
     environment:
       PORT: 6060
       AUTH_CLIENT_ID: "bb-web-client"
       AUTH_REALM: "customer"
-      API_ROOT: /api/
+      API_ROOT: /api
       AUTH_URL: http://localhost:8180/auth
-      #redirectUri: '${PROTOCOL}//${HOSTNAME}${BASE_HREF}oauthcallback',
-      HOSTNAME: "localhost:6060"
+      HOSTNAME: localhost:6060
       PROTOCOL: "http:"
       BASE_HREF: /application-center/
-    ports:
-      - "6060:6060"
     volumes:
       - ./nginx/api.conf:/nginx-config/server/15-api.conf
     healthcheck:
