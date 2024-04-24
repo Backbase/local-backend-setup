@@ -667,8 +667,7 @@ services:
       - edge
 
   application-center:
-    image: repo.backbase.com/backbase-docker-releases/application-center-ang:${BB_VERSION}
-    #image: harbor.backbase.eu/stable/application-center-ang:0.114.0
+    image: repo.backbase.com/backbase-docker-releases/application-center-ang:2024.03-LTS
     ports:
       - "6060:6060"
     environment:
