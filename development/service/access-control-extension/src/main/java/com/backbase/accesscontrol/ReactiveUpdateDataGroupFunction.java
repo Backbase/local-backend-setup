@@ -8,18 +8,16 @@ import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
-@Component("updateDataGroup")
+@Component("reactiveUpdateDataGroup")
 @AllArgsConstructor
 @Slf4j
-public class UpdateDataGroupFunction implements
-    Function<Message<PresentationDataGroupUpdate>, PresentationDataGroupUpdate> {
+public class ReactiveUpdateDataGroupFunction implements
+    Function<Flux<PresentationDataGroupUpdate>, Flux<PresentationDataGroupUpdate>> {
 
-    @Value("${waiting:0}")
+    @Value("${waiting:10000}")
     private Long waitingTime;
     private final DataGroupServiceFacade dataGroupServiceFacade;
     private final PutDataGroupsEventMapper putDataGroupsEventMapper;
@@ -27,35 +25,26 @@ public class UpdateDataGroupFunction implements
     /**
      * Applies this function to the given argument.
      *
-     * @param message the function argument
+     * @param inputs the function argument
      * @return the function result
      */
     @Override
-    public PresentationDataGroupUpdate apply(Message<PresentationDataGroupUpdate> message) {
-        //log.info("Message received: {}", message);
-        Acknowledgment acknowledgment = message.getHeaders()
-            .get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-        PresentationDataGroupUpdateDto dto = mapEventToDto(message);
-        updateDataGroupWithDelay(dto);
+    public Flux<PresentationDataGroupUpdate> apply(Flux<PresentationDataGroupUpdate> inputs) {
 
-        log.info("Event process successfully");
-
-        if (acknowledgment != null) {
-            System.out.println("Acknowledgment provided");
-            acknowledgment.acknowledge();
-        }
-
-        return message.getPayload();
+        return inputs.doOnNext(this::process);
     }
 
-    private PresentationDataGroupUpdateDto mapEventToDto(Message<PresentationDataGroupUpdate> message) {
-        return putDataGroupsEventMapper.map(message.getPayload());
+    private void process(PresentationDataGroupUpdate presentationDataGroupUpdate) {
+        log.info("Reactive Message received: {}", presentationDataGroupUpdate);
+        PresentationDataGroupUpdateDto dto = putDataGroupsEventMapper.map(presentationDataGroupUpdate);
+        updateDataGroupWithDelay(dto);
     }
 
     private void updateDataGroupWithDelay(PresentationDataGroupUpdateDto dto) {
         try {
             Thread.sleep(waitingTime);
             dataGroupServiceFacade.updateDataGroup(dto);
+            log.info("Reactive Event process successfully");
         } catch (InterruptedException e) {
             log.error("Error occurred while waiting for thread", e);
             Thread.currentThread().interrupt();
