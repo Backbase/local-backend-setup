@@ -32,7 +32,7 @@ For the setup, you must have the following:
 
 1. Install Colima to run Docker and work with Docker Compose:
     ```shell
-    brew install colima docker docker-compose docker-credential-helper
+    brew install colima docker docker composedocker-credential-helper
     colima start --cpu 4 --memory 16
     ```
    Workaround to fix Colima issue [#764](https://github.com/abiosoft/colima/issues/764) in order to build the Identity Auth Server image using docker compose:

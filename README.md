@@ -18,11 +18,11 @@ Set up a Docker local environment on your laptop by running these commands in th
    
   If first time then run with b
    ```
-   docker-compose --profile=backbase-bootstrap up -d
+   docker compose--profile=backbase-bootstrap up -d
    ```
    otherwise, run without any profile
    ```
-   docker-compose up -d
+   docker composeup -d
    ```
 4. In case you want to reset your local env and start fresh, run following script
    ```shell
