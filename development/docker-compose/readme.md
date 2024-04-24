@@ -75,6 +75,10 @@ For the setup, you must have the following:
       * **Realm Admin Credentials**: `admin` / `admin`
     - **Edge Gateway**: http://localhost:8280/api
     - **Registry**: http://localhost:8761
+    - **Retail Web App**:  http://localhost:9090
+    - **Employee Web App**: http://localhost:8080
+    - **Retail Onboarding**: http://localhost:7070
+    - **Web Application Centre**: http://localhost:6060
 7. Verify the health of your environment to ensure services are running: 
     ```shell
     docker compose ps
