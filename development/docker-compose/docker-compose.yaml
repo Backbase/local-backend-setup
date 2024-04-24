@@ -672,12 +672,12 @@ services:
       PORT: 6060
       AUTH_CLIENT_ID: "bb-web-client"
       AUTH_REALM: "customer"
-      BASE_DOMAIN: http://localhost:6060
       API_ROOT: /api/
       AUTH_URL: http://localhost:8180/auth
-      BASE_HREF: /application-center/
-      #HOSTNAME:
+      #redirectUri: '${PROTOCOL}//${HOSTNAME}${BASE_HREF}oauthcallback',
+      HOSTNAME: "localhost:6060"
       PROTOCOL: "http:"
+      BASE_HREF: /application-center/
     ports:
       - "6060:6060"
     volumes:
