@@ -252,7 +252,7 @@ services:
       - backbase-identity
 
   retail-onboarding:
-    image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-service:2024.03-digital-sales
+    image: repo.backbase.com/backbase-docker-releases/retail-onboarding-service:2024.03-digital-sales
     ports:
       - "8091:8080"
     environment:
@@ -301,7 +301,7 @@ services:
       - activemq
 
   party-profile:
-    image: crbackbasesharedprd874.azurecr.io/stable/party-profile-service:${ONBOARDING_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/party-profile-service:${ONBOARDING_VERSION}
     ports:
       - "8092:8080"
     environment:
@@ -523,7 +523,7 @@ services:
         condition: service_healthy
 
   retail-onboarding-prospect:
-    image: crbackbasesharedprd874.azurecr.io/stable/retail-onboarding-prospect:${ONBOARDING_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/retail-onboarding-prospect:${ONBOARDING_VERSION}
     environment:
       FLOW_NAME: "retail-onboarding"
       "BASE_HREF": "/retail-onboarding/"
@@ -587,7 +587,7 @@ services:
       - edge
 
   identity-proxy:
-    image: crbackbasesharedprd874.azurecr.io/stable/identity-proxy-service:${ONBOARDING_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/identity-proxy-service:${ONBOARDING_VERSION}
 
     ports:
       - "8098:8080"
@@ -621,7 +621,7 @@ services:
       - backbase-identity
 
   content-service:
-    image: crbackbasesharedprd874.azurecr.io/stable/contentservices:${BB_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/contentservices:${BB_VERSION}
 
     ports:
       - "8097:8080"
@@ -643,8 +643,29 @@ services:
       - registry
       - backbase-identity
 
+  application-management-service:
+    image: repo.backbase.com/backbase-docker-releases/application-management-service:{BB_VERSION}
+    ports:
+      - "8097:8080"
+    environment:
+      <<: [ *common-variables, *database-variables, *message-broker-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/content-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "contentservices.storage.defaultImplementation": "DB"
+      "contentservices.whitelist.allowedContentTypes": "image/jpeg,image/pjpeg,image/gif,image/png,image/svg+xml,application/pdf,application/json,application/zip,application/rtf,text/plain,text/html,text/csv,application/octet-stream,text/x-handlebars-template"
+      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/content-service", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - registry
+      - backbase-identity
   #  remote-config:
-#    image: crbackbasesharedprd874.azurecr.io/stable/remote-config:2024.03-LTS
+#    image: repo.backbase.com/backbase-docker-releases/remote-config:2024.03-LTS
 #    ports:
 #      - "8097:8080"
 #    environment:
