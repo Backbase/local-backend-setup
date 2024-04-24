@@ -407,6 +407,86 @@ services:
       - registry
       - backbase-identity
 
+  identity-proxy:
+    image: repo.backbase.com/backbase-docker-releases/identity-proxy-service:${ONBOARDING_VERSION}
+
+    ports:
+      - "8098:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *message-broker-variables ]
+      server.port: 8080
+      "spring.application.name": "identity-proxy"
+      backbase.security.public.paths: /client-api/**
+      SPRING_PROFILES_ACTIVE: eureka
+      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINESOFBUSINESS_0_NAME: "RETAIL"
+      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINESOFBUSINESS_0_REALMNAME: "customer"
+      #  TO BE REMOVED IN 2024.04
+      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINEOFBUSINESSES_0_NAME: "RETAIL"
+      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINEOFBUSINESSES_0_REALMNAME: "customer"
+      "backbase.identity-proxy-service.flow.customer.default-realm": "customer"
+      "backbase.identity-proxy-service.identity.password": "admin"
+      "backbase.identity-proxy-service.identity.username": "admin"
+      BACKBASE_IDENTITY_PROXY_SERVICE_IDENTITY_SERVER_URL: http://backbase-identity:8080/auth
+      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_GET_IDENTITY_SPECIFICATIONS_URL: http://backbase-identity:8080/auth/admin/realms/%s
+      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_PUT_RESET_PASSWORD_URL: http://backbase-identity:8080/auth/admin/realms/%s/users/%s/reset-password
+      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_GET_IDENTITY_TOKEN_URL: http://backbase-identity:8080/auth/realms/%s/protocol/openid-connect/token
+      logging.level.com.backbase: TRACE
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/identity-proxy", "<status>UP</status>" ]
+    links:
+      - edge
+      - registry
+      - backbase-identity
+
+  content-service:
+    image: repo.backbase.com/backbase-docker-releases/contentservices:${BB_VERSION}
+
+    ports:
+      - "8097:8080"
+    environment:
+      <<: [ *common-variables, *database-variables, *message-broker-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/content-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "contentservices.storage.defaultImplementation": "DB"
+      "contentservices.whitelist.allowedContentTypes": "image/jpeg,image/pjpeg,image/gif,image/png,image/svg+xml,application/pdf,application/json,application/zip,application/rtf,text/plain,text/html,text/csv,application/octet-stream,text/x-handlebars-template"
+      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/content-service", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - registry
+      - backbase-identity
+
+  application-management-service:
+    image: repo.backbase.com/backbase-docker-releases/application-management-service:${BB_VERSION}
+    environment:
+      <<: [ *common-variables, *database-variables, *message-broker-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/application-management-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_OPENIDCONNECTURL: http://backbase-identity:8080/auth/realms/employee/.well-known/openid-configuration
+      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_BASEAPIPATH: http://edge:8080/api/application-management-service
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: dbs-audit,dbs-entitlements,identity
+      spring.application.name: application-management-service
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/application-management-service", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - registry
+      - backbase-identity
+      - edge
+
   product-catalog-task:
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
     profiles:
@@ -589,15 +669,15 @@ services:
   application-center:
     image: repo.backbase.com/backbase-docker-releases/application-center-ang:1.0.1
     environment:
-      AUTH_URL: http://localhost:8180/auth
       PORT: 6060
-      API_ROOT: http://localhost:8080/api
-      "AUTH_CLIENT_ID": "bb-web-client"
-      "AUTH_LANDING_PAGE": "select-context"
-      "AUTH_REALM": "customer"
-      "AUTH_REDIRECT_PAGE": "redirect"
-      "AUTH_SCOPE": "openid"
-      "BASE_HREF": /application-center/
+      AUTH_CLIENT_ID: "bb-web-client"
+      AUTH_REALM: "customer"
+      BASE_DOMAIN: http://localhost:6060
+      API_ROOT: /api/
+      AUTH_URL: http://localhost:8180/auth
+      BASE_HREF: /application-center/
+      #HOSTNAME:
+      PROTOCOL: "http:"
     ports:
       - "6060:6060"
     volumes:
@@ -608,85 +688,7 @@ services:
     links:
       - edge
 
-  identity-proxy:
-    image: repo.backbase.com/backbase-docker-releases/identity-proxy-service:${ONBOARDING_VERSION}
 
-    ports:
-      - "8098:8080"
-    environment:
-      <<: [ *common-variables, *message-broker-variables, *message-broker-variables ]
-      server.port: 8080
-      "spring.application.name": "identity-proxy"
-      backbase.security.public.paths: /client-api/**
-      SPRING_PROFILES_ACTIVE: eureka
-      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINESOFBUSINESS_0_NAME: "RETAIL"
-      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINESOFBUSINESS_0_REALMNAME: "customer"
-        #  TO BE REMOVED IN 2024.04
-      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINEOFBUSINESSES_0_NAME: "RETAIL"
-      BACKBASE_IDENTITYPROXYSERVICE_FLOW_CUSTOMER_LINEOFBUSINESSES_0_REALMNAME: "customer"
-      "backbase.identity-proxy-service.flow.customer.default-realm": "customer"
-      "backbase.identity-proxy-service.identity.password": "admin"
-      "backbase.identity-proxy-service.identity.username": "admin"
-      BACKBASE_IDENTITY_PROXY_SERVICE_IDENTITY_SERVER_URL: http://backbase-identity:8080/auth
-      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_GET_IDENTITY_SPECIFICATIONS_URL: http://backbase-identity:8080/auth/admin/realms/%s
-      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_PUT_RESET_PASSWORD_URL: http://backbase-identity:8080/auth/admin/realms/%s/users/%s/reset-password
-      BACKBASE_IDENTITY_PROXY_SERVICE_SERVICE_API_GET_IDENTITY_TOKEN_URL: http://backbase-identity:8080/auth/realms/%s/protocol/openid-connect/token
-      logging.level.com.backbase: TRACE
-    volumes:
-      - ./scripts:/tmp/h
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/identity-proxy", "<status>UP</status>" ]
-    links:
-      - edge
-      - registry
-      - backbase-identity
-
-  content-service:
-    image: repo.backbase.com/backbase-docker-releases/contentservices:${BB_VERSION}
-
-    ports:
-      - "8097:8080"
-    environment:
-      <<: [*common-variables, *database-variables, *message-broker-variables]
-      spring.datasource.url: jdbc:mysql://mysql:3306/content-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-      "contentservices.storage.defaultImplementation": "DB"
-      "contentservices.whitelist.allowedContentTypes": "image/jpeg,image/pjpeg,image/gif,image/png,image/svg+xml,application/pdf,application/json,application/zip,application/rtf,text/plain,text/html,text/csv,application/octet-stream,text/x-handlebars-template"
-      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
-    volumes:
-      - ./scripts:/tmp/h
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/content-service", "<status>UP</status>" ]
-    depends_on:
-      mysql:
-        condition: service_healthy
-    links:
-      - registry
-      - backbase-identity
-
-  application-management-service:
-    image: repo.backbase.com/backbase-docker-releases/application-management-service:${BB_VERSION}
-    environment:
-      <<: [ *common-variables, *database-variables, *message-broker-variables ]
-      spring.datasource.url: jdbc:mysql://mysql:3306/application-management-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_OPENIDCONNECTURL: http://backbase-identity:8080/auth/realms/employee/.well-known/openid-configuration
-      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_BASEAPIPATH: http://edge:8080/api/application-management-service
-      SERVER_PORT: 8080
-      SPRING_PROFILES_ACTIVE: dbs-audit,dbs-entitlements,identity
-      spring.application.name: application-management-service
-    volumes:
-      - ./scripts:/tmp/h
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/application-management-service", "<status>UP</status>" ]
-    depends_on:
-      mysql:
-        condition: service_healthy
-    links:
-      - registry
-      - backbase-identity
-      - edge
   #  remote-config:
 #    image: repo.backbase.com/backbase-docker-releases/remote-config:2024.03-LTS
 #    ports:
