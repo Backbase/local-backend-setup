@@ -528,7 +528,7 @@ services:
         condition: service_completed_successfully
 
   backbase-bootstrap-task:
-    image: repo.backbase.com/backbase-bootstrap-task:0.29.0-SNAPSHOT-7
+    image: crreference914.azurecr.io/backbase-bootstrap-task:0.29.0
     profiles:
       - backbase-bootstrap
     environment:
