@@ -667,7 +667,7 @@ services:
       - edge
 
   application-center:
-    image: repo.backbase.com/backbase-docker-releases/application-center-ang:1.0.1
+    image: repo.backbase.com/backbase-docker-releases/application-center-ang:${WEB_APP_CENTER_VERSION}
     environment:
       PORT: 6060
       AUTH_CLIENT_ID: "bb-web-client"
