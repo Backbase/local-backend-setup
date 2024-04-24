@@ -143,7 +143,7 @@ services:
     environment:
       QUARKUS_HTTP_CORS: "true"
       QUARKUS_HTTP_CORS_EXPOSED_HEADERS: "Location"
-      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080,http://localhost:9090,http://localhost:4200,http://localhost:7070"
+      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080,http://localhost:9090,http://localhost:4200,http://localhost:7070,http://localhost:6060"
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       KC_DB_URL: "jdbc:mysql://mysql:3306/backbase_identity?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
@@ -586,6 +586,28 @@ services:
     links:
       - edge
 
+  application-center:
+    image: repo.backbase.com/backbase-docker-releases/application-center-ang:1.0.1
+    environment:
+      AUTH_URL: http://localhost:8180/auth
+      PORT: 6060
+      API_ROOT: http://localhost:8080/api
+      "AUTH_CLIENT_ID": "bb-web-client"
+      "AUTH_LANDING_PAGE": "select-context"
+      "AUTH_REALM": "customer"
+      "AUTH_REDIRECT_PAGE": "redirect"
+      "AUTH_SCOPE": "openid"
+      "BASE_HREF": /application-center/
+    ports:
+      - "6060:6060"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+    healthcheck:
+      test: [ "CMD", "none" ]
+      disable: true
+    links:
+      - edge
+
   identity-proxy:
     image: repo.backbase.com/backbase-docker-releases/identity-proxy-service:${ONBOARDING_VERSION}
 
@@ -644,26 +666,27 @@ services:
       - backbase-identity
 
   application-management-service:
-    image: repo.backbase.com/backbase-docker-releases/application-management-service:{BB_VERSION}
-    ports:
-      - "8097:8080"
+    image: repo.backbase.com/backbase-docker-releases/application-management-service:${BB_VERSION}
     environment:
       <<: [ *common-variables, *database-variables, *message-broker-variables ]
-      spring.datasource.url: jdbc:mysql://mysql:3306/content-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-      "contentservices.storage.defaultImplementation": "DB"
-      "contentservices.whitelist.allowedContentTypes": "image/jpeg,image/pjpeg,image/gif,image/png,image/svg+xml,application/pdf,application/json,application/zip,application/rtf,text/plain,text/html,text/csv,application/octet-stream,text/x-handlebars-template"
-      "spring.cloud.azure.eventhubs.kafka.enabled": "false"
+      spring.datasource.url: jdbc:mysql://mysql:3306/application-management-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_OPENIDCONNECTURL: http://backbase-identity:8080/auth/realms/employee/.well-known/openid-configuration
+      BACKBASE_LENDING_DOCUMENTATION_SWAGGER_BASEAPIPATH: http://edge:8080/api/application-management-service
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: dbs-audit,dbs-entitlements,identity
+      spring.application.name: application-management-service
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/content-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/application-management-service", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
     links:
       - registry
       - backbase-identity
+      - edge
   #  remote-config:
 #    image: repo.backbase.com/backbase-docker-releases/remote-config:2024.03-LTS
 #    ports:
