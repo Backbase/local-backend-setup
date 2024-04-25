@@ -12,7 +12,7 @@
     <groupId>com.backbase.dbs.accesscontrol</groupId>
     <artifactId>access-control-extension</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 
     <properties>
         <java.version>17</java.version>
@@ -27,9 +27,11 @@
 
         <!-- Dependencies -->
         <backbase-bom.version>2023.10</backbase-bom.version>
+        <access-control-openapi-spec.version>3.1.1</access-control-openapi-spec.version>
 
         <!-- Plugin version -->
         <gitflow-maven-plugin.version>1.19.0</gitflow-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
 
         <!-- base image TODO change it to desired capability -->
         <docker.base.name>repo.backbase.com/backbase-docker-releases/access-control</docker.base.name>
@@ -62,10 +64,10 @@
             <classifier>classes</classifier>
             <scope>provided</scope>
         </dependency>
-      <!--  <dependency>
-            <groupId>com.backbase.buildingblocks</groupId>
-            <artifactId>events</artifactId>
-        </dependency>-->
+        <!--  <dependency>
+              <groupId>com.backbase.buildingblocks</groupId>
+              <artifactId>events</artifactId>
+          </dependency>-->
         <dependency>
             <groupId>com.backbase.buildingblocks</groupId>
             <artifactId>communication</artifactId>
@@ -101,23 +103,75 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.backbase.codegen</groupId>
-                <artifactId>jsonschema-events-maven-plugin</artifactId>
-                <version>16.0.1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>generate-ingress-events</id>
+                        <id>unpack-access-control-spec</id>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>events-generation</goal>
+                            <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <packageVersion>1</packageVersion>
-                            <useJavaTime>true</useJavaTime>
-                            <outputFile>${project.basedir}/target/generated-sources/jsonschema-events</outputFile>
-                            <inputFile>${project.basedir}/src/main/resources/events</inputFile>
-                            <!-- The packageName should not contain com.backbase as that is already the default value of the basePackageName -->
-                            <packageName>accesscontrol.event</packageName>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.backbase.dbs.accesscontrol</groupId>
+                                    <artifactId>access-control-openapi-spec</artifactId>
+                                    <version>${access-control-openapi-spec.version}</version>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                    <classifier>api</classifier>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
+                                            <pattern>
+                                                ((?:access\-control\-(?:client|service)|accessgroup\-integration\-(?:inbound|outbound))\-api\-v[1-9]).*(\.yaml)$
+                                            </pattern>
+                                            <replacement>$1$2</replacement>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>**/*.yaml</includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-ag-integration-api-code-v3</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <output>${project.build.directory}/generated-sources/</output>
+                            <generateSupportingFiles>true</generateSupportingFiles>
+                            <generatorName>spring</generatorName>
+                            <strictSpec>true</strictSpec>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <inputSpec>
+                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.yaml
+                            </inputSpec>
+                            <configOptions>
+                                <library>spring-boot</library>
+                                <useJakartaEe>true</useJakartaEe>
+                                <dateLibrary>legacy</dateLibrary>
+                                <interfaceOnly>true</interfaceOnly>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <useBeanValidation>true</useBeanValidation>
+                                <useClassLevelBeanValidation>true</useClassLevelBeanValidation>
+                                <containerDefaultToNull>false</containerDefaultToNull>
+                                <useTags>true</useTags>
+                                <java8>true</java8>
+                                <useOptional>false</useOptional>
+                                <apiPackage>com.backbase.integration.accessgroup.rest.spec.v3.serviceapi</apiPackage>
+                                <modelPackage>com.backbase.integration.accessgroup.rest.spec.v3</modelPackage>
+                            </configOptions>
                         </configuration>
                     </execution>
                 </executions>

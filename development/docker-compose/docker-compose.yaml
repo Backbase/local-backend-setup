@@ -179,9 +179,9 @@ services:
 
   access-control:
     #image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
-    image: repo.backbase.com/access-control-extension:2023.10-0.0.4
-    deploy:
-      replicas: 3
+    image: repo.backbase.com/access-control-extension:2023.10-0.0.5
+    ports:
+      - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
@@ -195,13 +195,13 @@ services:
       #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 3
 
       SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: PutDataGroupsEvent
-      spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
-      spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
+      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
+      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
       spring.cloud.stream.bindings.updateDataGroup-in-0.group: put-data-groups-event-group
       spring.cloud.stream.bindings.updateDataGroup-in-0.content-type: application/json
 
       SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: PutDataGroupsSuccessEvent
-      spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
+      #spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
       spring.cloud.stream.bindings.updateDataGroup-out-0.group: put-data-groups-success-event-group
       spring.cloud.stream.bindings.updateDataGroup-out-0.content-type: application/json
 
