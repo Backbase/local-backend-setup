@@ -178,7 +178,6 @@ services:
         condition: service_healthy
 
   access-control:
-    #image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
     image: repo.backbase.com/access-control-extension:2023.10-0.0.5
     ports:
       - "8040:8080"
@@ -188,27 +187,29 @@ services:
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: updateDataGroup;reactiveUpdateDataGroup
+      SPRING_CLOUD_FUNCTION_DEFINITION: updateDataGroup;upsertDataGroup
 
-      #SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: PutDataGroupsEvent
-      #SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: PutDataGroupsSuccessEvent
-      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 3
-
-      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: PutDataGroupsEvent
+      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: UpdateDataGroupsEvent
       #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
       #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
-      spring.cloud.stream.bindings.updateDataGroup-in-0.group: put-data-groups-event-group
+      spring.cloud.stream.bindings.updateDataGroup-in-0.group: update-data-groups-event-group
       spring.cloud.stream.bindings.updateDataGroup-in-0.content-type: application/json
 
-      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: PutDataGroupsSuccessEvent
+      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: UpdateDataGroupsSuccessEvent
       #spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
-      spring.cloud.stream.bindings.updateDataGroup-out-0.group: put-data-groups-success-event-group
+      spring.cloud.stream.bindings.updateDataGroup-out-0.group: update-data-groups-success-event-group
       spring.cloud.stream.bindings.updateDataGroup-out-0.content-type: application/json
 
-      SPRING_CLOUD_STREAM_BINDINGS_reactiveUpdateDataGroup-in-0_DESTINATION: ReactivePutDataGroupsEvent
-      SPRING_CLOUD_STREAM_BINDINGS_reactiveUpdateDataGroup-out-0_DESTINATION: ReactivePutDataGroupsSuccessEvent
-      spring.cloud.stream.bindings.reactiveUpdateDataGroup-in-0.consumer.concurrency: 3
-      spring.cloud.stream.bindings.reactiveUpdateDataGroup-in-0.group: reactive-put-data-groups-event-group
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
+      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
+      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
+
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
+      #spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
