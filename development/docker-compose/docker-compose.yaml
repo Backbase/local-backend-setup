@@ -86,10 +86,10 @@ services:
     ports:
       - "8761:8080"
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/HealthCheck.java" ]
+      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar" ]
 
   edge:
     image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
@@ -100,10 +100,10 @@ services:
       gateway.actuator.security.enabled: false
       gateway.csrf.enabled: false
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/edge", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/edge", "<status>UP</status>" ]
     links:
       - registry
       - token-converter
@@ -118,10 +118,10 @@ services:
       backbase.oidc-token-converter.whitelistedDomains[0].internalHost: backbase-identity:8080
       backbase.oidc-token-converter.whitelistedDomains[0].issuerHost: localhost
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
     links:
       - registry
       - backbase-identity
@@ -153,10 +153,10 @@ services:
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -169,10 +169,10 @@ services:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -188,10 +188,10 @@ services:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -211,10 +211,10 @@ services:
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -234,10 +234,10 @@ services:
       identity.realmConfiguration.fallbackOptions.enableUser: true
       identity.realmConfiguration.fallbackOptions.useTemporaryPassword: true
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
     links:
       - registry
       - backbase-identity
@@ -322,9 +322,9 @@ services:
   #     <<: *common-variables
   #     eureka.client.enabled: 'true'
   #   volumes:
-  #     - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+  #     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
   #   healthcheck:
   #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
+  #     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
   #   links:
   #     - registry

@@ -130,10 +130,10 @@ The following is an example configuration:
       <<: *message-broker-variables
       <<: *database-variables
     volumes:
-      - ./scripts:/tmp/h
+      - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/<SERVICE-NAME>", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<SERVICE-NAME>", "<status>UP</status>" ]
     links:
       - registry
 ```
@@ -217,10 +217,10 @@ To debug your Docker image remotely inside the local environment, do the followi
           eureka.client.enabled: 'true'
           JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
         volumes:
-          - ./scripts:/tmp/h
+          - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
         healthcheck:
           <<: *healthcheck-defaults
-          test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/example-service", "<status>UP</status>" ]
+          test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/example-service", "<status>UP</status>" ]
         links:
           - registry
     ```
@@ -289,5 +289,10 @@ In order to configure CORS in Edge, you can set the `SPRING_APPLICATION_JSON` in
       gateway.csrf.enabled: false
       SPRING_APPLICATION_JSON: '{ "gateway": { "csrf": { "enabled": false } }, "spring": { "cloud": { "gateway": { "globalcors": { "corsConfigurations": { "[/**]": { "allowedOriginPatterns": "*", "exposedHeaders": "*", "allowedHeaders": "*", "allowedMethods": [ "GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE" ] } } } } } } }'
 ```
+
+## HealthCheck 
+
+If you implement any changes in HealthCheck behaviour, please create a jar file of development/docker-compose/scripts/HealthCheck.java 
+and copy it to 'development/docker-compose/exe' folder.
 
 
