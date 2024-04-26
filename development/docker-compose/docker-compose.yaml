@@ -201,15 +201,19 @@ services:
       spring.cloud.stream.bindings.updateDataGroup-out-0.content-type: application/json
 
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
-      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
-      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitionCount: 100
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 100
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
 
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
-      #spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 100
       spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
       spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
+
+      logging.root: WARN
+      logging.level.com.backbase: WARN
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: WARN
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
@@ -334,35 +338,35 @@ services:
     volumes:
       - ./stubs:/home/wiremock
 
-  legal-entity-composition-service:
-     image: repo.backbase.com/backbase-stream-images/legal-entity-composition-service:3.72.1
-     ports:
-       - "8090:8080"
-     environment:
-       <<: *common-variables
-       eureka.client.enabled: 'true'
-       backbase.activemq.enabled: 'false'
-       spring.cloud.stream.defaultBinder: 'kafka'
-       backbase.kafka.enabled: 'true'
-       spring.kafka.consumer.bootstrap-servers: kafka:9092
-       spring.cloud.stream.kafka.binder.kafkas: kafka:9092
-       spring.cloud.stream.kafka.binder.zkNodes: zookeeper:2181
-       spring.kafka.bootstrap-servers: kafka:9092
-       PRODUCER_BOOTSTRAP_SERVERS: 'kafka:9092'
-       eureka.instance.appname: legal-entity-composition
-       backbase.stream.compositions.legal-entity.chains.product-composition.enabled: 'false'
-     volumes:
-       - ./scripts:/tmp/h
-     healthcheck:
-       <<: *healthcheck-defaults
-       test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/legal-entity-composition", "<status>UP</status>" ]
-     depends_on:
-       kafka:
-         condition: service_healthy
-     links:
-       - registry
-       - kafka
-       - zookeeper
+#  legal-entity-composition-service:
+#     image: repo.backbase.com/backbase-stream-images/legal-entity-composition-service:3.72.1
+#     ports:
+#       - "8090:8080"
+#     environment:
+#       <<: *common-variables
+#       eureka.client.enabled: 'true'
+#       backbase.activemq.enabled: 'false'
+#       spring.cloud.stream.defaultBinder: 'kafka'
+#       backbase.kafka.enabled: 'true'
+#       spring.kafka.consumer.bootstrap-servers: kafka:9092
+#       spring.cloud.stream.kafka.binder.kafkas: kafka:9092
+#       spring.cloud.stream.kafka.binder.zkNodes: zookeeper:2181
+#       spring.kafka.bootstrap-servers: kafka:9092
+#       PRODUCER_BOOTSTRAP_SERVERS: 'kafka:9092'
+#       eureka.instance.appname: legal-entity-composition
+#       backbase.stream.compositions.legal-entity.chains.product-composition.enabled: 'false'
+#     volumes:
+#       - ./scripts:/tmp/h
+#     healthcheck:
+#       <<: *healthcheck-defaults
+#       test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/legal-entity-composition", "<status>UP</status>" ]
+#     depends_on:
+#       kafka:
+#         condition: service_healthy
+#     links:
+#       - registry
+#       - kafka
+#       - zookeeper
 
   kafka-message-producer:
     image: harbor.backbase.eu/development/kafka-message-producer:1.0.0-SNAPSHOT
@@ -550,16 +554,16 @@ services:
       KSQL_KSQL_SINK_PARTITIONS: '1'
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: '1'
 
-  test-data:
-    image: gradle:8-jdk11
-    command: "gradle --no-daemon testInjectData -x installFrontend -x assembleFrontend"
-    restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./:/app:z
-    links:
-      - kafka
-      - schema-registry
+#  test-data:
+#    image: gradle:8-jdk11
+#    command: "gradle --no-daemon testInjectData -x installFrontend -x assembleFrontend"
+#    restart: unless-stopped
+#    working_dir: /app
+#    volumes:
+#      - ./:/app:z
+#    links:
+#      - kafka
+#      - schema-registry
 
 #  kafkacat:
 #    image: confluentinc/cp-kafkacat:7.0.13
