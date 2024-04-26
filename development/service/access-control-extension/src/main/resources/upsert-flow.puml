@@ -1,0 +1,28 @@
+@startuml
+package "Kafka" <<queue>> {
+  package "UpsertDataGroupsEvent" <<queue>> {
+  }
+  package "UpsertDataGroupsSuccessEvent" <<queue>> {
+  }
+}
+
+package "Raiffeisen" <<Bank>> {
+  entity UpsertDataGroupsEvent
+}
+
+package "Backbase.AccessControl" {
+  package "SpringBeans" {
+    class DataGroupServiceFacade
+  }
+  package "extension" {
+    class UpsertDataGroupCloudFunction
+  }
+}
+
+Raiffeisen.UpsertDataGroupsEvent -> Kafka.UpsertDataGroupsEvent: 1. UpsertDataGroupsEvent
+
+Kafka.UpsertDataGroupsEvent --> Backbase.AccessControl.extension.UpsertDataGroupCloudFunction: 2. UpsertDataGroupsEvent
+
+Backbase.AccessControl.extension.UpsertDataGroupCloudFunction -> Backbase.AccessControl.SpringBeans.DataGroupServiceFacade: 3. Update Data Group
+Backbase.AccessControl.extension.UpsertDataGroupCloudFunction --> Kafka.UpsertDataGroupsSuccessEvent: 4. UpsertDataGroupsSuccessEvent
+@enduml
