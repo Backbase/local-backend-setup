@@ -23,6 +23,9 @@ Raiffeisen.UpsertDataGroupsEvent -> Kafka.UpsertDataGroupsEvent: 1. UpsertDataGr
 
 Kafka.UpsertDataGroupsEvent --> Backbase.AccessControl.extension.UpsertDataGroupCloudFunction: 2. UpsertDataGroupsEvent
 
-Backbase.AccessControl.extension.UpsertDataGroupCloudFunction -> Backbase.AccessControl.SpringBeans.DataGroupServiceFacade: 3. Update Data Group
-Backbase.AccessControl.extension.UpsertDataGroupCloudFunction --> Kafka.UpsertDataGroupsSuccessEvent: 4. UpsertDataGroupsSuccessEvent
+Backbase.AccessControl.extension.UpsertDataGroupCloudFunction -> Backbase.AccessControl.SpringBeans.DataGroupServiceFacade: 3. Search Data Group
+
+Backbase.AccessControl.extension.UpsertDataGroupCloudFunction -> Backbase.AccessControl.SpringBeans.DataGroupServiceFacade: 4. Update or Creaet Data Group
+
+Backbase.AccessControl.extension.UpsertDataGroupCloudFunction --> Kafka.UpsertDataGroupsSuccessEvent: 5. UpsertDataGroupsSuccessEvent
 @enduml

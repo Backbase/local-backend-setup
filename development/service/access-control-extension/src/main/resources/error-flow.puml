@@ -1,0 +1,28 @@
+@startuml
+
+title Upsert Data Group Process
+
+start
+
+:UpsertDataGroupItem received;
+if (Process UpsertDataGroupItem) then (success)
+  :Search for data groups;
+  if (Data group exists?) then (yes)
+    :Update Data Group;
+  else (no)
+    :Create Data Group;
+  endif
+else (error)
+  :Send message to error topic with headers as error message;
+  :Pause Consumer;
+  while (Messages on Error Topic) is (true)
+    :Sleep for 10 seconds;
+  endwhile
+  :Resume Consumer;
+endif
+
+:Process complete;
+
+stop
+
+@enduml

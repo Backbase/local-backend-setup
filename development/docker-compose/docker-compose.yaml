@@ -178,42 +178,40 @@ services:
         condition: service_healthy
 
   access-control:
-    image: repo.backbase.com/access-control-extension:2023.10-0.0.5
-    ports:
-      - "8040:8080"
+    image: repo.backbase.com/access-control-extension:2023.10-0.0.6
+    deploy:
+      replicas: 2
+    #ports:
+    #  - "8040:8080"
+    #  - "5005:5005"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
+     # JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: updateDataGroup;upsertDataGroup
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
 
-      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-in-0_DESTINATION: UpdateDataGroupsEvent
-      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.partitionCount: 100
-      #spring.cloud.stream.bindings.updateDataGroup-in-0.consumer.concurrency: 100
-      spring.cloud.stream.bindings.updateDataGroup-in-0.group: update-data-groups-event-group
-      spring.cloud.stream.bindings.updateDataGroup-in-0.content-type: application/json
-
-      SPRING_CLOUD_STREAM_BINDINGS_updateDataGroup-out-0_DESTINATION: UpdateDataGroupsSuccessEvent
-      #spring.cloud.stream.bindings.updateDataGroup-out-0.producer.partitionCount: 100
-      spring.cloud.stream.bindings.updateDataGroup-out-0.group: update-data-groups-success-event-group
-      spring.cloud.stream.bindings.updateDataGroup-out-0.content-type: application/json
+      "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
 
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
-      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitionCount: 100
-      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 100
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitionCount: 2
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 2
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.max-attempts: 1
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.autoCommitOffset: true
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.error-handler-definition: MyErrorHandler
 
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
-      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 100
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 2
       spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
       spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
 
-      logging.root: WARN
-      logging.level.com.backbase: WARN
-      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: WARN
+      logging.root: INFO
+      logging.level.com.backbase: DEBUG
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
