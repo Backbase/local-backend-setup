@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UpsertDataGroupProcessor {
+public class DataGroupUpsertProcessor {
 
     private final DataItemsUtil dataItemsUtil;
     private final DataGroupServiceFacade dataGroupServiceFacade;

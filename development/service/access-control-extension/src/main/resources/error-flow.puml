@@ -15,9 +15,7 @@ if (Process UpsertDataGroupItem) then (success)
 else (error)
   :Send message to error topic with headers as error message;
   :Pause Consumer;
-  while (Messages on Error Topic) is (true)
-    :Sleep for 10 seconds;
-  endwhile
+  :Some Condition ?;
   :Resume Consumer;
 endif
 
