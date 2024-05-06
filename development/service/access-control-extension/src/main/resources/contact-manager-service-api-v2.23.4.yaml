@@ -1,0 +1,4117 @@
+openapi: 3.0.3
+info:
+  title: Contacts service API
+  description: Allows other services to execute CRUD operations on contacts.
+  version: 2.23.4
+  x-icon: contacts
+servers:
+- url: http://localhost:4010
+  description: Mock server
+- url: http://localhost:8080
+  description: Spring Boot default port
+- url: https://localhost:8081
+  description: "Best practice: use https"
+tags:
+- name: contacts
+- name: approvals-service-api
+paths:
+  /service-api/v2/contacts:
+    summary: Endpoints for working with contacts.
+    get:
+      tags:
+      - contacts
+      description: Retrieves list of all contacts.
+      operationId: getContacts
+      parameters:
+      - name: saId
+        in: query
+        description: Service agreement id
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+      - name: leId
+        in: query
+        description: Legal entity id
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      - name: from
+        in: query
+        description: Page Number. Skip over pages of elements by specifying a start
+          value for the query.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        examples:
+          example:
+            value: 20
+      - name: size
+        in: query
+        description: Limit the number of elements on the response.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+        examples:
+          example:
+            value: 80
+      - name: query
+        in: query
+        description: "The generic search term to search for contacts either by their\
+          \ name or alias or by one characteristic of their accounts (name, alias,\
+          \ accountNumber, IBAN, phoneNumber or email). This search is based on sql\
+          \ LIKE statement which means SQL wildcards(like '%', '_' - may differ depends\
+          \ on database engine) can be used in query parameter to perform more complex\
+          \ search. Providing only '_' or '%' will result in returning all valid contacts."
+        required: false
+        schema:
+          type: string
+        examples:
+          simple:
+            value: john
+          wildcard_one_char:
+            value: j__n
+          wildcard_multiple_chars:
+            value: j%n
+      - name: accountIdentifierTypes
+        in: query
+        description: |
+          An array of account identifier types to return the matching contacts should have at least one account with the given account identfier types.
+          The default behavior is to return the matching contacts having accounts with any type of account identifier (accountNumber, IBAN, phoneNumber, email or other).
+          But when the specific account identifier types are requested then the matching contacts which have at least one account with the requested account identfier being not empty,
+          and then matching the search term either by their name or alias or by one characteristic of their accounts (name, alias, requested account identifiers such as accountNumber, IBAN, phoneNumber, email or other)
+          are returned.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/account-identifier-type'
+      - name: contactExternalId
+        in: query
+        description: Reference of an Contact ID from another (external) system
+        required: false
+        schema:
+          $ref: '#/components/schemas/external-id'
+        examples:
+          example:
+            value: 81fd5ede036511e8ba890ed5f89f718b
+      - name: accountExternalId
+        in: query
+        description: Reference of an Account ID from another (external) system
+        required: false
+        schema:
+          $ref: '#/components/schemas/external-id'
+        examples:
+          example:
+            value: e71dc27c066211e8ba890ed5f89f718b
+      - name: lastPaymentAmountFrom
+        in: query
+        description: Lower value of the last payment amount range search. The value
+          is inclusive so this is acting as >=. This value is expected to have maximum
+          of 5 decimal places as this is our base scale for all monetary values. If
+          there will more than 5 decimal places BadRequest will be returned.
+        required: false
+        schema:
+          type: number
+        examples:
+          sample:
+            value: 100.12345
+      - name: lastPaymentAmountTo
+        in: query
+        description: Upper value of the last payment amount range search. The value
+          is inclusive so this is acting as <=. This value is expected to have maximum
+          of 5 decimal places as this is our base scale for all monetary values. If
+          there will more than 5 decimal places BadRequest will be returned.
+        required: false
+        schema:
+          type: number
+        examples:
+          sample:
+            value: 10000.569
+      - name: lastPaymentDateFrom
+        in: query
+        description: Lower value of the last payment date range search. The value
+          is inclusive so this is acting as >=.
+        required: false
+        schema:
+          type: string
+          format: date
+        examples:
+          sample-from:
+            value: 2023-10-01
+      - name: lastPaymentDateTo
+        in: query
+        description: Upper value of the last payment date range search. The value
+          is inclusive so this is acting as <=.
+        required: false
+        schema:
+          type: string
+          format: date
+        examples:
+          sample-from:
+            value: 2023-10-09
+      - name: contactGroupIds
+        in: query
+        description: List of contact group ids
+        required: false
+        schema:
+          maxItems: 30
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-group-id'
+      - name: favourite
+        in: query
+        description: Narrows down search result by searching only in favourite contacts.
+        required: false
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: List of contacts matching the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsGetResponseBody'
+              examples:
+                getContactsResponse:
+                  $ref: '#/components/examples/getContactsResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    post:
+      tags:
+      - contacts
+      summary: Creates a new contact.
+      description: |
+        Response 201 is a result of successful creation.
+        Response 202 will indicate contact request has been created and approval is required for having it available.
+      operationId: postContacts
+      requestBody:
+        description: |
+          Create a new contact. Response 201 is a result of successful creation.
+          Response 202 will indicate contact request has been created and approval is required for having it available.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsPostRequestBody'
+            examples:
+              createContactRequest:
+                $ref: '#/components/examples/createContactRequest'
+                value: null
+      responses:
+        "201":
+          description: Contact has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsPostResponseBody'
+              examples:
+                createContactResponse:
+                  $ref: '#/components/examples/createContactResponse'
+                  value: null
+        "202":
+          description: ApprovalRequired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsPostResponseBody'
+              examples:
+                createContactResponse:
+                  $ref: '#/components/examples/createContactResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /service-api/v2/contacts/{contactId}:
+    summary: Endpoints for working with contact by internal id.
+    get:
+      tags:
+      - contacts
+      description: Retrieves a contact by internal id.
+      operationId: getContactById
+      parameters:
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: contactStatus
+        in: query
+        description: An array of contact statuses that the matching contacts should
+          have when queried.
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-status'
+          default:
+          - ACTIVE
+          - PENDING_APPROVAL
+      responses:
+        "200":
+          description: ContactItem
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGetResponseBody'
+              examples:
+                example:
+                  $ref: '#/components/examples/example'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+    put:
+      tags:
+      - contacts
+      summary: Updates a single contact by its ID.
+      description: "Response 202 is a result of an accepted request. Please check\
+        \ the status field in the response for further information. When the status\
+        \ field populated with:\n   REQUEST_ACCEPTED - No further approvals are needed.\
+        \ The contact has been updated. This may result change of the contact ID based\
+        \ on the approvals configuration.\n   APPROVAL_REQUIRED - The contact update\
+        \ needs further approval. Until the contact is fully approved, the original\
+        \ contact is available with the original contact ID.\n   The contact is updated\
+        \ and available with a reassigned ID after the contact has been approved.\n\
+        \ \n Business validation: \n\n  As the Contact need to exist in context of\
+        \ a user this API check X-CXT-User-Token or UserContext for internalUserId,\
+        \ serviceAgreementId or legalEntityId. The validation is following the pattern:\n\
+        \  - if the approvals are disabled at least internalUserId and one of the\
+        \ following serviceAgreementId, legalEntityId is expected in the request as\
+        \ a matching pair to the accessContextScope.\n  - if the approvals are enabled\
+        \ API expect a pair of internalUserId and serviceAgreementId to be provided\
+        \ as those are required by approvals mechanism and in addition a legalEntityId\
+        \ when accessContextScope set to LE\n"
+      operationId: updateContact
+      parameters:
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPutRequestBody'
+            examples:
+              updateContactRequest:
+                $ref: '#/components/examples/updateContactRequest'
+                value: null
+      responses:
+        "202":
+          description: Contact update request was accepted. Please check the status
+            field for further information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactPutResponseBody'
+              examples:
+                updateContactResponse:
+                  $ref: '#/components/examples/updateContactResponse'
+                  value: null
+        "409":
+          description: ApprovalRequestConflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+              examples:
+                updateContactConflictResponse:
+                  $ref: '#/components/examples/updateContactConflictResponse'
+                  value: null
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+    delete:
+      tags:
+      - contacts
+      summary: Deletes a single contact by id.
+      description: Success response has a status to indicate the delete request has
+        been accepted or needs further approval.
+      operationId: deleteContact
+      parameters:
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: includeInactive
+        in: query
+        description: "Information if the contact should be deleted even if it is in\
+          \ one of the inactive statuses: IMPORTED, REJECTED, ENTERED."
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      - name: approvalId
+        in: query
+        description: Required for approval only. The id of the approval request that
+          is used to get this item approved.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 686838fb-c263-4214-8106-b60538610967
+      responses:
+        "202":
+          description: DeleteRequested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDeleteResponseBody'
+              examples:
+                deleteContactResponse:
+                  $ref: '#/components/examples/deleteContactResponse'
+                  value: null
+        "409":
+          description: ApprovalRequestConflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+              examples:
+                deleteContactConflictResponse:
+                  $ref: '#/components/examples/deleteContactConflictResponse'
+                  value: null
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+  /service-api/v2/contacts/{contactId}/favourites:
+    summary: Endpoints for managing favourite contacts
+    patch:
+      tags:
+      - contacts
+      description: Marks or unmark contact as favourite
+      operationId: patchFavouriteContact
+      parameters:
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      requestBody:
+        description: Contains information about setting contact favourite or not
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFavouritePatchRequestBody'
+            examples:
+              contactFavouritePatchRequest:
+                $ref: '#/components/examples/contactFavouritePatchRequest'
+                value: null
+        required: true
+      responses:
+        "204":
+          description: No description available
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+  /service-api/v2/contacts/favourites:
+    summary: Endpoints for handling favourite contacts
+    put:
+      tags:
+      - contacts
+      description: Batch marks contacts as favourite
+      operationId: batchMarkContactAsFavourite
+      requestBody:
+        description: List of contact ids which should be marked as favourite
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsToMarkAsFavouriteRequestBody'
+            examples:
+              contactToMarkAsFavourite:
+                $ref: '#/components/examples/contactToMarkAsFavourite'
+                value: null
+        required: true
+      responses:
+        "204":
+          description: No description available
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+  /service-api/v2/contacts/{contactId}/approvals:
+    summary: Endpoints for working with contact approvals by internal contact id.
+    patch:
+      tags:
+      - approvals-service-api
+      summary: Allows to set contact final approval status.
+      operationId: updateApprovalStatus
+      parameters:
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      requestBody:
+        description: Patches a single contact by setting its approval status.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactSetApprovalStatusRequestBody'
+            examples:
+              patchPartyByIdRequest:
+                $ref: '#/components/examples/patchPartyByIdRequest'
+                value: null
+      responses:
+        "204":
+          description: No description available
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+  /service-api/v2/contacts/payee-groups/check:
+    summary: Endpoints for checking if user having given business functions is entitled
+      to execute a payment with given arrangement and payee groups that contain given
+      contacts.
+    post:
+      tags:
+      - contacts
+      description: |
+        Retrieves information about user entitlement to execute a payment action defined by privilege (e.g. 'create, 'view', 'edit') with an arrangement id to payee groups containing given contact ids
+        in context of business functions assigned to user.
+      operationId: postCheckUserEntitlementToExecutePayment
+      parameters:
+      - name: reportNotEntitledPayments
+        in: query
+        description: Specifies if response should contain details of not entitled
+          payments. Default value is false.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        description: Retrieves payment entitlement
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsPaymentEntitlementRequestBody'
+            examples:
+              example:
+                $ref: '#/components/examples/example-1'
+                value: null
+        required: true
+      responses:
+        "200":
+          description: Contacts payment entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsPaymentEntitlementResponseBody'
+              examples:
+                example:
+                  $ref: '#/components/examples/example-2'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+  /service-api/v2/contacts/externalId:
+    summary: Endpoints for working with contacts identified by external ID.
+    get:
+      tags:
+      - contacts
+      description: Retrieves list of contacts identified by external ID.
+      operationId: getContactsByExternalId
+      parameters:
+      - name: scope
+        in: query
+        description: "The scope which can be either Service Agreement (SA), Legal\
+          \ Entity (LE) or User (USER)"
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/AccessContextScope'
+        examples:
+          example:
+            value: SA
+      - name: contactExternalId
+        in: query
+        description: Reference of a contact ID from another (external) system
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 336d64ca-6eeb-11e8-adc0-fa7ae01bbebc
+      - name: externalServiceAgreementId
+        in: query
+        description: The external service agreement id. Mandatory if scope is SA.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: externalLegalEntityId
+        in: query
+        description: The external legal entity id. Mandatory if scope is LE.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: externalUserId
+        in: query
+        description: Deprecated since 2023.03 please use InternalUserId instead of
+          it. User external Id. Mandatory if scope is USER and internalUserId is not
+          set.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 76d5be8b-e80d-4842-8ce6-ea67519e8f74
+      - name: internalUserId
+        in: query
+        description: Internal user id. Mandatory if scope is USER and externalUserId
+          is not set.
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/InternalUserId'
+        examples:
+          example:
+            value: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+      responses:
+        "200":
+          description: Retrieves contacts by external ids and Access Context.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsByExternalIdGetResponseBody'
+              examples:
+                contactByIdAndAccessContextResponse:
+                  $ref: '#/components/examples/contactByIdAndAccessContextResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /service-api/v2/contacts/bulk:
+    summary: Endpoint for working with contacts in bulk.
+    post:
+      tags:
+      - contacts
+      description: Creates contacts in bulk.
+      operationId: postContactsBulk
+      requestBody:
+        description: Create new contacts in bulk
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsBulkPostRequestBody'
+            examples:
+              createContactBulkRequestWithoutInternalUserId:
+                $ref: '#/components/examples/createContactBulkRequestWithoutInternalUserId'
+                value: null
+              createContactBulkRequestWithInternalUserId:
+                $ref: '#/components/examples/createContactBulkRequestWithInternalUserId'
+                value: null
+      responses:
+        "201":
+          description: No description available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsBulkPostResponseBody'
+              examples:
+                createContactBulkResponse:
+                  $ref: '#/components/examples/createContactBulkResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /service-api/v2/contacts/bulk/delete:
+    summary: Endpoint for deleting contacts in bulk.
+    post:
+      tags:
+      - contacts
+      description: Deletes contacts in bulk.
+      operationId: postContactsBulkDelete
+      requestBody:
+        description: Delete contacts in bulk
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsBulkDeletePostRequestBody'
+            examples:
+              deleteContactBulkRequestWithoutInternalUserId:
+                $ref: '#/components/examples/deleteContactBulkRequestWithoutInternalUserId'
+                value: null
+              deleteContactBulkRequestWithInternalUserId:
+                $ref: '#/components/examples/deleteContactBulkRequestWithInternalUserId'
+                value: null
+      responses:
+        "200":
+          description: All the requested contacts have been deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsBulkDeletePostResponseBody'
+              examples:
+                createContactBulkResponse:
+                  $ref: '#/components/examples/createContactBulkResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /service-api/v2/contacts/internal-ids/filter:
+    summary: Endpoints for getting contacts internal ids.
+    post:
+      tags:
+      - contacts
+      description: Retrieves contacts external to internal id mapping.
+      operationId: postContactsInternalIdsFilter
+      parameters:
+      - name: saId
+        in: query
+        description: |
+          Service agreement to match the contacts (only in access context scope SA).
+          Contacts from other service agreements will not be included into mapping response even if they have the requested external ids.
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+        examples:
+          example:
+            value: 06bb18ba-ff0d-4056-908e-44e7e6a7d86d
+      requestBody:
+        description: External to internal contacts ids filter.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactsInternalIdsFilterPostRequestBody'
+            examples:
+              contactsExternalToInternalIdsFilterRequest:
+                $ref: '#/components/examples/contactsExternalToInternalIdsFilterRequest'
+                value: null
+      responses:
+        "200":
+          description: List of contacts filtered by the criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactsInternalIdsFilterPostResponseBody'
+              examples:
+                contactsExternalToInternalIdsFilterResponse:
+                  $ref: '#/components/examples/contactsExternalToInternalIdsFilterResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /service-api/v2/contact-groups:
+    summary: Endpoint to handle contact groups.
+    get:
+      tags:
+      - contact-groups
+      description: Retrieves all contact groups for given query parameters.
+      operationId: getAllContactGroups
+      parameters:
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      - name: from
+        in: query
+        description: Page Number. Skip over pages of elements by specifying a start
+          value for the query.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        examples:
+          example:
+            value: 20
+      - name: size
+        in: query
+        description: Limit the number of elements on the response.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+        examples:
+          example:
+            value: 80
+      responses:
+        "200":
+          description: List of all contact groups for given user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroupsGetResponseBody'
+              examples:
+                contactGroupGetResponse:
+                  $ref: '#/components/examples/contactGroupGetResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+    post:
+      tags:
+      - contact-groups
+      description: Creates a new contact group.
+      operationId: postContactGroup
+      requestBody:
+        description: Body of new contact group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactGroupPostRequestBody'
+            examples:
+              contactGroupPostRequest:
+                $ref: '#/components/examples/contactGroupPostRequest'
+                value: null
+      responses:
+        "201":
+          description: Contact group has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroupPostResponseBody'
+              examples:
+                contactGroupPostResponse:
+                  $ref: '#/components/examples/contactGroupPostResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+  /service-api/v2/contact-groups/{groupId}:
+    summary: Endpoint to handle contact groups by id.
+    get:
+      tags:
+      - contact-groups
+      description: Retrieves contact group with given id.
+      operationId: getContactGroup
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      responses:
+        "200":
+          description: Contact group for given id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroupGetResponseBody'
+              examples:
+                contactGroupGetByIdResponse:
+                  $ref: '#/components/examples/contactGroupGetByIdResponse'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+    put:
+      tags:
+      - contact-groups
+      description: Update contact group with given id. Response 204 is a result of
+        an accepted request.
+      operationId: putContactGroup
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactGroupPutRequestBody'
+            examples:
+              contactGroupPutRequest:
+                $ref: '#/components/examples/contactGroupPutRequest'
+                value: null
+      responses:
+        "204":
+          description: Contact group has been updated.
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+    delete:
+      tags:
+      - contact-groups
+      description: Delete contact group with given id.
+      operationId: deleteContactGroup
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      responses:
+        "204":
+          description: Contact group has been deleted.
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+  /service-api/v2/contact-groups/{groupId}/contacts:
+    summary: Endpoint for handling contacts in contact groups.
+    get:
+      tags:
+      - contact-groups
+      description: Retrieves all contacts for contact group with given id.
+      operationId: getContactsByGroupId
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      - name: from
+        in: query
+        description: Page Number. Skip over pages of elements by specifying a start
+          value for the query.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        examples:
+          example:
+            value: 20
+      - name: size
+        in: query
+        description: Limit the number of elements on the response.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+        examples:
+          example:
+            value: 80
+      responses:
+        "200":
+          description: List of all contacts for given group id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupedContacts'
+              examples:
+                contactGroupGetResponse:
+                  $ref: '#/components/examples/contactGroupGetResponse-1'
+                  value: null
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+    patch:
+      tags:
+      - contact-groups
+      description: Add many contacts to group.
+      operationId: addContactsToGroup
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      requestBody:
+        description: Ids of contacts that are going to be added to group in bulk.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactGroupAddContactPatchRequestBody'
+            examples:
+              contactGroupGetResponse:
+                $ref: '#/components/examples/contactGroupGetResponse-2'
+                value: null
+      responses:
+        "204":
+          description: Contacts has been added.
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+  /service-api/v2/contact-groups/{groupId}/contacts/{contactId}:
+    delete:
+      tags:
+      - contact-groups
+      description: Delete contact from group.
+      operationId: deleteContactFromGroup
+      parameters:
+      - name: groupId
+        in: path
+        description: Contact group id
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-group-id'
+      - name: contactId
+        in: path
+        description: Internal id of the contact
+        required: true
+        schema:
+          $ref: '#/components/schemas/contact-id'
+      - name: legalEntityId
+        in: query
+        description: The legal entity id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/legal-entity-id'
+        examples:
+          sample-id:
+            value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+      - name: serviceAgreementId
+        in: query
+        description: The service agreement id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/service-agreement-id'
+        examples:
+          sample-id:
+            value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+      - name: internalUserId
+        in: query
+        description: The internal user id that the user is acting in.
+        required: false
+        schema:
+          $ref: '#/components/schemas/internal-user-id'
+        examples:
+          sample-id:
+            value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+      responses:
+        "204":
+          description: Contact has been deleted from group.
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: NotFound
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+components:
+  schemas:
+    BadRequestError:
+      title: BadRequestError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    UnauthorizedError:
+      title: UnauthorizedError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    ForbiddenError:
+      title: ForbiddenError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    NotFoundError:
+      title: NotFoundError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    InternalServerError:
+      title: InternalServerError
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+      description: Represents HTTP 500 Internal Server Error
+    ConflictError:
+      title: ConflictError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    AccountInformation:
+      type: object
+      properties:
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        name:
+          $ref: '#/components/schemas/account-name'
+        alias:
+          $ref: '#/components/schemas/account-alias'
+        accountType:
+          $ref: '#/components/schemas/account-type'
+        accountNumber:
+          $ref: '#/components/schemas/account-number'
+        IBAN:
+          $ref: '#/components/schemas/Iban'
+        phoneNumber:
+          $ref: '#/components/schemas/phone-number-identifier'
+        email:
+          $ref: '#/components/schemas/email-identifier'
+        otherIdentifier:
+          $ref: '#/components/schemas/other-identifier'
+        BIC:
+          $ref: '#/components/schemas/Bic'
+        bankCode:
+          $ref: '#/components/schemas/bank-code'
+        bankName:
+          $ref: '#/components/schemas/bank-name'
+        bankAddressLine1:
+          $ref: '#/components/schemas/address-line'
+        bankAddressLine2:
+          $ref: '#/components/schemas/address-line'
+        bankStreetName:
+          $ref: '#/components/schemas/street-name'
+        bankTown:
+          $ref: '#/components/schemas/Town'
+        bankPostCode:
+          $ref: '#/components/schemas/post-code'
+        bankCountrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        bankCountry:
+          $ref: '#/components/schemas/Country'
+        accountHolderAddressLine1:
+          $ref: '#/components/schemas/address-line'
+        accountHolderAddressLine2:
+          $ref: '#/components/schemas/address-line'
+        accountHolderStreetName:
+          $ref: '#/components/schemas/street-name'
+        accountHolderTown:
+          $ref: '#/components/schemas/Town'
+        accountHolderPostCode:
+          $ref: '#/components/schemas/post-code'
+        accountHolderCountrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        accountHolderCountry:
+          $ref: '#/components/schemas/Country'
+        additions:
+          $ref: '#/components/schemas/Additions'
+    ContactSetApprovalStatusRequestBody:
+      required:
+      - approvalStatus
+      type: object
+      properties:
+        approvalStatus:
+          type: string
+          description: The status of the final approval.
+          enum:
+          - APPROVED
+          - REJECTED
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact partial update request body.
+    ContactFavouritePatchRequestBody:
+      required:
+      - favourite
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        favourite:
+          type: boolean
+    ContactsToMarkAsFavouriteRequestBody:
+      required:
+      - contactsIds
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        contactsIds:
+          maxItems: 100
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+    ContactsBulkDeletePostResponseBody:
+      properties:
+        successCount:
+          type: integer
+          description: The number of contacts processed successfully.
+        additions:
+          $ref: '#/components/schemas/Additions'
+    ContactsBulkDeletePostRequestBody:
+      required:
+      - accessContext
+      - externalContactIds
+      type: object
+      properties:
+        internalUserId:
+          $ref: '#/components/schemas/InternalUserId'
+        accessContext:
+          $ref: '#/components/schemas/ExternalAccessContext'
+        externalContactIds:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalContactId'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contacts within a context
+    ContactsBulkPostResponseBody:
+      type: object
+      properties:
+        successCount:
+          type: integer
+          description: The number of contacts processed successfully.
+        additions:
+          $ref: '#/components/schemas/Additions'
+      example:
+        successCount: 2
+    ContactsBulkPostRequestBody:
+      required:
+      - accessContext
+      - contacts
+      type: object
+      properties:
+        ingestMode:
+          $ref: '#/components/schemas/IngestMode'
+        accessContext:
+          $ref: '#/components/schemas/ExternalAccessContext'
+        internalUserId:
+          $ref: '#/components/schemas/InternalUserId'
+        contacts:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalContact'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: External contacts within same context
+    ContactsInternalIdsFilterPostRequestBody:
+      required:
+      - externalContactIds
+      type: object
+      properties:
+        externalContactIds:
+          maxItems: 10000
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalContactId'
+      description: External to internal contacts ids filter.
+    ContactsInternalIdsFilterPostResponseBody:
+      type: object
+      additionalProperties:
+        minItems: 1
+        type: array
+        items:
+          $ref: '#/components/schemas/Id'
+      description: External to internal contacts ids filter.
+    ContactsByExternalIdGetResponseBody:
+      type: array
+      items:
+        $ref: '#/components/schemas/ContactsByExternalIdAndAccessContextGetResponseBodyItem'
+    ContactsByExternalIdAndAccessContextGetResponseBodyItem:
+      required:
+      - accounts
+      - id
+      - name
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        externalId:
+          $ref: '#/components/schemas/ExternalContactId'
+        accounts:
+          minItems: 1
+          type: array
+          description: List of contact accounts ordered by name in ascending order
+            with nulls last
+          items:
+            $ref: '#/components/schemas/AccountInformation'
+        accessContextScope:
+          $ref: '#/components/schemas/AccessContextScope'
+        name:
+          $ref: '#/components/schemas/ContactName'
+        alias:
+          $ref: '#/components/schemas/ContactAlias'
+        category:
+          $ref: '#/components/schemas/ContactCategory'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/ContactPhoneNumber'
+        emailId:
+          $ref: '#/components/schemas/ContactEmailId'
+        addressLine1:
+          $ref: '#/components/schemas/AddressLine'
+        addressLine2:
+          $ref: '#/components/schemas/AddressLine'
+        streetName:
+          $ref: '#/components/schemas/StreetName'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/PostCode'
+        countrySubDivision:
+          $ref: '#/components/schemas/CountrySubDivision'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/ActiveContactStatus'
+        userReference:
+          $ref: '#/components/schemas/UserReference'
+        contactReference:
+          $ref: '#/components/schemas/ContactReference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/GenericSearchField'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/GenericSearchField'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/LastPaymentAmount'
+        lastPaymentDate:
+          $ref: '#/components/schemas/LastPaymentDate'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: ContactItem
+    ContactsGetResponseBody:
+      type: array
+      items:
+        $ref: '#/components/schemas/ContactGetResponseBody'
+    ContactGetResponseBody:
+      required:
+      - accounts
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/contact-id'
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        accounts:
+          minItems: 1
+          type: array
+          description: List of contact accounts ordered by name in ascending order
+            with nulls last
+          items:
+            $ref: '#/components/schemas/account-information'
+        accessContextScope:
+          $ref: '#/components/schemas/access-context-scope'
+        name:
+          $ref: '#/components/schemas/name'
+        alias:
+          $ref: '#/components/schemas/alias'
+        category:
+          $ref: '#/components/schemas/category'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/phoneNumber'
+        emailId:
+          $ref: '#/components/schemas/emailId'
+        addressLine1:
+          $ref: '#/components/schemas/address-line'
+        addressLine2:
+          $ref: '#/components/schemas/address-line'
+        streetName:
+          $ref: '#/components/schemas/street-name'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/post-code'
+        countrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/active-contact-status'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/user-reference'
+        contactReference:
+          $ref: '#/components/schemas/contact-reference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/generic-search-field'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/generic-search-field'
+        lastPaymentDate:
+          $ref: '#/components/schemas/last-payment-date'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/last-payment-amount'
+      description: ContactItem
+    ContactPutRequestBody:
+      required:
+      - accounts
+      - name
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        accounts:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/account-information'
+        accessContextScope:
+          $ref: '#/components/schemas/access-context-scope'
+        name:
+          $ref: '#/components/schemas/name'
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        alias:
+          $ref: '#/components/schemas/alias'
+        category:
+          $ref: '#/components/schemas/category'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/phoneNumber'
+        emailId:
+          $ref: '#/components/schemas/emailId'
+        addressLine1:
+          $ref: '#/components/schemas/address-line'
+        addressLine2:
+          $ref: '#/components/schemas/address-line'
+        streetName:
+          $ref: '#/components/schemas/street-name'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/post-code'
+        countrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/active-contact-status'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/user-reference'
+        contactReference:
+          $ref: '#/components/schemas/contact-reference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/generic-search-field'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/generic-search-field'
+        lastPaymentDate:
+          $ref: '#/components/schemas/last-payment-date'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/last-payment-amount'
+      description: Contact update request body.
+    ContactPutResponseBody:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/approval-request-indicator'
+        activeContactId:
+          type: string
+          description: "The contact available for further calls with the ID provided\
+            \ in this field. The ID here may differ from the original contact if the\
+            \ update was successfully, the approvals enabled and the contact change\
+            \ has got approved already."
+        approvalId:
+          type: string
+          description: Internally used unique identification of approval request.
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact update response schema
+    ContactsPostResponseBody:
+      required:
+      - id
+      - status
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        status:
+          $ref: '#/components/schemas/ActiveContactStatus'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Object that defines an id attribute only.
+    ContactsPostRequestBody:
+      required:
+      - accounts
+      - name
+      properties:
+        approved:
+          type: boolean
+          description: "When set to true, the created contact will also be approved\
+            \ by the user (bbId). If the user cannot approve the contact, it will\
+            \ not be created at all."
+        accessContext:
+          type: object
+          properties:
+            legalEntityId:
+              $ref: '#/components/schemas/LegalEntityId'
+            serviceAgreementId:
+              $ref: '#/components/schemas/ServiceAgreementId'
+            internalUserId:
+              $ref: '#/components/schemas/InternalUserId'
+        accounts:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountInformation'
+        accessContextScope:
+          $ref: '#/components/schemas/AccessContextScope'
+        name:
+          $ref: '#/components/schemas/ContactName'
+        externalId:
+          $ref: '#/components/schemas/ExternalContactId'
+        alias:
+          $ref: '#/components/schemas/ContactAlias'
+        category:
+          $ref: '#/components/schemas/ContactCategory'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/ContactPhoneNumber'
+        emailId:
+          $ref: '#/components/schemas/ContactEmailId'
+        addressLine1:
+          $ref: '#/components/schemas/AddressLine'
+        addressLine2:
+          $ref: '#/components/schemas/AddressLine'
+        streetName:
+          $ref: '#/components/schemas/StreetName'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/PostCode'
+        countrySubDivision:
+          $ref: '#/components/schemas/CountrySubDivision'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/ActiveContactStatus'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/UserReference'
+        contactReference:
+          $ref: '#/components/schemas/ContactReference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/GenericSearchField'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/GenericSearchField'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/LastPaymentAmount'
+        lastPaymentDate:
+          $ref: '#/components/schemas/LastPaymentDate'
+      description: ContactItem for posting
+    ContactDeleteResponseBody:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/approval-request-indicator'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact delete response schema
+    ExternalAccessContext:
+      required:
+      - externalUserId
+      - scope
+      type: object
+      properties:
+        externalLegalEntityId:
+          $ref: '#/components/schemas/ExternalAccessGroupEntityId'
+        externalServiceAgreementId:
+          $ref: '#/components/schemas/ExternalAccessGroupEntityId'
+        externalUserId:
+          $ref: '#/components/schemas/ExternalUserId'
+        scope:
+          $ref: '#/components/schemas/AccessContextScope'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Access context
+    ExternalAccountInformation:
+      properties:
+        externalId:
+          $ref: '#/components/schemas/ExternalContactId'
+        name:
+          $ref: '#/components/schemas/AccountName'
+        alias:
+          $ref: '#/components/schemas/AccountAlias'
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        accountNumber:
+          $ref: '#/components/schemas/AccountNumber'
+        IBAN:
+          $ref: '#/components/schemas/Iban'
+        phoneNumber:
+          $ref: '#/components/schemas/phone-number-identifier'
+        email:
+          $ref: '#/components/schemas/email-identifier'
+        otherIdentifier:
+          $ref: '#/components/schemas/other-identifier'
+        BIC:
+          $ref: '#/components/schemas/Bic'
+        bankCode:
+          $ref: '#/components/schemas/BankCode'
+        bankName:
+          $ref: '#/components/schemas/BankName'
+        bankAddressLine1:
+          $ref: '#/components/schemas/AddressLine'
+        bankAddressLine2:
+          $ref: '#/components/schemas/AddressLine'
+        bankStreetName:
+          $ref: '#/components/schemas/StreetName'
+        bankTown:
+          $ref: '#/components/schemas/Town'
+        bankPostCode:
+          $ref: '#/components/schemas/PostCode'
+        bankCountrySubDivision:
+          $ref: '#/components/schemas/CountrySubDivision'
+        bankCountry:
+          $ref: '#/components/schemas/Country'
+        accountHolderAddressLine1:
+          $ref: '#/components/schemas/AddressLine'
+        accountHolderAddressLine2:
+          $ref: '#/components/schemas/AddressLine'
+        accountHolderStreetName:
+          $ref: '#/components/schemas/StreetName'
+        accountHolderTown:
+          $ref: '#/components/schemas/Town'
+        accountHolderPostCode:
+          $ref: '#/components/schemas/PostCode'
+        accountHolderCountrySubDivision:
+          $ref: '#/components/schemas/CountrySubDivision'
+        accountHolderCountry:
+          $ref: '#/components/schemas/Country'
+        additions:
+          $ref: '#/components/schemas/Additions'
+    ExternalContact:
+      required:
+      - accounts
+      - externalId
+      - name
+      properties:
+        accounts:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalAccountInformation'
+        externalId:
+          $ref: '#/components/schemas/ExternalContactId'
+        accessContextScope:
+          $ref: '#/components/schemas/AccessContextScope'
+        name:
+          $ref: '#/components/schemas/ContactName'
+        alias:
+          $ref: '#/components/schemas/ContactAlias'
+        category:
+          $ref: '#/components/schemas/ContactCategory'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/ContactPhoneNumber'
+        emailId:
+          $ref: '#/components/schemas/ContactEmailId'
+        addressLine1:
+          $ref: '#/components/schemas/AddressLine'
+        addressLine2:
+          $ref: '#/components/schemas/AddressLine'
+        streetName:
+          $ref: '#/components/schemas/StreetName'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/PostCode'
+        countrySubDivision:
+          $ref: '#/components/schemas/CountrySubDivision'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/ActiveContactStatus'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/UserReference'
+        contactReference:
+          $ref: '#/components/schemas/ContactReference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/GenericSearchField'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/GenericSearchField'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/LastPaymentAmount'
+        lastPaymentDate:
+          $ref: '#/components/schemas/LastPaymentDate'
+    ExternalAccessGroupEntityId:
+      maxLength: 64
+      minLength: 1
+      pattern: ^\S+$
+      type: string
+      description: External ID for entities in AccessGroup domain
+    ExternalUserId:
+      maxLength: 64
+      minLength: 1
+      pattern: ^\S+$
+      type: string
+      description: Deprecated since 2023.03 please use InternalUserId instead of it.
+        External user id.
+    InternalUserId:
+      maxLength: 36
+      minLength: 1
+      type: string
+      description: Internal user id
+    ServiceAgreementId:
+      maxLength: 36
+      type: string
+      description: The service agreement id.
+    LegalEntityId:
+      maxLength: 36
+      type: string
+      description: The legal entity id.
+    ExternalContactId:
+      maxLength: 32
+      type: string
+      description: Reference of an ID from another (external) system
+    Id:
+      maxLength: 36
+      type: string
+      description: Internally used unique identification of the contact
+    AccessContextScope:
+      type: string
+      description: |
+        Access context scope of the contact, either ServiceAgreement (SA), LegalEntity (LE) or User (USER).
+      enum:
+      - SA
+      - LE
+      - USER
+    IngestMode:
+      type: string
+      description: |
+        The way how contacts will be ingested into the system. UPSERT
+        mode will delete the existing contacts (who are matched on externalId)
+        and create new contacts based on payload provided in request. Default
+        way is creation only which does not require this property.
+      enum:
+      - UPSERT
+      - CREATE
+    ActiveContactStatus:
+      type: string
+      description: |
+        The active status of a contact. When approvals is not enabled ACTIVE is the only value possible.
+        Otherwise following values mean:
+        ACTIVE - fully approved;
+        PENDING_APPROVAL - the contact needs further approval to become active.
+      enum:
+      - ACTIVE
+      - PENDING_APPROVAL
+    Additions:
+      title: Additions
+      type: object
+      additionalProperties:
+        type: string
+      description: Additional properties
+    ContactsPaymentEntitlementRequestBody:
+      required:
+      - paymentEntitlementDetails
+      - privilege
+      properties:
+        privilege:
+          $ref: '#/components/schemas/privilege'
+        paymentEntitlementDetails:
+          maxItems: 1000
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentEntitlementDetails'
+      description: Retrieves payment entitlement for contacts
+    ContactsPaymentEntitlementResponseBody:
+      required:
+      - entitled
+      properties:
+        entitled:
+          type: boolean
+        notEntitledPaymentDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentEntitlementDetails'
+      description: Contacts payment entitlement with optional information about not
+        entitled payments
+    PaymentEntitlementDetails:
+      required:
+      - arrangementId
+      - businessFunctions
+      - contactIds
+      properties:
+        businessFunctions:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/business-function'
+        arrangementId:
+          type: string
+        contactIds:
+          maxItems: 10000
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+    ContactGroupsGetResponseBody:
+      type: array
+      items:
+        $ref: '#/components/schemas/ContactGroup'
+    ContactGroupGetResponseBody:
+      $ref: '#/components/schemas/contact-group'
+    ContactGroupPostRequestBody:
+      required:
+      - name
+      - scope
+      - userContext
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/group-name'
+        description:
+          $ref: '#/components/schemas/description'
+        scope:
+          $ref: '#/components/schemas/access-context-scope'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    ContactGroupPostResponseBody:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/contact-group-id'
+    ContactGroupPutRequestBody:
+      required:
+      - name
+      - userContext
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/group-name'
+        description:
+          $ref: '#/components/schemas/description'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    GroupedContacts:
+      type: array
+      items:
+        $ref: '#/components/schemas/grouped-contact'
+    ContactGroupAddContactPatchRequestBody:
+      required:
+      - ids
+      - userContext
+      type: object
+      properties:
+        ids:
+          maxItems: 100
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    UserContext:
+      type: object
+      properties:
+        internalUserId:
+          $ref: '#/components/schemas/internal-user-id'
+        serviceAgreementId:
+          $ref: '#/components/schemas/service-agreement-id'
+        legalEntityId:
+          $ref: '#/components/schemas/legal-entity-id'
+      description: "User context object. At least internalUserId and one of the following\
+        \ serviceAgreementId, legalEntityId is required when X-CXT-User-Token is not\
+        \ provided."
+    ContactName:
+      maxLength: 140
+      minLength: 1
+      type: string
+      description: The name of a contact
+    ContactAlias:
+      maxLength: 80
+      type: string
+      description: Name will be displayed if alias field is not filled
+    ContactCategory:
+      maxLength: 70
+      type: string
+      description: "Category to which the contact belongs to like employee, supplier."
+    ContactPerson:
+      maxLength: 70
+      type: string
+      description: Contact person of the contact
+    ContactPhoneNumber:
+      maxLength: 30
+      type: string
+      description: Contact phone number of the contact
+    ContactEmailId:
+      maxLength: 255
+      type: string
+      description: Email-id of the contact
+      format: email
+    AddressLine:
+      maxLength: 70
+      type: string
+      description: Address line
+    StreetName:
+      maxLength: 70
+      type: string
+      description: Street name
+    Town:
+      maxLength: 35
+      type: string
+      description: City or town
+    PostCode:
+      maxLength: 16
+      type: string
+      description: Address post code
+    CountrySubDivision:
+      maxLength: 35
+      type: string
+      description: Country region or state
+    Country:
+      maxLength: 2
+      minLength: 2
+      type: string
+      description: ISO 3166-1 alpha-2 Country Code
+    Iban:
+      maxLength: 34
+      type: string
+      description: "IBAN account identifier in format to ISO 13616. At least one of\
+        \ the account identifiers (accountNumber, IBAN, phoneNumber, email or otherIdentifier)\
+        \ is mandatory"
+    Bic:
+      maxLength: 11
+      type: string
+      description: The Business Identifier Code as issued within the SWIFT domain
+    BankCode:
+      maxLength: 20
+      type: string
+      description: "The code assigned by a central bank, e.g. ABA RTN"
+    BankName:
+      maxLength: 140
+      type: string
+      description: Specifies the name of the bank where the account is issued
+    AccountNumber:
+      maxLength: 40
+      type: string
+      description: "An account identifier. At least one of the account identifiers\
+        \ (accountNumber, IBAN, phoneNumber, email or otherIdentifier) is mandatory."
+    AccountType:
+      maxLength: 10
+      type: string
+      description: "The type of the account, e.g. CHECKING/SAVINGS"
+    AccountAlias:
+      maxLength: 50
+      type: string
+      description: Name will be displayed if alias field is not filled
+    AccountName:
+      maxLength: 140
+      type: string
+      description: The name of an account
+    ContactReference:
+      maxLength: 255
+      type: string
+      description: Reference used for easy identification of a payment by the contact
+    UserReference:
+      maxLength: 255
+      type: string
+      description: Reference used for easy identification of a payment by the user
+    GenericSearchField:
+      maxLength: 255
+      type: string
+      description: Generic search field
+    LastPaymentAmount:
+      minimum: 0
+      type: number
+      description: Last payment amount. This value is expected to have maximum of
+        5 decimal places as this is our base scale for all monetary values. If there
+        will more than 5 decimal places BadRequest will be returned.
+    LastPaymentDate:
+      type: string
+      description: Last payment date of the contact in format YYYY-MM-DD.
+      format: date
+    service-agreement-id:
+      maxLength: 36
+      type: string
+      description: The service agreement id.
+    legal-entity-id:
+      maxLength: 36
+      type: string
+      description: The legal entity id.
+    external-id:
+      maxLength: 32
+      type: string
+      description: Reference of an ID from another (external) system
+    account-identifier-type:
+      type: string
+      description: "Account Identifier type can be one of IBAN, ACCOUNT_NUMBER, PHONE_NUMBER,\
+        \ EMAIL, OTHER"
+      enum:
+      - IBAN
+      - ACCOUNT_NUMBER
+      - PHONE_NUMBER
+      - EMAIL
+      - OTHER
+    internal-user-id:
+      maxLength: 36
+      minLength: 1
+      type: string
+      description: Internal user id
+    contact-id:
+      maxLength: 36
+      type: string
+      description: Internally used unique identification of the contact
+    contact-status:
+      type: string
+      description: |
+        The active status of a contact. When approvals is not enabled ACTIVE and IMPORTED are the only values possible.
+        Otherwise following values mean:
+        ACTIVE - the contact that was fully approved during approval process.
+        PENDING_APPROVAL - the contact needs further approval to become active.
+        ENTERED - the contact that was updated/deleted during approval process but not yet approved and waiting for final status.
+        REJECTED - the contact that was rejected during approval process.
+        IMPORTED - the contact that was imported from CSV file but not yet active.
+      enum:
+      - ACTIVE
+      - PENDING_APPROVAL
+      - ENTERED
+      - REJECTED
+      - IMPORTED
+    contact-group-id:
+      maxLength: 36
+      type: string
+      description: Internally used unique identifier of the contact group
+    bad-request-error:
+      title: BadRequestError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    unauthorized-error:
+      title: UnauthorizedError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    forbidden-error:
+      title: ForbiddenError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    not-found-error:
+      title: NotFoundError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    internal-server-error:
+      title: InternalServerError
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+      description: Represents HTTP 500 Internal Server Error
+    conflict-error:
+      title: ConflictError
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information
+        key:
+          minLength: 1
+          type: string
+          description: Error summary
+        errors:
+          type: array
+          description: Detailed error information
+          items:
+            $ref: '#/components/schemas/error-item'
+    account-information:
+      type: object
+      properties:
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        name:
+          $ref: '#/components/schemas/account-name'
+        alias:
+          $ref: '#/components/schemas/account-alias'
+        accountType:
+          $ref: '#/components/schemas/account-type'
+        accountNumber:
+          $ref: '#/components/schemas/account-number'
+        IBAN:
+          $ref: '#/components/schemas/Iban'
+        phoneNumber:
+          $ref: '#/components/schemas/phone-number-identifier'
+        email:
+          $ref: '#/components/schemas/email-identifier'
+        otherIdentifier:
+          $ref: '#/components/schemas/other-identifier'
+        BIC:
+          $ref: '#/components/schemas/Bic'
+        bankCode:
+          $ref: '#/components/schemas/bank-code'
+        bankName:
+          $ref: '#/components/schemas/bank-name'
+        bankAddressLine1:
+          $ref: '#/components/schemas/address-line'
+        bankAddressLine2:
+          $ref: '#/components/schemas/address-line'
+        bankStreetName:
+          $ref: '#/components/schemas/street-name'
+        bankTown:
+          $ref: '#/components/schemas/Town'
+        bankPostCode:
+          $ref: '#/components/schemas/post-code'
+        bankCountrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        bankCountry:
+          $ref: '#/components/schemas/Country'
+        accountHolderAddressLine1:
+          $ref: '#/components/schemas/address-line'
+        accountHolderAddressLine2:
+          $ref: '#/components/schemas/address-line'
+        accountHolderStreetName:
+          $ref: '#/components/schemas/street-name'
+        accountHolderTown:
+          $ref: '#/components/schemas/Town'
+        accountHolderPostCode:
+          $ref: '#/components/schemas/post-code'
+        accountHolderCountrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        accountHolderCountry:
+          $ref: '#/components/schemas/Country'
+        additions:
+          $ref: '#/components/schemas/Additions'
+    contact-set-approval-status-request-body:
+      required:
+      - approvalStatus
+      type: object
+      properties:
+        approvalStatus:
+          type: string
+          description: The status of the final approval.
+          enum:
+          - APPROVED
+          - REJECTED
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact partial update request body.
+    contact-favourite-patch-request:
+      required:
+      - favourite
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        favourite:
+          type: boolean
+    contacts-to-mark-as-favourite-request:
+      required:
+      - contactsIds
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        contactsIds:
+          maxItems: 100
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+    contact-get-response-body:
+      required:
+      - accounts
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/contact-id'
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        accounts:
+          minItems: 1
+          type: array
+          description: List of contact accounts ordered by name in ascending order
+            with nulls last
+          items:
+            $ref: '#/components/schemas/account-information'
+        accessContextScope:
+          $ref: '#/components/schemas/access-context-scope'
+        name:
+          $ref: '#/components/schemas/name'
+        alias:
+          $ref: '#/components/schemas/alias'
+        category:
+          $ref: '#/components/schemas/category'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/phoneNumber'
+        emailId:
+          $ref: '#/components/schemas/emailId'
+        addressLine1:
+          $ref: '#/components/schemas/address-line'
+        addressLine2:
+          $ref: '#/components/schemas/address-line'
+        streetName:
+          $ref: '#/components/schemas/street-name'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/post-code'
+        countrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/active-contact-status'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/user-reference'
+        contactReference:
+          $ref: '#/components/schemas/contact-reference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/generic-search-field'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/generic-search-field'
+        lastPaymentDate:
+          $ref: '#/components/schemas/last-payment-date'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/last-payment-amount'
+      description: ContactItem
+    contact-put-request-body:
+      required:
+      - accounts
+      - name
+      - userContext
+      type: object
+      properties:
+        userContext:
+          $ref: '#/components/schemas/user-context'
+        accounts:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/account-information'
+        accessContextScope:
+          $ref: '#/components/schemas/access-context-scope'
+        name:
+          $ref: '#/components/schemas/name'
+        externalId:
+          $ref: '#/components/schemas/external-id'
+        alias:
+          $ref: '#/components/schemas/alias'
+        category:
+          $ref: '#/components/schemas/category'
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+        phoneNumber:
+          $ref: '#/components/schemas/phoneNumber'
+        emailId:
+          $ref: '#/components/schemas/emailId'
+        addressLine1:
+          $ref: '#/components/schemas/address-line'
+        addressLine2:
+          $ref: '#/components/schemas/address-line'
+        streetName:
+          $ref: '#/components/schemas/street-name'
+        town:
+          $ref: '#/components/schemas/Town'
+        postCode:
+          $ref: '#/components/schemas/post-code'
+        countrySubDivision:
+          $ref: '#/components/schemas/country-sub-division'
+        country:
+          $ref: '#/components/schemas/Country'
+        activeStatus:
+          $ref: '#/components/schemas/active-contact-status'
+        additions:
+          $ref: '#/components/schemas/Additions'
+        userReference:
+          $ref: '#/components/schemas/user-reference'
+        contactReference:
+          $ref: '#/components/schemas/contact-reference'
+        searchableFieldOne:
+          $ref: '#/components/schemas/generic-search-field'
+        searchableFieldTwo:
+          $ref: '#/components/schemas/generic-search-field'
+        lastPaymentDate:
+          $ref: '#/components/schemas/last-payment-date'
+        lastPaymentAmount:
+          $ref: '#/components/schemas/last-payment-amount'
+      description: Contact update request body.
+    contact-put-response-body:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/approval-request-indicator'
+        activeContactId:
+          type: string
+          description: "The contact available for further calls with the ID provided\
+            \ in this field. The ID here may differ from the original contact if the\
+            \ update was successfully, the approvals enabled and the contact change\
+            \ has got approved already."
+        approvalId:
+          type: string
+          description: Internally used unique identification of approval request.
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact update response schema
+    contact-delete-response-body:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/approval-request-indicator'
+        additions:
+          $ref: '#/components/schemas/Additions'
+      description: Contact delete response schema
+    phone-number-identifier:
+      maxLength: 30
+      type: string
+      description: "A phone number account identifier. At least one of the account\
+        \ identifiers (accountNumber, IBAN, phoneNumber, email or otherIdentifier)\
+        \ is mandatory."
+    email-identifier:
+      maxLength: 255
+      type: string
+      description: "An email account identifier. At least one of the account identifiers\
+        \ (accountNumber, IBAN, phoneNumber, email or otherIdentifier) is mandatory."
+      format: email
+    other-identifier:
+      maxLength: 300
+      type: string
+      description: "An account identifier. At least one of the account identifiers\
+        \ (accountNumber, IBAN, phoneNumber, email or otherIdentifier) is mandatory"
+    access-context-scope:
+      type: string
+      description: |
+        Access context scope of the contact, either ServiceAgreement (SA), LegalEntity (LE) or User (USER).
+      enum:
+      - SA
+      - LE
+      - USER
+    ingest-mode:
+      type: string
+      description: |
+        The way how contacts will be ingested into the system. UPSERT
+        mode will delete the existing contacts (who are matched on externalId)
+        and create new contacts based on payload provided in request. Default
+        way is creation only which does not require this property.
+      enum:
+      - UPSERT
+      - CREATE
+    active-contact-status:
+      type: string
+      description: |
+        The active status of a contact. When approvals is not enabled ACTIVE is the only value possible.
+        Otherwise following values mean:
+        ACTIVE - fully approved;
+        PENDING_APPROVAL - the contact needs further approval to become active.
+      enum:
+      - ACTIVE
+      - PENDING_APPROVAL
+    privilege:
+      type: string
+      description: "Privilege to perform an action (e.g. 'view', 'delete', etc.)"
+    business-function:
+      type: string
+      description: "Business function name (e.g. SEPA CT, Manage Legal Entities, etc.)"
+    ContactGroup:
+      $ref: '#/components/schemas/contact-group'
+    contact-group:
+      required:
+      - contactIds
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/contact-group-id'
+        name:
+          $ref: '#/components/schemas/group-name'
+        description:
+          $ref: '#/components/schemas/description'
+        scope:
+          $ref: '#/components/schemas/access-context-scope'
+        contactIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+    contact-group-post-request-body:
+      required:
+      - name
+      - scope
+      - userContext
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/group-name'
+        description:
+          $ref: '#/components/schemas/description'
+        scope:
+          $ref: '#/components/schemas/access-context-scope'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    contact-group-put-request-body:
+      required:
+      - name
+      - userContext
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/group-name'
+        description:
+          $ref: '#/components/schemas/description'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    grouped-contact:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/contact-id'
+        name:
+          $ref: '#/components/schemas/name'
+        alias:
+          $ref: '#/components/schemas/alias'
+        phoneNumber:
+          $ref: '#/components/schemas/phoneNumber'
+        emailId:
+          $ref: '#/components/schemas/emailId'
+    contact-group-patch-request-body:
+      required:
+      - ids
+      - userContext
+      type: object
+      properties:
+        ids:
+          maxItems: 100
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/contact-id'
+        userContext:
+          $ref: '#/components/schemas/user-context'
+    user-context:
+      type: object
+      properties:
+        internalUserId:
+          $ref: '#/components/schemas/internal-user-id'
+        serviceAgreementId:
+          $ref: '#/components/schemas/service-agreement-id'
+        legalEntityId:
+          $ref: '#/components/schemas/legal-entity-id'
+      description: "User context object. At least internalUserId and one of the following\
+        \ serviceAgreementId, legalEntityId is required when X-CXT-User-Token is not\
+        \ provided."
+    name:
+      maxLength: 140
+      minLength: 1
+      type: string
+      description: The name of a contact
+    alias:
+      maxLength: 80
+      type: string
+      description: Name will be displayed if alias field is not filled
+    category:
+      maxLength: 70
+      type: string
+      description: "Category to which the contact belongs to like employee, supplier."
+    phoneNumber:
+      maxLength: 30
+      type: string
+      description: Contact phone number of the contact
+    emailId:
+      maxLength: 255
+      type: string
+      description: Email-id of the contact
+      format: email
+    address-line:
+      maxLength: 70
+      type: string
+      description: Address line
+    street-name:
+      maxLength: 70
+      type: string
+      description: Street name
+    post-code:
+      maxLength: 16
+      type: string
+      description: Address post code
+    country-sub-division:
+      maxLength: 35
+      type: string
+      description: Country region or state
+    bank-code:
+      maxLength: 20
+      type: string
+      description: "The code assigned by a central bank, e.g. ABA RTN"
+    bank-name:
+      maxLength: 140
+      type: string
+      description: Specifies the name of the bank where the account is issued
+    account-number:
+      maxLength: 40
+      type: string
+      description: "An account identifier. At least one of the account identifiers\
+        \ (accountNumber, IBAN, phoneNumber, email or otherIdentifier) is mandatory."
+    account-type:
+      maxLength: 10
+      type: string
+      description: "The type of the account, e.g. CHECKING/SAVINGS"
+    account-alias:
+      maxLength: 50
+      type: string
+      description: Name will be displayed if alias field is not filled
+    account-name:
+      maxLength: 140
+      type: string
+      description: The name of an account
+    contact-reference:
+      maxLength: 255
+      type: string
+      description: Reference used for easy identification of a payment by the contact
+    user-reference:
+      maxLength: 255
+      type: string
+      description: Reference used for easy identification of a payment by the user
+    generic-search-field:
+      maxLength: 255
+      type: string
+      description: Generic search field
+    last-payment-amount:
+      minimum: 0
+      type: number
+      description: Last payment amount. This value is expected to have maximum of
+        5 decimal places as this is our base scale for all monetary values. If there
+        will more than 5 decimal places BadRequest will be returned.
+    last-payment-date:
+      type: string
+      description: Last payment date of the contact in format YYYY-MM-DD.
+      format: date
+    approval-request-indicator:
+      type: string
+      description: Indicator for approval required or request accepted.
+      enum:
+      - APPROVAL_REQUIRED
+      - REQUEST_ACCEPTED
+    group-name:
+      maxLength: 50
+      minLength: 1
+      type: string
+      description: The name of a contact group
+    description:
+      maxLength: 300
+      minLength: 1
+      type: string
+      description: Description of contact group
+    error-item:
+      title: ErrorItem
+      required:
+      - key
+      - message
+      type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: Any further information.
+        key:
+          minLength: 1
+          type: string
+          description: "{capability-name}.api.{api-key-name}. For generated validation\
+            \ errors this is the path in the document the error resolves to. e.g.\
+            \ object name + '.' + field"
+        context:
+          title: Context
+          type: object
+          additionalProperties:
+            type: string
+          description: Context can be anything used to construct localised messages.
+  parameters:
+    contactExternalIdParameter:
+      $ref: '#/components/parameters/contact-external-id-parameter'
+    accountExternalIdParameter:
+      $ref: '#/components/parameters/account-external-id-parameter'
+    accountIdentifierTypesParameter:
+      $ref: '#/components/parameters/account-identifier-types-parameter'
+    queryParamParameter:
+      $ref: '#/components/parameters/query-parameter'
+    fromParameter:
+      $ref: '#/components/parameters/from-parameter'
+    sizeParameter:
+      $ref: '#/components/parameters/size-parameter'
+    serviceAgreementIdParameter:
+      $ref: '#/components/parameters/service-agreement-id-parameter'
+    legalEntityIdParameter:
+      $ref: '#/components/parameters/legal-entity-id-parameter'
+    internalUserIdParameter:
+      $ref: '#/components/parameters/internal-user-id-parameter'
+    contactIdParameter:
+      $ref: '#/components/parameters/contact-id-parameter'
+    contactStatusParameter:
+      $ref: '#/components/parameters/contact-status-parameter'
+    lastPaymentAmountFrom:
+      $ref: '#/components/parameters/last-payment-amount-from-query-parameter'
+    lastPaymentAmountTo:
+      $ref: '#/components/parameters/last-payment-amount-to-query-parameter'
+    lastPaymentDateFrom:
+      $ref: '#/components/parameters/last-payment-date-from-query-parameter'
+    lastPaymentDateTo:
+      $ref: '#/components/parameters/last-payment-date-to-query-parameter'
+    contactGroupId:
+      $ref: '#/components/parameters/contact-group-id-path-parameter'
+    contactGroupIds:
+      $ref: '#/components/parameters/contact-group-ids-query-parameter'
+    favourite:
+      $ref: '#/components/parameters/favourite-query-parameter'
+    contact-external-id-parameter:
+      name: contactExternalId
+      in: query
+      description: Reference of an Contact ID from another (external) system
+      required: false
+      schema:
+        $ref: '#/components/schemas/external-id'
+      examples:
+        example:
+          value: 81fd5ede036511e8ba890ed5f89f718b
+    account-external-id-parameter:
+      name: accountExternalId
+      in: query
+      description: Reference of an Account ID from another (external) system
+      required: false
+      schema:
+        $ref: '#/components/schemas/external-id'
+      examples:
+        example:
+          value: e71dc27c066211e8ba890ed5f89f718b
+    account-identifier-types-parameter:
+      name: accountIdentifierTypes
+      in: query
+      description: |
+        An array of account identifier types to return the matching contacts should have at least one account with the given account identfier types.
+        The default behavior is to return the matching contacts having accounts with any type of account identifier (accountNumber, IBAN, phoneNumber, email or other).
+        But when the specific account identifier types are requested then the matching contacts which have at least one account with the requested account identfier being not empty,
+        and then matching the search term either by their name or alias or by one characteristic of their accounts (name, alias, requested account identifiers such as accountNumber, IBAN, phoneNumber, email or other)
+        are returned.
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/account-identifier-type'
+    query-parameter:
+      name: query
+      in: query
+      description: "The generic search term to search for contacts either by their\
+        \ name or alias or by one characteristic of their accounts (name, alias, accountNumber,\
+        \ IBAN, phoneNumber or email). This search is based on sql LIKE statement\
+        \ which means SQL wildcards(like '%', '_' - may differ depends on database\
+        \ engine) can be used in query parameter to perform more complex search. Providing\
+        \ only '_' or '%' will result in returning all valid contacts."
+      required: false
+      schema:
+        type: string
+      examples:
+        simple:
+          value: john
+        wildcard_one_char:
+          value: j__n
+        wildcard_multiple_chars:
+          value: j%n
+    from-parameter:
+      name: from
+      in: query
+      description: Page Number. Skip over pages of elements by specifying a start
+        value for the query.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+      examples:
+        example:
+          value: 20
+    size-parameter:
+      name: size
+      in: query
+      description: Limit the number of elements on the response.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 10
+      examples:
+        example:
+          value: 80
+    service-agreement-id-parameter:
+      name: serviceAgreementId
+      in: query
+      description: The service agreement id that the user is acting in.
+      required: false
+      schema:
+        $ref: '#/components/schemas/service-agreement-id'
+      examples:
+        sample-id:
+          value: 54d4c741-51d1-415a-8523-d0d25141d7b2
+    legal-entity-id-parameter:
+      name: legalEntityId
+      in: query
+      description: The legal entity id that the user is acting in.
+      required: false
+      schema:
+        $ref: '#/components/schemas/legal-entity-id'
+      examples:
+        sample-id:
+          value: 5ea2659b-e2e7-4935-b686-190fa75d3f96
+    internal-user-id-parameter:
+      name: internalUserId
+      in: query
+      description: The internal user id that the user is acting in.
+      required: false
+      schema:
+        $ref: '#/components/schemas/internal-user-id'
+      examples:
+        sample-id:
+          value: 8afa1b0f-3cd2-4d66-b9ee-c282971080dd
+    contact-id-parameter:
+      name: contactId
+      in: path
+      description: Internal id of the contact
+      required: true
+      schema:
+        $ref: '#/components/schemas/contact-id'
+    contact-status-parameter:
+      name: contactStatus
+      in: query
+      description: An array of contact statuses that the matching contacts should
+        have when queried.
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/contact-status'
+        default:
+        - ACTIVE
+        - PENDING_APPROVAL
+    last-payment-amount-from-query-parameter:
+      name: lastPaymentAmountFrom
+      in: query
+      description: Lower value of the last payment amount range search. The value
+        is inclusive so this is acting as >=. This value is expected to have maximum
+        of 5 decimal places as this is our base scale for all monetary values. If
+        there will more than 5 decimal places BadRequest will be returned.
+      required: false
+      schema:
+        type: number
+      examples:
+        sample:
+          value: 100.12345
+    last-payment-amount-to-query-parameter:
+      name: lastPaymentAmountTo
+      in: query
+      description: Upper value of the last payment amount range search. The value
+        is inclusive so this is acting as <=. This value is expected to have maximum
+        of 5 decimal places as this is our base scale for all monetary values. If
+        there will more than 5 decimal places BadRequest will be returned.
+      required: false
+      schema:
+        type: number
+      examples:
+        sample:
+          value: 10000.569
+    last-payment-date-from-query-parameter:
+      name: lastPaymentDateFrom
+      in: query
+      description: Lower value of the last payment date range search. The value is
+        inclusive so this is acting as >=.
+      required: false
+      schema:
+        type: string
+        format: date
+      examples:
+        sample-from:
+          value: 2023-10-01
+    last-payment-date-to-query-parameter:
+      name: lastPaymentDateTo
+      in: query
+      description: Upper value of the last payment date range search. The value is
+        inclusive so this is acting as <=.
+      required: false
+      schema:
+        type: string
+        format: date
+      examples:
+        sample-from:
+          value: 2023-10-09
+    contact-group-id-path-parameter:
+      name: groupId
+      in: path
+      description: Contact group id
+      required: true
+      schema:
+        $ref: '#/components/schemas/contact-group-id'
+    contact-group-ids-query-parameter:
+      name: contactGroupIds
+      in: query
+      description: List of contact group ids
+      required: false
+      schema:
+        maxItems: 30
+        type: array
+        items:
+          $ref: '#/components/schemas/contact-group-id'
+    favourite-query-parameter:
+      name: favourite
+      in: query
+      description: Narrows down search result by searching only in favourite contacts.
+      required: false
+      schema:
+        type: boolean
+  examples:
+    getContactsResponse:
+      summary: getContactsResponse
+      value:
+      - id: 0855e686-d31e-4216-b3dd-5d66161d536d
+        externalId: 356f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: John Doe
+        alias: John
+        category: Employee
+        contactPerson: Jane Doe
+        phoneNumber: "055512345678"
+        emailId: john@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a1441b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: QA Bank
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+          accountHolderAddressLine1: ""
+          accountHolderAddressLine2: ""
+          accountHolderStreetName: Woestduinstraat 114-3
+          accountHolderTown: Amsterdam
+          accountHolderPostCode: 1059 SP
+          accountHolderCountrySubDivision: North Holland
+          accountHolderCountry: NL
+        accessContextScope: SA
+        activeStatus: ACTIVE
+        userReference: Car rental payment to John
+        contactReference: Car rental payment from Robin
+        searchableFieldOne: Some search data one
+        searchableFieldTwo: Some search data two
+        lastPaymentAmount: 1000.23
+        lastPaymentDate: 2023-10-09
+      - id: 0855e686-d31e-4216-b3dd-5d66161d536e
+        externalId: 426f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: Jane Doe
+        alias: Jane
+        category: Manager
+        contactPerson: John Doe
+        phoneNumber: "055512345678"
+        emailId: jane@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a8141b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: Test Bank Co
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+        accessContextScope: LE
+        activeStatus: PENDING_APPROVAL
+    createContactRequest:
+      summary: createContactRequest
+      value:
+        externalId: 356f28e9-cee6-4b5c-9b80-6621516e0f7d
+        accessContext:
+          internalUserId: af18e112-927f-4f2f-8e55-ea55c411f9fb
+          serviceAgreementId: cbc7ff5f-57dc-46ff-a6c7-6747176e5fce
+          legalEntityId: 2ac6c7ed-b1c0-40d8-9029-5924e68cada1
+        name: John Doe
+        alias: John
+        category: Employee
+        contactPerson: Jane Doe
+        phoneNumber: "055512345678"
+        emailId: john@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a8141b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: Test Bank Co
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+          accountHolderAddressLine1: Backbase enterprise
+          accountHolderAddressLine2: ""
+          accountHolderStreetName: Jacob Bontiusplaats 9
+          accountHolderTown: Amsterdam
+          accountHolderPostCode: 1018 LL
+          accountHolderCountrySubDivision: North Holland
+          accountHolderCountry: NL
+        approved: true
+        accessContextScope: SA
+        userReference: Car rental payment to John
+        contactReference: Car rental payment from Robin
+        searchableFieldOne: Some search data one
+        searchableFieldTwo: Some search data two
+        lastPaymentAmount: 1000.23
+        lastPaymentDate: 2023-10-09
+    createContactResponse:
+      summary: createContactResponse
+      value:
+        id: 0955e686-d31e-4216-b3dd-5d66161d536d
+        status: ACTIVE
+    example:
+      summary: example
+      value:
+        id: 0855e686-d31e-4216-b3dd-5d66161d536d
+        externalId: 356f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: John Doe
+        alias: John
+        category: Employee
+        contactPerson: Jane Doe
+        phoneNumber: "055512345678"
+        emailId: john@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a8141b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: Test Bank Co
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+          accountHolderAddressLine1: Backbase enterprise
+          accountHolderAddressLine2: ""
+          accountHolderStreetName: Jacob Bontiusplaats 9
+          accountHolderTown: Amsterdam
+          accountHolderPostCode: 1018 LL
+          accountHolderCountrySubDivision: North Holland
+          accountHolderCountry: NL
+        accessContextScope: USER
+        activeStatus: ACTIVE
+        userReference: Car rental payment to John
+        contactReference: Car rental payment from Robin
+        searchableFieldOne: Some search data one
+        searchableFieldTwo: Some search data two
+        lastPaymentAmount: 1000.23
+        lastPaymentDate: 2023-10-09
+    updateContactRequest:
+      summary: updateContactRequest
+      value:
+        externalId: 356f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: John Doe
+        alias: John
+        category: Employee
+        contactPerson: Jane Doe
+        phoneNumber: "055512345678"
+        emailId: john@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a8141b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: Test Bank Co
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+          accountHolderAddressLine1: Backbase enterprise
+          accountHolderAddressLine2: ""
+          accountHolderStreetName: Jacob Bontiusplaats 9
+          accountHolderTown: Amsterdam
+          accountHolderPostCode: 1018 LL
+          accountHolderCountrySubDivision: North Holland
+          accountHolderCountry: NL
+        accessContextScope: LE
+        userContext:
+          internalUserId: 8f84ce3b-bbbd-47e9-8044-499befc61b86
+        userReference: Car rental payment to John
+        contactReference: Car rental payment from Robin
+        searchableFieldOne: Some search data one
+        searchableFieldTwo: Some search data two
+        lastPaymentAmount: 1000.23
+        lastPaymentDate: 2023-10-09
+    updateContactResponse:
+      summary: updateContactResponse
+      value:
+        status: REQUEST_ACCEPTED
+    updateContactConflictResponse:
+      summary: updateContactConflictResponse
+      value:
+        key: ApprovalAlreadyExistForContact
+        message: Approval request already exist with this contact.
+    deleteContactResponse:
+      summary: deleteContactResponse
+      value:
+        status: REQUEST_ACCEPTED
+    deleteContactConflictResponse:
+      summary: deleteContactConflictResponse
+      value:
+        key: ApprovalAlreadyExistForContact
+        message: Approval request already exist with this contact.
+    contactFavouritePatchRequest:
+      summary: contactFavouritePatchRequest
+      value:
+        userContext:
+          internalUserId: 0873d8a4-a03b-462b-bd5b-46f19d0fedfc
+          serviceAgreementId: 7b6265aa-b011-4c8c-8657-7b906688c2a2
+          legalEntityId: ecb487a6-a404-41d9-bb05-0d9217af9482
+        favourite: true
+    contactToMarkAsFavourite:
+      summary: contactToMarkAsFavourite
+      value:
+        userContext:
+          internalUserId: 0873d8a4-a03b-462b-bd5b-46f19d0fedfc
+          serviceAgreementId: 7b6265aa-b011-4c8c-8657-7b906688c2a2
+          legalEntityId: ecb487a6-a404-41d9-bb05-0d9217af9482
+        contactIds:
+        - 0855e686-d31e-4216-b3dd-5d66161d536d
+        - 0855e686-d31e-4216-b3dd-5d66161d536d
+        - 0855e686-d31e-4216-b3dd-5d66161d536d
+        - 0855e686-d31e-4216-b3dd-5d66161d536d
+    patchPartyByIdRequest:
+      summary: patchPartyByIdRequest
+      value:
+        approvalStatus: APPROVED
+    example-1:
+      summary: example-1
+      value:
+        privilege: create
+        paymentEntitlementDetails:
+        - businessFunctions:
+          - SEPA CT
+          - Domestic Payments
+          arrangementId: d0c8dd02-99be-46e9-8ff0-8021a71552a7
+          contactIds:
+          - 0955e686-d31e-4216-b3dd-5d66161d536d
+        - businessFunctions:
+          - Domestic Payments
+          arrangementId: d308ae19-d170-4967-b185-dceb8d356cfa
+          contactIds:
+          - 8553c9b8-6266-483f-925b-6cfee6b4f4bc
+          - 621e5084-c2ba-49ad-8eb7-eaeceaf43a75
+    example-2:
+      summary: example-2
+      value:
+        entitled: false
+        notEntitledPaymentDetails:
+        - businessFunctions:
+          - Domestic Payments
+          arrangementId: d308ae19-d170-4967-b185-dceb8d356cfa
+          contactIds:
+          - 8553c9b8-6266-483f-925b-6cfee6b4f4bc
+    contactByIdAndAccessContextResponse:
+      summary: contactByIdAndAccessContextResponse
+      value:
+      - id: 0855e686-d31e-4216-b3dd-5d66161d536d
+        externalId: 356f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: John Doe
+        alias: John
+        category: Employee
+        contactPerson: Jane Doe
+        phoneNumber: "055512345678"
+        emailId: john@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a1441b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: QA Bank
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+          accountHolderAddressLine1: ""
+          accountHolderAddressLine2: ""
+          accountHolderStreetName: Woestduinstraat 114-3
+          accountHolderTown: Amsterdam
+          accountHolderPostCode: 1059 SP
+          accountHolderCountrySubDivision: North Holland
+          accountHolderCountry: NL
+        accessContextScope: SA
+        activeStatus: ACTIVE
+        userReference: Car rental payment to John
+        contactReference: Car rental payment from Robin
+        searchableFieldOne: Some search data one
+        searchableFieldTwo: Some search data two
+        lastPaymentAmount: 1000.23
+        lastPaymentDate: 2023-10-09
+      - id: 0855e686-d31e-4216-b3dd-5d66161d536e
+        externalId: 426f28e9-cee6-4b5c-9b80-6621516e0f7d
+        name: Jane Doe
+        alias: Jane
+        category: Manager
+        contactPerson: John Doe
+        phoneNumber: "055512345678"
+        emailId: jane@example.com
+        addressLine1: Backbase enterprise
+        addressLine2: ""
+        streetName: Jacob Bontiusplaats 9
+        town: Amsterdam
+        postCode: 1018 LL
+        countrySubDivision: North Holland
+        country: NL
+        accounts:
+        - externalId: a8141b9e066211e8ba890ed5f89f718b
+          name: Jane Doe
+          alias: Jane
+          accountType: SAVINGS
+          IBAN: FI21 1234 5600 0007 85
+          bankName: Test Bank
+          bankAddressLine1: Test Bank Co
+          bankAddressLine2: ""
+          bankStreetName: Jodenbreestraat 96
+          bankTown: Amsterdam
+          bankPostCode: 1011NS
+          bankCountrySubDivision: North Holland
+          bankCountry: NL
+        accessContextScope: LE
+        activeStatus: PENDING_APPROVAL
+    createContactBulkRequestWithoutInternalUserId:
+      summary: createContactBulkRequestWithoutInternalUserId
+      value:
+        accessContext:
+          externalLegalEntityId: 72feba38-f800-4243-bccc-5fd1368a4164
+          externalServiceAgreementId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          externalUserId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          scope: LE
+        contacts:
+        - name: John Doe
+          alias: John
+          category: Employee
+          contactPerson: Jane Doe
+          phoneNumber: "055512345678"
+          emailId: john@example.com
+          searchableFieldOne: Some search data one
+          searchableFieldTwo: Some search data two
+          lastPaymentAmount: 1000.23
+          lastPaymentDate: 2023-10-09
+          address:
+            addressLine1: Backbase enterprise
+            addressLine2: ""
+            streetName: Jacob Bontiusplaats 9
+            town: Amsterdam
+            postCode: 1018 LL
+            countrySubDivision: North Holland
+            country: NL
+          externalId: a8141b9e066211e8ba890ed5f89f718b
+          userReference: Car rental payment to John
+          contactReference: Car rental payment from Robin
+          accounts:
+          - name: Current account
+            alias: Current
+            iban: NL29ABNA0499974219
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: aef1b0a2066211e8ba890ed5f89f718b
+          - name: Saving account
+            alias: Savings
+            iban: NL91ABNA0417164300
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: bef1b0a2066211e8ba890ed5f89f718c
+        - name: Jane Doe
+          alias: Jane
+          category: Employee
+          contactPerson: John Doe
+          phoneNumber: "055512345679"
+          emailId: jane@example.com
+          address:
+            addressLine1: Backbase enterprise
+            addressLine2: ""
+            streetName: Jacob Bontiusplaats 9
+            town: Amsterdam
+            postCode: 1018 LL
+            countrySubDivision: North Holland
+            country: NL
+          externalId: b8141b9e066211e8ba890ed5f89f718y
+          accounts:
+          - name: Saving account
+            alias: Savings
+            iban: NL02ABNA0123456789
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: zef1b0a2066211e8ba890ed5f89f718y
+    createContactBulkRequestWithInternalUserId:
+      summary: createContactBulkRequestWithInternalUserId
+      value:
+        internalUserId: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+        accessContext:
+          externalLegalEntityId: 72feba38-f800-4243-bccc-5fd1368a4164
+          externalServiceAgreementId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          externalUserId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          scope: LE
+        contacts:
+        - name: John Doe
+          alias: John
+          category: Employee
+          contactPerson: Jane Doe
+          phoneNumber: "055512345678"
+          emailId: john@example.com
+          searchableFieldOne: Some search data one
+          searchableFieldTwo: Some search data two
+          lastPaymentAmount: 1000.23
+          lastPaymentDate: 2023-10-09
+          address:
+            addressLine1: Backbase enterprise
+            addressLine2: ""
+            streetName: Jacob Bontiusplaats 9
+            town: Amsterdam
+            postCode: 1018 LL
+            countrySubDivision: North Holland
+            country: NL
+          externalId: a8141b9e066211e8ba890ed5f89f718b
+          accounts:
+          - name: Current account
+            alias: Current
+            iban: NL29ABNA0499974219
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: aef1b0a2066211e8ba890ed5f89f718b
+          - name: Saving account
+            alias: Savings
+            iban: NL91ABNA0417164300
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: bef1b0a2066211e8ba890ed5f89f718c
+        - name: Jane Doe
+          alias: Jane
+          category: Employee
+          contactPerson: John Doe
+          phoneNumber: "055512345679"
+          emailId: jane@example.com
+          address:
+            addressLine1: Backbase enterprise
+            addressLine2: ""
+            streetName: Jacob Bontiusplaats 9
+            town: Amsterdam
+            postCode: 1018 LL
+            countrySubDivision: North Holland
+            country: NL
+          externalId: b8141b9e066211e8ba890ed5f89f718y
+          accounts:
+          - name: Saving account
+            alias: Savings
+            iban: NL02ABNA0123456789
+            bankName: Test Bank
+            bankAddress:
+              addressLine1: Test Bank Co
+              addressLine2: ""
+              streetName: Jodenbreestraat 96
+              town: Amsterdam
+              postCode: 1011NS
+              countrySubDivision: North Holland
+              country: NL
+            accountHolderAddress:
+              addressLine1: Backbase enterprise
+              addressLine2: ""
+              streetName: Jacob Bontiusplaats 9
+              town: Amsterdam
+              postCode: 1018 LL
+              countrySubDivision: North Holland
+              country: NL
+            externalId: zef1b0a2066211e8ba890ed5f89f718y
+    createContactBulkResponse:
+      summary: createContactBulkResponse
+      value:
+        successCount: 2
+    deleteContactBulkRequestWithoutInternalUserId:
+      summary: deleteContactBulkRequestWithoutInternalUserId
+      value:
+        accessContext:
+          externalLegalEntityId: 72feba38f8004243bccc5fd1368a4164
+          externalServiceAgreementId: 9f2bce5f482a460fa5e7e181de6591d1
+          externalUserId: 9f2bce5f482a460fa5e7e181de6591d1
+          scope: LE
+        externalContactIds:
+        - a8141b9e066211e8ba890ed5f89f718b
+        - b8141b9e066211e8ba890ed5f89f718y
+    deleteContactBulkRequestWithInternalUserId:
+      summary: deleteContactBulkRequestWithInternalUserId
+      value:
+        internalUserId: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+        accessContext:
+          externalLegalEntityId: 72feba38f8004243bccc5fd1368a4164
+          externalServiceAgreementId: 9f2bce5f482a460fa5e7e181de6591d1
+          externalUserId: 9f2bce5f482a460fa5e7e181de6591d1
+          scope: LE
+        externalContactIds:
+        - a8141b9e066211e8ba890ed5f89f718b
+        - b8141b9e066211e8ba890ed5f89f718y
+    contactsExternalToInternalIdsFilterRequest:
+      summary: contactsExternalToInternalIdsFilterRequest
+      value:
+        externalContactIds:
+        - external_contact_e93cd41c824c001
+        - external_contact_53c6de0733afb3d
+        - external_contact_8905bd06ba35216
+    contactsExternalToInternalIdsFilterResponse:
+      summary: contactsExternalToInternalIdsFilterResponse
+      value:
+        external_contact_e93cd41c824c001:
+        - 2e6ec42c-b783-4f97-92e8-245b629fb585
+        external_contact_53c6de0733afb3d:
+        - 40a6aac1-5f22-415e-9e4b-f714254eb034
+        external_contact_8905bd06ba35216:
+        - eda7f5de-d55c-4574-8a57-c2611b282ca6
+        - 0b7be175-3278-4649-8d0b-9ab438d62fbe
+    contactGroupGetResponse:
+      summary: contactGroupGetResponse
+      value:
+      - id: 0855e686-d31e-4216-b3dd-5d66161d5361
+        name: My first example contact group
+        description: My first example contact group description
+        scope: SA
+        contacts:
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebc
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebd
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebe
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebf
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebg
+      - id: 0855e686-d31e-4216-b3dd-5d66161d5362
+        name: My second example contact group
+        description: My second example contact group description
+        scope: LE
+        contacts:
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebc
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebd
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebe
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebf
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebg
+    contactGroupPostRequest:
+      summary: contactGroupPostRequest
+      value:
+        name: My example contact group name
+        description: My example contact group description
+        scope: LE
+        userContext:
+          internalUserId: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+          serviceAgreementId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          legalEntityId: 2ac6c7ed-b1c0-40d8-9029-5924e68cada1
+    contactGroupPostResponse:
+      summary: contactGroupPostResponse
+      value:
+        id: 0855e686-d31e-4216-b3dd-5d66161d5362
+    contactGroupGetByIdResponse:
+      summary: contactGroupGetByIdResponse
+      value:
+        id: 0855e686-d31e-4216-b3dd-5d66161d5361
+        name: My first example contact group
+        description: My first example contact group description
+        scope: LE
+        contacts:
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebc
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebd
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebe
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebf
+        - 5edffbc2-5dc0-11e8-9c2d-fa7ae01bbebg
+    contactGroupPutRequest:
+      summary: contactGroupPutRequest
+      value:
+        name: Updated contact group name
+        description: Updated contact group description
+        userContext:
+          internalUserId: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+          serviceAgreementId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          legalEntityId: 2ac6c7ed-b1c0-40d8-9029-5924e68cada1
+    contactGroupGetResponse-1:
+      summary: contactGroupGetResponse-1
+      value:
+      - id: 0855e686-d31e-4216-b3dd-5d66161d5361
+        name: Johny Kowalsky
+        alias: Johny
+        phoneNumber: 111-222-333
+        emailId: "123321"
+      - id: 0855e686-d31e-4216-b3dd-5d66161d5362
+        name: Theodore Roosevelt
+        alias: Teddy
+        phoneNumber: 444-555-666
+        emailId: "3332123123"
+      - id: 0855e686-d31e-4216-b3dd-5d66161d5363
+        name: Alexander Hamilton
+        alias: Alex
+        phoneNumber: 777-888-999
+        emailId: "8732810192"
+    contactGroupGetResponse-2:
+      summary: contactGroupGetResponse-2
+      value:
+        ids:
+        - 0955e686-d31e-4216-b3dd-5d66161d536d
+        - 661b0935-044a-4778-aa47-423541525151
+        - 621e5084-c2ba-49ad-8eb7-eaeceaf43a75
+        - 8553c9b8-6266-483f-925b-6cfee6b4f4bc
+        userContext:
+          internalUserId: ddfbc4d0-9996-414d-b3a1-0f303cdee04e
+          serviceAgreementId: 9f2bce5f-482a-460f-a5e7-e181de6591d1
+          legalEntityId: 2ac6c7ed-b1c0-40d8-9029-5924e68cada1
