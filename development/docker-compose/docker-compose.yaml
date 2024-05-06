@@ -180,23 +180,22 @@ services:
   access-control:
     image: repo.backbase.com/access-control-extension:2023.10-0.0.6
     deploy:
-      replicas: 1
-    ports:
-      - "8040:8080"
-      - "5005:5005"
+      replicas: 3
+    #ports:
+    #  - "8040:8080"
+    #  - "5005:5005"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+     # JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       waiting: 0
-      "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
+      spring.liquibase.enabled: false
+      #"spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-
-
-      "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
       "management.endpoints.web.exposure.include": bindings
-
       SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
+
+      spring.cloud.stream.autoRebalanceEnabled: true
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_GROUP: upsert-data-groups-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONTENT_TYPE: application/json
@@ -208,7 +207,9 @@ services:
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_GROUP: upsert-data-groups-success-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_CONTENT_TYPE: application/json
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_COUNT: 1 # Specify partition count for output
+      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_KEY_EXPRESSION": headers['partitionKey']
+      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_SELECTOR_EXPRESSION": headers['partitionKey']
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_COUNT: 3 # Specify partition count for output
 
 #      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
 #      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
