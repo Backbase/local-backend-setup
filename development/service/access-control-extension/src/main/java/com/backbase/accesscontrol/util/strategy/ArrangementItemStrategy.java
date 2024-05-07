@@ -1,6 +1,6 @@
 package com.backbase.accesscontrol.util.strategy;
 
-import static com.backbase.accesscontrol.util.ErrorCodes.ERR_IAG_032;
+import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_032;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getNotFoundException;
 import static java.util.stream.Collectors.toMap;
 

@@ -126,14 +126,6 @@
                                     <classifier>api</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
-                                    <fileMappers>
-                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
-                                            <pattern>
-                                                ((?:access\-control\-(?:client|service)|accessgroup\-integration\-(?:inbound|outbound))\-api\-v[1-9]).*(\.yaml)$
-                                            </pattern>
-                                            <replacement>$1$2</replacement>
-                                        </fileMapper>
-                                    </fileMappers>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.backbase.dbs.contact</groupId>
@@ -143,14 +135,6 @@
                                     <classifier>api</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
-                                    <fileMappers>
-                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
-                                            <pattern>
-                                                ((?:contact\-manager\-(?:client|service)|contact\-manager\-(?:inbound|outbound))\-api\-v[1-9]).*(\.yaml)$
-                                            </pattern>
-                                            <replacement>$1$2</replacement>
-                                        </fileMapper>
-                                    </fileMappers>
                                 </artifactItem>
                             </artifactItems>
                             <includes>**/*.yaml</includes>
@@ -176,7 +160,7 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <inputSpec>
-                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.yaml
+                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.2.2.yaml
                             </inputSpec>
                             <configOptions>
                                 <library>spring-mvc</library>
@@ -205,7 +189,7 @@
                             <strictSpec>true</strictSpec>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
-                            <inputSpec>${project.build.directory}/contact-manager/contact-manager-service-api-v2.yaml</inputSpec>
+                            <inputSpec>${project.build.directory}/contact-manager/contact-manager-service-api-v2.19.0.yaml</inputSpec>
                             <configOptions>
                                 <library>resttemplate</library>
                                 <dateLibrary>legacy</dateLibrary>
@@ -234,7 +218,7 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <inputSpec>
-                                ${project.build.directory}/access-control/access-control-service-api-v3.yaml
+                                ${project.build.directory}/access-control/access-control-service-api-v3.5.2.yaml
                             </inputSpec>
                             <configOptions>
                                 <library>resttemplate</library>

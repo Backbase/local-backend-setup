@@ -39,7 +39,6 @@ public class DataGroupUpsertProcessor {
             log.info("Updating Data Group: {}", updateDto);
             dataGroupServiceFacade.updateDataGroup(updateDto);
         } else {
-
             log.info("Data group not found: {}", searchResult.get(0).getDataGroups().get(0).getName());
             DataGroupBaseDto createDto = mapper.mapToDataGroupBaseDto(requestPayload);
             convertDataItemExternalIdsToInternal(requestPayload, createDto);

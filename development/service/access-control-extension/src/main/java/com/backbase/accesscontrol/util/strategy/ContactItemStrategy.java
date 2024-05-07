@@ -1,7 +1,7 @@
 package com.backbase.accesscontrol.util.strategy;
 
-import static com.backbase.accesscontrol.util.ErrorCodes.ERR_IAG_034;
-import static com.backbase.accesscontrol.util.ErrorCodes.ERR_IAG_035;
+import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_034;
+import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_035;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getBadRequestException;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getNotFoundException;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;

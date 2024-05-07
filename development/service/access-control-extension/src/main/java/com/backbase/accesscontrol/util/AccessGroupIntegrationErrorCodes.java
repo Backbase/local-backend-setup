@@ -1,6 +1,6 @@
 package com.backbase.accesscontrol.util;
 
-public enum ErrorCodes {
+public enum AccessGroupIntegrationErrorCodes {
 
     ERR_IAG_006("Creating service agreement failed",
         "accessGroup.save.error.message.E_SERVICE_AGREEMENT_INGEST_FAILED"),
@@ -50,7 +50,7 @@ public enum ErrorCodes {
     private String errorCode;
     private String errorMessage;
 
-    ErrorCodes(String errorMessage, String errorCode) {
+    AccessGroupIntegrationErrorCodes(String errorMessage, String errorCode) {
         this.errorMessage = errorMessage;
         this.errorCode = errorCode;
     }
