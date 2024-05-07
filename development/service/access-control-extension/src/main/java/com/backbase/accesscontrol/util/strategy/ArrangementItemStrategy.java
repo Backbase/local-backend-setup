@@ -9,6 +9,7 @@ import com.backbase.dbs.arrangement.api.client.v2.ArrangementsApi;
 import com.backbase.dbs.arrangement.api.client.v2.model.AccountArrangementItem;
 import com.backbase.dbs.arrangement.api.client.v2.model.AccountArrangementItems;
 import com.backbase.dbs.arrangement.api.client.v2.model.AccountArrangementsFilter;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class ArrangementItemStrategy implements DataItemExternalIdStrategy {
         log.debug("Filter account arrangements items by external ids: {}", externalIds);
 
         AccountArrangementItems arrangements = arrangementsApi.postFilter(
-            new AccountArrangementsFilter().externalArrangementIds(externalIds)
+            new AccountArrangementsFilter().externalArrangementIds(new ArrayList<>(externalIds))
                 .size(externalIds.size()));
 
         if (externalIds.size() != arrangements.getArrangementElements().size()) {

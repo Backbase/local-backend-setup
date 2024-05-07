@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.backbase.buildingblocks</groupId>
         <artifactId>backbase-service-extension-starter-parent</artifactId>
-        <version>16.0.1</version>
+        <version>15.2.3</version>
         <relativePath/>
     </parent>
 
@@ -26,18 +26,15 @@
         <jib.to.image>${docker.image.name}:${backbase-bom.version}-${project.version}</jib.to.image>
 
         <!-- Dependencies -->
-        <backbase-bom.version>2023.10</backbase-bom.version>
-        <access-control-openapi-spec.version>3.1.1</access-control-openapi-spec.version>
-        <contacts-manager-service-api.version>2.23.4</contacts-manager-service-api.version>
+        <backbase-bom.version>2023.09.5-LTS</backbase-bom.version>
+        <access-control-openapi-spec.version>2.5.1</access-control-openapi-spec.version>
 
         <!-- Plugin version -->
-        <gitflow-maven-plugin.version>1.19.0</gitflow-maven-plugin.version>
-        <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
-        <wagon-maven-plugin.version>2.0.2</wagon-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>4.3.1</openapi-generator-maven-plugin.version>
 
         <!-- base image TODO change it to desired capability -->
         <docker.base.name>repo.backbase.com/backbase-docker-releases/access-control</docker.base.name>
-        <docker.base.tag>2023.10</docker.base.tag>
+        <docker.base.tag>2023.09.5-LTS</docker.base.tag>
 
         <!-- Sonar -->
         <!--suppress UnresolvedMavenProperty -->
@@ -89,6 +86,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-stream-binder-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>com.backbase.buildingblocks</groupId>
@@ -133,29 +135,25 @@
                                         </fileMapper>
                                     </fileMappers>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.backbase.dbs.contact</groupId>
+                                    <artifactId>contact-manager</artifactId>
+                                    <version>${contact-manager.version}</version>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                    <classifier>api</classifier>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <fileMappers>
+                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
+                                            <pattern>
+                                                ((?:contact\-manager\-(?:client|service)|contact\-manager\-(?:inbound|outbound))\-api\-v[1-9]).*(\.yaml)$
+                                            </pattern>
+                                            <replacement>$1$2</replacement>
+                                        </fileMapper>
+                                    </fileMappers>
+                                </artifactItem>
                             </artifactItems>
                             <includes>**/*.yaml</includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>wagon-maven-plugin</artifactId>
-                <version>${wagon-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>download-contact-manager-service-api</id>
-                        <goals>
-                            <goal>download-single</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <skipIfExists>true</skipIfExists>
-                            <toFile>${project.build.directory}/external-api/contact-manager/contact-manager-service-api-v2.yaml</toFile>
-                            <serverId>Backbase Public Repository</serverId>
-                            <url>https://repo.backbase.com/specs/contact-manager/</url>
-                            <fromFile>contact-manager-service-api-v${contacts-manager-service-api.version}.yaml</fromFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -181,14 +179,12 @@
                                 ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.yaml
                             </inputSpec>
                             <configOptions>
-                                <library>spring-boot</library>
-                                <useJakartaEe>true</useJakartaEe>
+                                <library>spring-mvc</library>
                                 <dateLibrary>legacy</dateLibrary>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <useBeanValidation>true</useBeanValidation>
                                 <useClassLevelBeanValidation>true</useClassLevelBeanValidation>
-                                <containerDefaultToNull>false</containerDefaultToNull>
                                 <useTags>true</useTags>
                                 <java8>true</java8>
                                 <useOptional>false</useOptional>
@@ -209,11 +205,9 @@
                             <strictSpec>true</strictSpec>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
-                            <inputSpec>${project.build.directory}/external-api/contact-manager/contact-manager-service-api-v2.yaml</inputSpec>
+                            <inputSpec>${project.build.directory}/contact-manager/contact-manager-service-api-v2.yaml</inputSpec>
                             <configOptions>
                                 <library>resttemplate</library>
-                                <useJakartaEe>true</useJakartaEe>
-                                <containerDefaultToNull>true</containerDefaultToNull>
                                 <dateLibrary>legacy</dateLibrary>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
@@ -244,11 +238,9 @@
                             </inputSpec>
                             <configOptions>
                                 <library>resttemplate</library>
-                                <useJakartaEe>true</useJakartaEe>
                                 <dateLibrary>legacy</dateLibrary>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
-                                <containerDefaultToNull>false</containerDefaultToNull>
                                 <useBeanValidation>true</useBeanValidation>
                                 <useClassLevelBeanValidation>true</useClassLevelBeanValidation>
                                 <useTags>true</useTags>

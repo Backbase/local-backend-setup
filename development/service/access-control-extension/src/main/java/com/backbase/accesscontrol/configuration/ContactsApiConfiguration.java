@@ -5,7 +5,7 @@ import static com.backbase.buildingblocks.communication.http.HttpCommunicationCo
 
 import com.backbase.dbs.contact.api.client.ApiClient;
 import com.backbase.dbs.contact.api.client.v2.ContactsApi;
-import jakarta.validation.constraints.Pattern;
+import javax.validation.constraints.Pattern;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

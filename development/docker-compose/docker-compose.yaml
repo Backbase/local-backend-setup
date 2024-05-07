@@ -197,6 +197,7 @@ services:
 
       spring.cloud.stream.autoRebalanceEnabled: true
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
+      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: rch-30730-kep-data-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_GROUP: upsert-data-groups-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONTENT_TYPE: application/json
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_CONCURRENCY: 1
@@ -204,6 +205,7 @@ services:
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_MAX_ATTEMPTS: 1
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_PARTITIONED: true # Ensure input binding is partitioned
 
+      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: rch-30730-kep-data-group-push-success
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_GROUP: upsert-data-groups-success-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_CONTENT_TYPE: application/json

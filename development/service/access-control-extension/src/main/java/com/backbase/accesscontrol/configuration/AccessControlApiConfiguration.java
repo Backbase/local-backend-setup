@@ -6,7 +6,7 @@ import com.backbase.buildingblocks.communication.http.HttpCommunicationConfigura
 import com.backbase.dbs.accesscontrol.api.client.ApiClient;
 import com.backbase.dbs.accesscontrol.api.client.v3.LegalEntitiesApi;
 import com.backbase.dbs.accesscontrol.api.client.v3.ServiceAgreementsApi;
-import jakarta.validation.constraints.Pattern;
+import javax.validation.constraints.Pattern;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

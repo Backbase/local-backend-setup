@@ -28,7 +28,7 @@ public class DataGroupUpsertHandler implements
         IntegrationDataGroupItemBatchPutRequestBody requestPayload = message.getPayload();
 
         return MessageBuilder.withPayload(dataGroupUpsertProcessor.process(requestPayload))
-            .setHeader(KafkaHeaders.PARTITION, partitionId)
+            .setHeader(KafkaHeaders.PARTITION_ID, partitionId)
             .build();
     }
 }
