@@ -1,9 +1,9 @@
-package com.backbase.accesscontrol.util.strategy;
+package com.backbase.datagroup.util.strategy;
 
-import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_033;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getNotFoundException;
 
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
+import com.backbase.datagroup.util.AccessGroupIntegrationErrorCodes;
 import com.backbase.dbs.accesscontrol.api.client.v3.LegalEntitiesApi;
 import com.backbase.dbs.accesscontrol.api.client.v3.model.LegalEntityItemBase;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ public class CustomersItemStrategy implements DataItemExternalIdStrategy {
             legalEntityItemBase = legalEntitiesApi.getLegalEntityByExternalId(externalId);
         } catch (NotFoundException e) {
             log.info("Legal entity with external id {} not found.", externalId);
-            throw getNotFoundException(ERR_IAG_033.getErrorMessage(), ERR_IAG_033.getErrorCode());
+            throw getNotFoundException(AccessGroupIntegrationErrorCodes.ERR_IAG_033.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_033.getErrorCode());
         }
         return legalEntityItemBase.getId();
     }

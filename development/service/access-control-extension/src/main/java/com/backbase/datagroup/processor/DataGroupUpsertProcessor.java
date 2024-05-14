@@ -1,13 +1,13 @@
-package com.backbase.accesscontrol.processor;
+package com.backbase.datagroup.processor;
 
 import com.backbase.accesscontrol.domain.dto.DataGroupBaseDto;
 import com.backbase.accesscontrol.domain.dto.PresentationDataGroupUpdateDto;
 import com.backbase.accesscontrol.domain.dto.PresentationItemIdentifierDto;
 import com.backbase.accesscontrol.domain.dto.PresentationServiceAgreementWithDataGroupsDto;
-import com.backbase.accesscontrol.mapper.PutDataGroupsEventMapper;
+import com.backbase.datagroup.mapper.PutDataGroupsEventMapper;
 import com.backbase.accesscontrol.service.facades.v3.DataGroupServiceFacade;
-import com.backbase.accesscontrol.util.strategy.ContactItemStrategy;
-import com.backbase.accesscontrol.util.strategy.DataItemExternalIdConverter;
+import com.backbase.datagroup.util.strategy.ContactItemStrategy;
+import com.backbase.datagroup.util.strategy.DataItemExternalIdConverter;
 import com.backbase.dbs.accesscontrol.api.client.v3.ServiceAgreementsApi;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationItemIdentifier;
@@ -47,7 +47,7 @@ public class DataGroupUpsertProcessor {
         }
 
         log.info("Upsert Data Event processed successfully");
-        return requestPayload;
+        return mapper.mapToDataGroupUpsertResponse(requestPayload);
     }
 
     private boolean isDataGroupExist(List<PresentationServiceAgreementWithDataGroupsDto> searchResult, String name) {

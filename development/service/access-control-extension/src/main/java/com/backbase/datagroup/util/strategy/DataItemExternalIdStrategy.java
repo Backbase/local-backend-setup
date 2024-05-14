@@ -1,4 +1,4 @@
-package com.backbase.accesscontrol.util.strategy;
+package com.backbase.datagroup.util.strategy;
 
 import java.util.Map;
 import java.util.Set;

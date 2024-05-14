@@ -1,4 +1,4 @@
-package com.backbase.accesscontrol.util.strategy;
+package com.backbase.datagroup.util.strategy;
 
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationItemIdentifier;
 import java.util.List;

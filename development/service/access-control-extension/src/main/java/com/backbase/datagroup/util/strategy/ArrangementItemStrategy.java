@@ -1,10 +1,10 @@
-package com.backbase.accesscontrol.util.strategy;
+package com.backbase.datagroup.util.strategy;
 
-import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_032;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getNotFoundException;
 import static java.util.stream.Collectors.toMap;
 
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
+import com.backbase.datagroup.util.AccessGroupIntegrationErrorCodes;
 import com.backbase.dbs.arrangement.api.client.v2.ArrangementsApi;
 import com.backbase.dbs.arrangement.api.client.v2.model.AccountArrangementItem;
 import com.backbase.dbs.arrangement.api.client.v2.model.AccountArrangementItems;
@@ -38,7 +38,7 @@ public class ArrangementItemStrategy implements DataItemExternalIdStrategy {
             return arrangementsApi.getInternalId(externalId).getInternalId();
         } catch (NotFoundException e) {
             log.info("Arrangement with external id {} does not exists.", externalId);
-            throw getNotFoundException(ERR_IAG_032.getErrorMessage(), ERR_IAG_032.getErrorCode());
+            throw getNotFoundException(AccessGroupIntegrationErrorCodes.ERR_IAG_032.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_032.getErrorCode());
         }
     }
 
@@ -53,7 +53,7 @@ public class ArrangementItemStrategy implements DataItemExternalIdStrategy {
         if (externalIds.size() != arrangements.getArrangementElements().size()) {
             log.info("Arrangements from arrangement domain have size {} but sent {} for mapping",
                 arrangements.getArrangementElements().size(), externalIds.size());
-            throw getNotFoundException(ERR_IAG_032.getErrorMessage(), ERR_IAG_032.getErrorCode());
+            throw getNotFoundException(AccessGroupIntegrationErrorCodes.ERR_IAG_032.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_032.getErrorCode());
         }
 
         return arrangements.getArrangementElements().stream()

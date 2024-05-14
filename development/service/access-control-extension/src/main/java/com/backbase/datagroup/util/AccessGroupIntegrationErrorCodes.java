@@ -1,4 +1,4 @@
-package com.backbase.accesscontrol.util;
+package com.backbase.datagroup.util;
 
 public enum AccessGroupIntegrationErrorCodes {
 

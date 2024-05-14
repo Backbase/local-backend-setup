@@ -1,10 +1,10 @@
-package com.backbase.accesscontrol.mapper;
+package com.backbase.datagroup.mapper;
 
 import com.backbase.accesscontrol.domain.dto.DataGroupBaseDto;
 import com.backbase.accesscontrol.domain.dto.PresentationDataGroupUpdateDto;
 import com.backbase.accesscontrol.domain.dto.PresentationSearchDataGroupsRequestDto;
+import com.backbase.datagroup.model.DataGroupUpsertResponse;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
-import java.util.List;
 import org.mapstruct.Mapping;
 
 @org.mapstruct.Mapper(componentModel = "spring")
@@ -16,7 +16,7 @@ public interface PutDataGroupsEventMapper {
     @Mapping(target = "dataItems", ignore = true)
     PresentationDataGroupUpdateDto mapToDataGroupUpdateDto(IntegrationDataGroupItemBatchPutRequestBody event);
 
-    @Mapping(target = "externalServiceAgreementId",  source = "dataGroupIdentifier.nameIdentifier.externalServiceAgreementId")
+    @Mapping(target = "externalServiceAgreementId", source = "dataGroupIdentifier.nameIdentifier.externalServiceAgreementId")
     @Mapping(target = "serviceAgreementId", ignore = true)
     @Mapping(target = "items", ignore = true)
     DataGroupBaseDto mapToDataGroupBaseDto(IntegrationDataGroupItemBatchPutRequestBody event);
@@ -29,4 +29,7 @@ public interface PutDataGroupsEventMapper {
     @Mapping(target = "legalEntityIdentifier", ignore = true)
     PresentationSearchDataGroupsRequestDto mapToPresentationSearchDataGroupsRequestDto(
         IntegrationDataGroupItemBatchPutRequestBody requestPayload);
+
+    @Mapping(target = "externalServiceAgreementId", source = "dataGroupIdentifier.nameIdentifier.externalServiceAgreementId")
+    DataGroupUpsertResponse mapToDataGroupUpsertResponse(IntegrationDataGroupItemBatchPutRequestBody requestPayload);
 }

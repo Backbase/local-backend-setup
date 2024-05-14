@@ -1,11 +1,11 @@
-package com.backbase.accesscontrol.util.strategy;
+package com.backbase.datagroup.util.strategy;
 
-import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_034;
-import static com.backbase.accesscontrol.util.AccessGroupIntegrationErrorCodes.ERR_IAG_035;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getBadRequestException;
 import static com.backbase.accesscontrol.util.ExceptionUtil.getNotFoundException;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
+import com.backbase.accesscontrol.util.ExceptionUtil;
+import com.backbase.datagroup.util.AccessGroupIntegrationErrorCodes;
 import com.backbase.dbs.contact.api.client.v2.ContactsApi;
 import com.backbase.dbs.contact.api.client.v2.model.ContactsInternalIdsFilterPostRequestBody;
 import com.google.common.collect.Sets;
@@ -41,7 +41,7 @@ public class ContactItemStrategy implements DataItemExternalIdStrategy {
             log.info(
                 "Data group with type CONTACTS cannot be created because following contact external ids are not found: {}",
                 Sets.difference(externalIds, externalContactIdToInternalIds.keySet()));
-            throw getNotFoundException(ERR_IAG_034.getErrorMessage(), ERR_IAG_034.getErrorCode());
+            throw getNotFoundException(AccessGroupIntegrationErrorCodes.ERR_IAG_034.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_034.getErrorCode());
         }
         List<String> contactExternalIdsNotMapped = externalContactIdToInternalIds.entrySet().stream()
             .filter(entry -> isEmpty(entry.getValue())).map(Entry::getKey).toList();
@@ -49,7 +49,7 @@ public class ContactItemStrategy implements DataItemExternalIdStrategy {
             log.info(
                 "Data group with type CONTACTS cannot be created because following contact external ids are not found: {}",
                 contactExternalIdsNotMapped);
-            throw getNotFoundException(ERR_IAG_034.getErrorMessage(), ERR_IAG_034.getErrorCode());
+            throw getNotFoundException(AccessGroupIntegrationErrorCodes.ERR_IAG_034.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_034.getErrorCode());
         }
         List<String> contactExternalIdsMappedToMultipleInternalIds = externalContactIdToInternalIds.entrySet()
             .stream().filter(entry -> entry.getValue().size() > 1).map(Entry::getKey).toList();
@@ -57,7 +57,7 @@ public class ContactItemStrategy implements DataItemExternalIdStrategy {
             log.info(
                 "Data group with type CONTACTS cannot be created because following data item external ids are mapped to multiple contacts: {}",
                 contactExternalIdsMappedToMultipleInternalIds);
-            throw getBadRequestException(ERR_IAG_035.getErrorMessage(), ERR_IAG_035.getErrorCode());
+            throw ExceptionUtil.getBadRequestException(AccessGroupIntegrationErrorCodes.ERR_IAG_035.getErrorMessage(), AccessGroupIntegrationErrorCodes.ERR_IAG_035.getErrorCode());
         }
         return externalContactIdToInternalIds.entrySet().stream()
             .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().get(0)));

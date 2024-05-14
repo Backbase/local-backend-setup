@@ -186,44 +186,31 @@ services:
     #  - "5005:5005"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-     # JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+      #JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       #"spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
       spring.liquibase.enabled: false
-
-      spring.cloud.stream.autoRebalanceEnabled: true
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
-      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: rch-30730-kep-data-group
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_GROUP: upsert-data-groups-event-group
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: rch-30730-kep-data-group
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_GROUP: rch-30730-upsert-data-groups-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONTENT_TYPE: application/json
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_CONCURRENCY: 1
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_AUTO_COMMIT_OFFSET: true
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_MAX_ATTEMPTS: 1
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_CONSUMER_PARTITIONED: true # Ensure input binding is partitioned
-
-      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: rch-30730-kep-data-group-push-success
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_GROUP: upsert-data-groups-success-event-group
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-in-0.consumer.configuration.key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: rch-30730-kep-data-group-push-success
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_GROUP: rch-30730-upsert-data-groups-success-event-group
       SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_CONTENT_TYPE: application/json
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.message-key-expression: headers['kafka_messageKey']
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.configuration.key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_COUNT: 3
+      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_REPLICA_COUNT: 3
+      "spring.kafka.consumer.auto-offset-reset": earliest
+
       #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_KEY_EXPRESSION": headers['partitionKey']
       #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_SELECTOR_EXPRESSION": headers['partitionKey']
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_PRODUCER_PARTITION_COUNT: 3 # Specify partition count for output
-
-#      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
-#      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
-#      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 1
-#      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.max-attempts: 1
-#      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.autoCommitOffset: true
-#      spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
-#      spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
-#
-#      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
-#      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 12
-#      spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
-#      spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
-
       logging.root: INFO
       logging.level.com.backbase: INFO
       logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: INFO
@@ -486,6 +473,8 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    ports:
+      - "9092:9092"
     hostname: kafka
     container_name: kafka
     restart: unless-stopped
@@ -549,6 +538,24 @@ services:
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
       CONNECT_PLUGIN_PATH: ' /usr/share/java/'
 
+  transaction-manager:
+    image: repo.backbase.com/backbase-docker-releases/transaction-manager:${BB_VERSION}
+    ports:
+      - "8055:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/transaction-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/transaction-manager", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - kafka
+      - registry
   ksqldb:
     image: confluentinc/cp-ksqldb-server:latest
     restart: unless-stopped

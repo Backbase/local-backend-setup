@@ -1,4 +1,4 @@
-package com.backbase.accesscontrol.configuration;
+package com.backbase.datagroup.configuration;
 
 import static com.backbase.buildingblocks.communication.http.HttpCommunicationConfiguration.INTERCEPTORS_ENABLED_HEADER;
 
