@@ -1,7 +1,7 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=INFO
   SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   server.shutdown: graceful
@@ -16,7 +16,7 @@ x-common-variables: &common-variables
   eureka.instance.initialStatus: STARTING
   management.endpoints.web.exposure.include: '*'
   management.endpoints.enabled-by-default: true
-  management.security.roles: ANONYMOUS,ACTUATOR
+  management.security.roles: ANONYMOUS,ACTUATOR,USER
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
   management.tracing.enabled: false
@@ -24,7 +24,7 @@ x-common-variables: &common-variables
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
-  backbase.security.public.paths: /integration-api/**
+  backbase.security.public.paths: /integration-api/**,/oauth/token,/convert
   backbase.security.mtls.enabled: false
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
@@ -46,7 +46,7 @@ x-message-broker-variables: &message-broker-variables
 x-healthcheck-defaults: &healthcheck-defaults
   start_period: 60s
   interval: 15s
-  timeout: 5s
+  timeout: 15s
   retries: 15
 
 name: backbase
