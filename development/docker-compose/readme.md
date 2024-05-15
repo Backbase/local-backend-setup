@@ -167,6 +167,8 @@ To upgrade a service in the environment, change the Docker image tag to the new 
 
 To upgrade all services to a specific Backbase BOM version, change the `BB_VERSION` value in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.
 
+To upgrade to stream version compatible with BB_VERSION, please refer this [link](https://github.com/Backbase/stream-services/blob/master/README.md)
+
 ## Debug custom applications
 
 You can debug your custom application in the local environment by either running it locally and using the environment, or by running it in the environment and using remote debugging.
