@@ -146,10 +146,19 @@ bootstrap:
                     address: "sara@email.com"
                   mobileNumber:
                     number: "1234567890"
-                referenceJobRoleNames:
-                  - "Retail User"
             productGroups:
               - name: "sara-arrangements"
+                users:
+                  - user:
+                      externalId: "sara"
+                      fullName: "Sara Jones"
+                      identityLinkStrategy: "CREATE_IN_IDENTITY"
+                      emailAddress:
+                        address: "sara@email.com"
+                      mobileNumber:
+                        number: "1234567890"
+                    referenceJobRoleNames:
+                      - "Retail User"
                 description: "Product group containing user arrangements"
                 currentAccounts:
                   - externalId: "021000021"
