@@ -12,7 +12,7 @@ FROM $IDENTITY_BUILDER as auth-server-builder
 #  - https://www.keycloak.org/server/all-config
 #  - https://quarkus.io/guides/all-config
 
-ENV KC_DB "mysql"
+ENV KC_DB "oracle"
 ENV KC_TRANSACTION_XA_ENABLED "true"
 ENV KC_HEALTH_ENABLED "true"
 ENV KC_METRICS_ENABLED "false"

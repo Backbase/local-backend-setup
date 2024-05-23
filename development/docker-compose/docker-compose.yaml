@@ -33,10 +33,9 @@ x-common-variables: &common-variables
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
   spring.liquibase.enabled: true
-  spring.datasource.username: root
-  spring.datasource.password: root
-  spring.datasource.driver-class-name: com.mysql.cj.jdbc.Driver
-  spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+  spring.datasource.url: jdbc:oracle:thin:@oracle-db:1521/BACKBASE
+  spring.datasource.driver-class-name: oracle.jdbc.OracleDriver
+  spring.datasource.password: b4ckb4s3
 
 x-message-broker-variables: &message-broker-variables
   spring.activemq.broker-url: tcp://activemq:61616
@@ -52,7 +51,7 @@ x-healthcheck-defaults: &healthcheck-defaults
 name: backbase
 
 volumes:
-  mysql_data:
+  oracle_data:
     driver: local
 
 secrets:
@@ -62,19 +61,19 @@ secrets:
     file: ${HOME}/.netrc
 
 services:
-  mysql:
-    image: mysql:8.0.31
+  # Sign-in using oracle's free account first at https://container-registry.oracle.com/ords/ocr/ba/database/enterprise
+  # and accept the terms, then login using 'docker login container-registry.oracle.com' to get the image
+  oracle-db:
+    image: container-registry.oracle.com/database/enterprise:19.19.0.0 # This tag is compliant with Apple chips (arm64), for Intel chips (amd64) use '19.3.0.0' tag
     ports:
-      - "3306:3306"
+      - "1521:1521"
+      - "5500:5500" # EM Express at: https://localhost:5500/em
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      ORACLE_PDB: BACKBASE
+      ORACLE_PWD: b4ckb4s3
     volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: mysqladmin ping --silent
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - oracle_data:/opt/oracle/oradata
+      - ./initdb:/opt/oracle/scripts/startup # Each service has to have a dedicated user in the create_users.sql script
 
   activemq:
     image: apache/activemq-classic
@@ -146,9 +145,9 @@ services:
       BACKBASE_HTTP_CORS: "true"
       BACKBASE_HTTP_CORS_EXPOSED_HEADERS: "Location"
       BACKBASE_HTTP_CORS_ORIGINS: "http://localhost:4200,http://localhost:8080"
-      KC_DB_URL: "jdbc:mysql://mysql:3306/backbase_identity?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
-      KC_DB_USERNAME: "root"
-      KC_DB_PASSWORD: "root"
+      KC_DB_URL: "jdbc:oracle:thin:@oracle-db:1521/BACKBASE"
+      KC_DB_USERNAME: "backbase_identity"
+      KC_DB_PASSWORD: "b4ckb4s3"
       KC_LOG_LEVEL: "INFO"
       KC_LOG_CONSOLE_FORMAT: "%d{yyy:MM:dd HH:mm:ss.SSS} %-5p [%X{traceId},%X{spanId},%X{sampled}] %i --- [%t] %c{2.} : %m%n"
       KC_HOSTNAME_URL: "http://localhost:8180/auth/"
@@ -164,7 +163,7 @@ services:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
     depends_on:
-      mysql:
+      oracle-db:
         condition: service_healthy
 
   access-control:
@@ -173,14 +172,14 @@ services:
       - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      spring.datasource.username: access_control
     volumes:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
     depends_on:
-      mysql:
+      oracle-db:
         condition: service_healthy
     links:
       - activemq
@@ -192,14 +191,14 @@ services:
       - "8050:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      spring.datasource.username: arrangement_manager
     volumes:
       - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
     depends_on:
-      mysql:
+      oracle-db:
         condition: service_healthy
     links:
       - activemq
@@ -211,7 +210,7 @@ services:
       - "8060:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.url: jdbc:mysql://mysql:3306/user-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      spring.datasource.username: user_manager
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
@@ -222,7 +221,7 @@ services:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
     depends_on:
-      mysql:
+      oracle-db:
         condition: service_healthy
     links:
       - activemq
@@ -290,8 +289,8 @@ services:
 
   wiremock:
     image: wiremock/wiremock:2.32.0
-    profiles:
-      - with-mocks
+    ports:
+      - "8888:8080"
     command:
       - --global-response-templating
       - --verbose
@@ -351,6 +350,7 @@ services:
       API_ROOT: /api/
       AUTH_URL: http://localhost:8180/auth/
       FALLBACK_LOCALE: en-US
+      USE_TRANSACTION_SIGNING_V2: true
     ports:
       - "8080:8080"
     volumes:
