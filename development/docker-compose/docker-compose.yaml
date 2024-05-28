@@ -200,7 +200,7 @@ services:
       - registry
 
   user-manager:
-    image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
+    image: harbor.backbase.eu/development/user-manager:17.1.0-rc.4.2-SNAPSHOT
     ports:
       - "8060:8080"
     environment:
@@ -210,6 +210,8 @@ services:
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      "resilience4j.circuitbreaker.instances.accesscontrol-external.failureRateThreshold": "60"
+      "resilience4j.circuitbreaker.instances.accesscontrol-external.minimumNumberOfCalls": "2"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
