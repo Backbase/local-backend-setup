@@ -200,7 +200,7 @@ services:
       - registry
 
   user-manager:
-    image: harbor.backbase.eu/development/user-manager:17.1.0-rc.4.2-SNAPSHOT
+    image: harbor.backbase.eu/development/user-manager:17.1.0-rc.4.3-SNAPSHOT
     ports:
       - "8060:8080"
     environment:
