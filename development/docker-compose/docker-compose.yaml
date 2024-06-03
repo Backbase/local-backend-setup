@@ -200,9 +200,10 @@ services:
       - registry
 
   user-manager:
-    image: harbor.backbase.eu/development/user-manager:17.1.0-rc.4.3-SNAPSHOT
+    image: harbor.backbase.eu/development/user-manager:17.1.0-rc.4.7-SNAPSHOT
     ports:
       - "8060:8080"
+      - "5008:5005"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/user-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
@@ -212,6 +213,7 @@ services:
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
       "resilience4j.circuitbreaker.instances.accesscontrol-external.failureRateThreshold": "60"
       "resilience4j.circuitbreaker.instances.accesscontrol-external.minimumNumberOfCalls": "2"
+      JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
