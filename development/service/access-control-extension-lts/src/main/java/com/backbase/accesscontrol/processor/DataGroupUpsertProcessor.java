@@ -1,10 +1,10 @@
 package com.backbase.accesscontrol.processor;
 
-import com.backbase.accesscontrol.domain.dto.DataGroupBaseDto;
-import com.backbase.accesscontrol.domain.dto.PresentationDataGroupUpdateDto;
-import com.backbase.accesscontrol.domain.dto.PresentationServiceAgreementWithDataGroupsDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.DataGroupBaseDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationDataGroupUpdateDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationServiceAgreementWithDataGroupsDto;
 import com.backbase.accesscontrol.mapper.PutDataGroupsEventMapper;
-import com.backbase.accesscontrol.service.facades.v3.DataGroupServiceFacade;
+import com.backbase.accesscontrol.domain.service.facades.DataGroupServiceFacade;
 import com.backbase.accesscontrol.util.DataItemsUtil;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import java.util.List;

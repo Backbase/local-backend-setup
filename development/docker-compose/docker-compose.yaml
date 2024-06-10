@@ -180,10 +180,10 @@ services:
   access-control:
     image: repo.backbase.com/access-control-extension:2023.10-0.0.6
     deploy:
-      replicas: 2
-    ports:
-      - "8040:8080"
-      - "5005:5005"
+      replicas: 3
+#    ports:
+#      - "8040:8080"
+#      - "5005:5005"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
@@ -192,27 +192,43 @@ services:
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
       SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
+      spring.liquibase.enabled: false
 
       "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
       "management.endpoints.web.exposure.include": bindings
 
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
-      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitionCount: 2
-      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 1
-      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.max-attempts: 1
-      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.autoCommitOffset: true
-      spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.destination: rch-30730-kep-data-group
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.group: rch-30730-upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
-      #spring.cloud.stream.bindings.upsertDataGroup-in-0.error-handler-definition: MyErrorHandler
-
-      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
-      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 1
-      spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 4
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.auto-commit-offset: true
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.max-attempts: 1
+      spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitioned: true # Ensure input binding is partitioned
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-in-0.consumer.configuration.key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.destination: rch-30730-kep-data-group-push-success
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.group: rch-30730-upsert-data-groups-success-event-group
       spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.message-key-expression: headers['kafka_messageKey']
+      spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.configuration.key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 12
+      #spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.replica-count: 3
 
-      logging.root: INFO
-      logging.level.com.backbase: DEBUG
-      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+
+#      SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-in-0_DESTINATION: UpsertDataGroupsEvent
+#      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.partitionCount: 2
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.concurrency: 4
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.max-attempts: 1
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.consumer.autoCommitOffset: true
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.group: upsert-data-groups-event-group
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
+      #spring.cloud.stream.bindings.upsertDataGroup-in-0.error-handler-definition: MyErrorHandler
+#
+      #SPRING_CLOUD_STREAM_BINDINGS_upsertDataGroup-out-0_DESTINATION: UpsertDataGroupsSuccessEvent
+      #spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 12
+      #spring.cloud.stream.bindings.upsertDataGroup-out-0.group: upsert-data-groups-success-event-group
+      #spring.cloud.stream.bindings.upsertDataGroup-out-0.content-type: application/json
+
+      logging.root: WARN
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
