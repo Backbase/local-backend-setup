@@ -35,53 +35,47 @@ For the setup, you must have the following:
     brew install colima docker docker-compose docker-credential-helper
     colima start --cpu 4 --memory 16
     ```
-   Workaround to fix Colima issue [#764](https://github.com/abiosoft/colima/issues/764) in order to build the Identity Auth Server image using docker compose:
-   ```shell
-    docker buildx create --driver-opt 'image=moby/buildkit:rootless' 
-    ```
    > **NOTE**: Installing Colima is only for macOS. For Windows-based systems, you can install Docker Desktop and run it to start the Docker service before going to the next step.
 2. Log in to the Backbase repo:
     ```shell
     docker login repo.backbase.com
     ```
+3. Test your setup:
+    ```shell
+    docker pull repo.backbase.com/backbase-docker-releases/edge:2023.04
+    ```
 
 ### Set up the local environment
 
-1. View a list of all the running containers, with their status and configuration:
+1. Set the current path to `development/docker-compose` directory:
     ```shell
-    docker ps
-    ```
-2. To set the Docker image for the version of Edge you are running, replace `2022.09.1` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.:
-    ```shell
-    docker pull repo.backbase.com/backbase-docker-releases/edge:`2022.09.1`
+    cd development/docker-compose
     ```
 
-3. From the Docker Compose directory, start up the environment:
-    ```shell
-    docker compose up -d
-    ```
-   > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
-
-4. Add the `bootstrap` profile on the first run to ingest data into Banking Services:
+2. From the Docker Compose directory, start up the environment:
     ```shell
     docker compose --profile=bootstrap up -d
     ```
-5. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
+    > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
+
+    > **NOTE**: The `bootstrap` profile is usually used on the first run to ingest data into Banking Services. You can skip it if you don't need to ingest data.
+
+3. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f
     ```
-6. To access your environment, use the following endpoints:
+4. To access your environment, use the following endpoints:
     - **Identity**: http://localhost:8180/auth
       * **Realm Admin Credentials**: `admin` / `admin`
     - **Edge Gateway**: http://localhost:8280/api
     - **Registry**: http://localhost:8761
-7. Verify the health of your environment to ensure services are running: 
+5. Verify the health of your environment to ensure services are running: 
     ```shell
     docker compose ps
     ```
     For a more detailed check of your environment, use the Postman collection from the `./test` directory. For more information, see [Health check](#health-check).
 
-8. If you want to stop or kill containers, use one of the following:
+6. If you want to stop or kill containers, use one of the following:
     - Stop and remove containers in the Docker Compose file:
         ```shell
         docker compose down
@@ -109,12 +103,12 @@ To add more services in the environment, insert their configuration into the `do
 
 Before proceeding, make sure that the Docker Registry is accessible.
 
-1. Replace `SERVICE-NAME` with the service you want to add. For more information, see [Backend artifacts](https://community.backbase.com/documentation/DBS/latest/backend_artifacts).
+1. Replace `SERVICE-NAME` with the service you want to add. For more information, see [Backend artifacts](https://backbase.io/developers/documentation/banking-services/latest).
 2. Set your Docker image configuration.
 3. Set the `PORT` which the service exposes.
 4. You can add the following to the service environment variables:
    - To include common configurations, such as registry and signature keys, add `*common-variables`. 
-   - If a database is required for your service, add `*database-variables`.
+   - If a database is required for your service, add `*database-variables`. You have to provide `spring.datasource.url` for these services.
    - If the service utilizes events, include `*message-broker-variables`.
 
 The following is an example configuration:
@@ -144,7 +138,7 @@ The following tasks ingest data:
 - Product catalog task
 - Legal entity bootstrap task
 
-   > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` profiles are [enabled and pre-configured](https://github.com/Backbase/stream-services/blob/master/stream-legal-entity/legal-entity-bootstrap-task/src/main/resources/application.yml#L24) in the Stream services.
+   > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` profiles are [enabled and pre-configured](https://github.com/Backbase/stream-services/blob/5.3.0/stream-legal-entity/legal-entity-bootstrap-task/src/main/resources/application.yml#L21) in the Stream services.
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
@@ -198,6 +192,47 @@ To start an application in debug mode using, for example, IntelliJ IDE, do the f
 
     ![ide1](docs/ide1.png)
 
+#### Communicating with services
+
+There might be situations when your service is running locally and needs to communicate with services inside the environment using their service names. For example, if your service wants to call `http://user-manager/service-api/v1/some-service`, you should disable the Eureka client in your service and add the service instances statically:
+
+```yaml
+eureka:
+  client:
+    enabled: false
+spring:
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            user-manager:
+              - instanceId: userManager1
+                serviceId: user-manager
+                host: localhost
+                port: 8060
+```
+
+When the Eureka client is disabled, you will lose service discovery, and your service will not be discovered by Edge. If you need to call your service endpoints via Edge, the solution is to configure Edge and add the route to your service statically. Here is a sample configuration for that:
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: custom-route
+          uri: http://host.docker.internal:8080
+          predicates:
+            - Path=/api/example-service/**
+          filters:
+            - StripPrefix=2
+```
+
+You can add it via `spring.application.jason` property of Edge in docker-compose.yaml file:
+
+```yaml
+      SPRING_APPLICATION_JSON: "{\"spring\":{\"cloud\":{\"gateway\":{\"routes\":[{\"id\":\"custom-route\",\"uri\":\"http://host.docker.internal:8080\",\"predicates\":[\"Path=/api/example-service/**\"],\"filters\":[\"StripPrefix=2\"]}]}}}}"
+```
 
 ### Debug remotely
 
