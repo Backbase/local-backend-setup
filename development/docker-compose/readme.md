@@ -194,7 +194,7 @@ To start an application in debug mode using, for example, IntelliJ IDE, do the f
 
 #### Communicating with services
 
-There might be situations when your service is running locally and needs to communicate with services inside the environment using their service names. For example, if your service wants to call `http://user-manager/service-api/v1/some-service`, you should disable the Eureka client in your service and add the service instances statically:
+There might be situations when your service is running locally and needs to communicate with services inside the environment using their service names. For example, if your service wants to call `http://user-manager/service-api/v1/some-service`, Eureka will return the IP address of the `user-manager` inside the docker network which will not be accessible. In this case, you should disable the Eureka client in your service and add the service instances statically:
 
 ```yaml
 eureka:
@@ -228,7 +228,7 @@ spring:
             - StripPrefix=2
 ```
 
-You can add it via `spring.application.jason` property of Edge in docker-compose.yaml file:
+You can add it via `spring.application.json` property of Edge in docker-compose.yaml file:
 
 ```yaml
       SPRING_APPLICATION_JSON: "{\"spring\":{\"cloud\":{\"gateway\":{\"routes\":[{\"id\":\"custom-route\",\"uri\":\"http://host.docker.internal:8080\",\"predicates\":[\"Path=/api/example-service/**\"],\"filters\":[\"StripPrefix=2\"]}]}}}}"
