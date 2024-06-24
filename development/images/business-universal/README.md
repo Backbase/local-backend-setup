@@ -1,6 +1,6 @@
-# Employee Essentials Web
+# Business Essentials Web
 
-This image is not available in any Backbase public repository. 
+This image is not available in any Backbase public repository.
 
 You have the following options:
 
@@ -9,7 +9,7 @@ You have the following options:
 After connecting to Backbase VPN you can run:
 ```shell
 docker login harbor.backbase.eu
-docker pull --platform=linux/amd64 harbor.backbase.eu/development/business-banking-app-universal:2023.02-LTS
+docker pull --platform=linux/amd64 harbor.backbase.eu/development/business-universal:2024.03-LTS
 ```
 
 ## Building the image locally
@@ -17,17 +17,14 @@ docker pull --platform=linux/amd64 harbor.backbase.eu/development/business-banki
 You can build it by using the following commands:
 
 ```shell
-# Create a .npmrc file using your credentials.
-curl -s -u"<username>:<password>" https://repo.backbase.com/api/npm/npm-backbase/auth/backbase > .npmrc
+# If not there yet, create a .npmrc file using your credentials.
+curl -s -u"<USERNAME>:<PASSWORD/TOKEN>" https://repo.backbase.com/api/npm/npm-backbase/auth/backbase > ~/.npmrc
 
-# Build the image using the created .npmrc credentials as a build secret.
-docker build --platform=linux/amd64 --secret id=npm,src=$(pwd)/.npmrc -t harbor.backbase.eu/development/business-banking-app-universal:2023.02-LTS .
-```
+# If not there yet, create a .netrc file using your credentials.
+echo "machine repo.backbase.com login <USERNAME> password <PASSWORD/TOKEN>" > ~/.netrc
 
-If you already have Backbase registry configured in your laptop installation you can reuse your `.npmrc` file instead of generating a new one:
-```shell
 # Build the image using your existing credentials as a build secret.
-docker build --platform=linux/amd64 --secret id=npm,src=$(echo $HOME)/.npmrc -t harbor.backbase.eu/development/business-banking-app-universal:2023.02-LTS .
+docker build --platform=linux/amd64 --secret id=npm,src=$(echo $HOME)/.npmrc --secret id=repo,src=$(echo $HOME)/.netrc -t harbor.backbase.eu/development/business-universal:2024.03-LTS .
 ```
 
-> Mounting the secret as a `.npmrc` file is necessary to fetch the NPM dependencies on Backbase private registry.
+> Mounting the secret as `.netrc` is required to download the app from the Backbase JFrog repository, and `.npmrc` file is necessary to fetch the NPM dependencies on Backbase private registry.
