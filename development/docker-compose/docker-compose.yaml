@@ -383,37 +383,6 @@ services:
 #       - kafka
 #       - zookeeper
 
-  kafka-message-producer:
-    image: harbor.backbase.eu/development/kafka-message-producer:1.0.0-SNAPSHOT
-    ports:
-      - "8091:8080"
-    environment:
-      <<: *common-variables
-      server.port: 8080
-      eureka.client.enabled: 'true'
-      backbase.activemq.enabled: 'false'
-      spring.cloud.stream.defaultBinder: 'kafka'
-      backbase.kafka.enabled: 'true'
-      spring.kafka.consumer.bootstrap-servers: kafka:9092
-      spring.kafka.producer.bootstrap-servers: kafka:9092
-      spring.cloud.stream.kafka.binder.kafkas: kafka:9092
-      spring.cloud.stream.kafka.binder.zkNodes: zookeeper:2181
-      spring.kafka.bootstrap-servers: kafka:9092
-      PRODUCER_BOOTSTRAP_SERVERS: 'kafka:9092'
-      eureka.instance.appname: kafka-message-producer
-      backbase.security.public.paths: /**
-    volumes:
-      - ./scripts:/tmp/h
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xmx5M", "-Xmx10M", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/kafka-message-producer", "<status>UP</status>" ]
-    depends_on:
-      kafka:
-        condition: service_healthy
-    links:
-      - registry
-      - kafka
-      - zookeeper
 
 #  kafka:
 #    image: confluentinc/cp-kafka
