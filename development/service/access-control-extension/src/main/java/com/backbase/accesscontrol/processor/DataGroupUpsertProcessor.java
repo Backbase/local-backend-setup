@@ -33,7 +33,6 @@ public class DataGroupUpsertProcessor {
             log.debug("Updating Data Group: {}", updateDto);
             dataGroupServiceFacade.updateDataGroup(updateDto);
         } else {
-
             log.debug("Data group not found: {}", searchResult.get(0).getDataGroups().get(0).getName());
             DataGroupBaseDto createDto = mapper.mapToDataGroupBaseDto(requestPayload);
             dataItemsUtil.updateDataItems(requestPayload.getDataItems(), createDto);

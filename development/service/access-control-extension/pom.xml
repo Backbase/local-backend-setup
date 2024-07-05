@@ -122,14 +122,6 @@
                                     <classifier>api</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
-                                    <fileMappers>
-                                        <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
-                                            <pattern>
-                                                ((?:access\-control\-(?:client|service)|accessgroup\-integration\-(?:inbound|outbound))\-api\-v[1-9]).*(\.yaml)$
-                                            </pattern>
-                                            <replacement>$1$2</replacement>
-                                        </fileMapper>
-                                    </fileMappers>
                                 </artifactItem>
                             </artifactItems>
                             <includes>**/*.yaml</includes>
@@ -155,7 +147,7 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <inputSpec>
-                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.yaml
+                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.2.3.yaml
                             </inputSpec>
                             <configOptions>
                                 <library>spring-boot</library>
