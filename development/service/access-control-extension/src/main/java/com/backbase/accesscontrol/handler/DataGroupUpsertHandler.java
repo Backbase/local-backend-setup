@@ -54,7 +54,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred", e);
-            handleFailure(message, e); // Handle other exceptions immediately
+            handleFailure(message, e);
         }
 
         return null;
@@ -79,7 +79,6 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
 
         log.info("Pausing the consumer for topic {} and partition {}", topic, partitionId);
         consumer.pause(Collections.singleton(new TopicPartition(topic, partitionId)));
-        consumer.commitAsync();
 
         waitForErrorTopicToClear(KAFKA_ERROR_TOPIC, partitionId);
 
