@@ -3,14 +3,13 @@ package com.backbase.accesscontrol.handler;
 import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_ERROR_TOPIC;
 import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_ERROR_TOPIC_HEADER_NAME;
 
+import com.backbase.accesscontrol.exception.DataProcessingException;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.kafka.KafkaErrorTopicChecker;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
@@ -20,6 +19,8 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.retry.RecoveryCallback;
+import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
@@ -36,18 +37,24 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
     @Override
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
         log.info("Upsert Data Message received: {}", message);
-
-        IntegrationDataGroupItemBatchPutRequestBody requestPayload;
+        //TODO change logging
         try {
-            requestPayload = parsePayload(message.getPayload());
-            IntegrationDataGroupItemBatchPutRequestBody finalRequestPayload = requestPayload;
-            return retryTemplate.execute(context -> dataGroupUpsertProcessor.process(finalRequestPayload));
-        }
-        catch (PayloadParsingException e) {
-            handleFailure(message, e);
+            IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
+
+            RetryCallback<IntegrationDataGroupItemBatchPutRequestBody, RuntimeException> retryCallback =
+                context -> dataGroupUpsertProcessor.process(requestPayload);
+
+            RecoveryCallback<IntegrationDataGroupItemBatchPutRequestBody> recoveryCallback = context -> {
+                log.error("Retries exhausted for message: {}", message);
+
+                Exception finalException = (Exception) context.getLastThrowable();
+                throw new DataProcessingException("Couldn't process the message after retries.", finalException);
+            };
+
+            return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred", e);
-            handleFailure(message, e);
+            handleFailure(message, e); // Handle other exceptions immediately
         }
 
         return null;
@@ -72,6 +79,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
 
         log.info("Pausing the consumer for topic {} and partition {}", topic, partitionId);
         consumer.pause(Collections.singleton(new TopicPartition(topic, partitionId)));
+        consumer.commitAsync();
 
         waitForErrorTopicToClear(KAFKA_ERROR_TOPIC, partitionId);
 

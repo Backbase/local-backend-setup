@@ -47,6 +47,7 @@ x-message-broker-variables: &message-broker-variables
   spring.cloud.stream.kafka.binder.kafkas: kafka:9092
   spring.cloud.stream.kafka.binder.zkNodes: zookeeper:2181
   spring.kafka.bootstrap-servers: kafka:9092
+  spring.kafka.consumer.session.timeout.ms: 60000
   PRODUCER_BOOTSTRAP_SERVERS: 'kafka:9092'
 
 x-healthcheck-defaults: &healthcheck-defaults
@@ -181,22 +182,21 @@ services:
     image: repo.backbase.com/access-control-extension:2023.10-0.0.6
     deploy:
       replicas: 1
-#    ports:
-#      - "8040:8080"
-#      - "5005:5005"
+    ports:
+      - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
       SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
       spring.liquibase.enabled: true
-
       "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
       "management.endpoints.web.exposure.include": bindings
-
+      logging.level.com.backbase: DEBUG
+      RCH_KAFKA_BOOTSTRAP_SERVER: kafka:9092
+      RCH_KAFKA_GROUP_ID: kafka-connect
       spring.cloud.stream.bindings.upsertDataGroup-in-0.destination: rch-30730-kep-data-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: rch-30730-upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json

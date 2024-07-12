@@ -72,7 +72,15 @@
             <groupId>com.backbase.buildingblocks</groupId>
             <artifactId>communication</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.1.2</version>
+        </dependency>
         <!-- Lombok and Mapstruct -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -92,6 +100,11 @@
             <groupId>com.backbase.buildingblocks</groupId>
             <artifactId>service-sdk-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- For Maven -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.vintage</groupId>
