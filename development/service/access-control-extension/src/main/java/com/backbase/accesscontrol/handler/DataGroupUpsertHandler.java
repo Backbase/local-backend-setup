@@ -1,20 +1,18 @@
 package com.backbase.accesscontrol.handler;
 
-import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_ERROR_TOPIC;
-import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_ERROR_TOPIC_HEADER_NAME;
-
+import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
+import com.backbase.accesscontrol.constant.KafkaConstants;
 import com.backbase.accesscontrol.exception.DataProcessingException;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.kafka.KafkaErrorTopicChecker;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.TopicPartition;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -31,13 +29,13 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
     private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
     private final StreamBridge streamBridge;
     private final KafkaErrorTopicChecker kafkaErrorTopicChecker;
+    private final RchKafkaGenericProperties rchKafkaGenericProperties;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
         log.info("Upsert Data Message received: {}", message);
-        //TODO change logging
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
@@ -75,19 +73,19 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         var topic = message.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, String.class);
         var partitionId = message.getHeaders().get(KafkaHeaders.RECEIVED_PARTITION, Integer.class);
 
-        sendMessageToErrorTopic(e, message.getPayload(), partitionId);
-
+        sendMessageToErrorTopic(message, e);
+/*
         log.info("Pausing the consumer for topic {} and partition {}", topic, partitionId);
         consumer.pause(Collections.singleton(new TopicPartition(topic, partitionId)));
 
         waitForErrorTopicToClear(KAFKA_ERROR_TOPIC, partitionId);
 
         log.info("Resuming the consumer for topic {} and partition {}", topic, partitionId);
-        consumer.resume(Collections.singleton(new TopicPartition(topic, partitionId)));
+        consumer.resume(Collections.singleton(new TopicPartition(topic, partitionId)));*/
     }
 
-    private void waitForErrorTopicToClear(String errorTopic, Integer partitionId) {
-        while (kafkaErrorTopicChecker.areMessagesOnErrorTopic(errorTopic, partitionId)) {
+/*    private void waitForErrorTopicToClear(String errorTopic) {
+        while (kafkaErrorTopicChecker.areMessagesOnErrorTopic(errorTopic)) {
             try {
                 log.info("Sleeping for 10 seconds");
                 TimeUnit.SECONDS.sleep(10);
@@ -97,15 +95,25 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
                 break;
             }
         }
-    }
+    }*/
 
-    private void sendMessageToErrorTopic(Exception e, Object requestPayload, Integer partitionId) {
-        Message<Object> errorMessage =
-            MessageBuilder.withPayload(requestPayload)
-                .setHeader(KAFKA_ERROR_TOPIC_HEADER_NAME, e)
-                .setHeader(KafkaHeaders.PARTITION, partitionId)
-                .build();
-        streamBridge.send(KAFKA_ERROR_TOPIC, errorMessage);
+    private void sendMessageToErrorTopic(Message<String> originalMessage, Exception e) {
+        MessageBuilder<String> errorMessageBuilder = MessageBuilder.withPayload(originalMessage.getPayload())
+            .copyHeaders(originalMessage.getHeaders())
+            .setHeader(KafkaConstants.ERROR_CODE_HEADER, e.getClass().getSimpleName())
+            .setHeader(KafkaConstants.ERROR_MESSAGE_HEADER, e.getMessage())
+            .setHeader(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(e));
+
+        Message<String> errorMessage = errorMessageBuilder.build();
+        streamBridge.send(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(), errorMessage);
         log.info("Message Sent to ErrorTopic");
     }
+
+
+    private String getStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
+    }
+
 }

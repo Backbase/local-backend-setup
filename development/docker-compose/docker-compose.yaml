@@ -197,6 +197,7 @@ services:
       logging.level.com.backbase: DEBUG
       RCH_KAFKA_BOOTSTRAP_SERVER: kafka:9092
       RCH_KAFKA_GROUP_ID: kafka-connect
+      RCH_KAFKA_UPSERT_DATA_GROUP_ERROR_TOPIC_NAME: UpsertDataGroupsFailureEvent
       spring.cloud.stream.bindings.upsertDataGroup-in-0.destination: rch-30730-kep-data-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: rch-30730-upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
