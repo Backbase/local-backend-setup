@@ -2,11 +2,14 @@ package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.constant.KafkaConstants;
+import com.backbase.accesscontrol.dto.ServiceAgreementDto;
 import com.backbase.accesscontrol.exception.DataProcessingException;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.kafka.KafkaErrorTopicChecker;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
+import com.backbase.accesscontrol.processor.ServiceAgreementProcessor;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
+import com.backbase.integration.accessgroup.rest.spec.v3.ServiceAgreement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,10 +26,10 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("upsertDataGroup")
+@Component("upsertServiceAgreement")
 @AllArgsConstructor
-public class DataGroupUpsertHandler implements Function<Message<String>, IntegrationDataGroupItemBatchPutRequestBody> {
-    private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
+public class ServiceAgreementUpsertHandler implements Function<Message<String>, ServiceAgreement> {
+    private final ServiceAgreementProcessor serviceAgreementProcessor;
     private final StreamBridge streamBridge;
     private final KafkaErrorTopicChecker kafkaErrorTopicChecker;
     private final RchKafkaGenericProperties rchKafkaGenericProperties;
@@ -34,15 +37,15 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
     private final ObjectMapper objectMapper;
 
     @Override
-    public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
-        log.info("Upsert Data Group Message received: {}", message);
+    public ServiceAgreement apply(Message<String> message) {
+        log.info("Create Service Agreement Message received: {}", message);
         try {
-            IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
+            ServiceAgreement requestPayload = parsePayload(message.getPayload());
 
-            RetryCallback<IntegrationDataGroupItemBatchPutRequestBody, RuntimeException> retryCallback =
-                context -> dataGroupUpsertProcessor.process(requestPayload);
+            RetryCallback<ServiceAgreement, RuntimeException> retryCallback =
+                context -> serviceAgreementProcessor.process(requestPayload);
 
-            RecoveryCallback<IntegrationDataGroupItemBatchPutRequestBody> recoveryCallback = context -> {
+            RecoveryCallback<ServiceAgreement> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message);
 
                 Exception finalException = (Exception) context.getLastThrowable();
@@ -58,9 +61,9 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         return null;
     }
 
-    public IntegrationDataGroupItemBatchPutRequestBody parsePayload(String payload) {
+    public ServiceAgreement parsePayload(String payload) {
         try {
-            return objectMapper.readValue(payload, IntegrationDataGroupItemBatchPutRequestBody.class);
+            return objectMapper.readValue(payload, ServiceAgreement.class);
         } catch (Exception e) {
             log.error("Error parsing message payload", e);
             throw new PayloadParsingException("Error parsing message payload", e);
@@ -105,7 +108,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             .setHeader(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(e));
 
         Message<String> errorMessage = errorMessageBuilder.build();
-        streamBridge.send(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(), errorMessage);
+        streamBridge.send(rchKafkaGenericProperties.getUpsertServiceAgreementErrorTopicName(), errorMessage);
         log.info("Message Sent to ErrorTopic");
     }
 

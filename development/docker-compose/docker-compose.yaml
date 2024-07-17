@@ -190,7 +190,7 @@ services:
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement
       spring.liquibase.enabled: true
       "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
       "management.endpoints.web.exposure.include": bindings
@@ -198,6 +198,7 @@ services:
       RCH_KAFKA_BOOTSTRAP_SERVER: kafka:9092
       RCH_KAFKA_GROUP_ID: kafka-connect
       RCH_KAFKA_UPSERT_DATA_GROUP_ERROR_TOPIC_NAME: UpsertDataGroupsFailureEvent
+      RCH_KAFKA_UPSERT_SERVICE_AGREEMENT_ERROR_TOPIC_NAME: UpsertServiceAgreementsFailureEvent
       spring.cloud.stream.bindings.upsertDataGroup-in-0.destination: rch-30730-kep-data-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: rch-30730-upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
