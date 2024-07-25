@@ -196,11 +196,10 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-#      backbase.api.extensions.classes.<>: personal-data
-#      backbase.api.extensions.property-sets.personal-data.properties.property-name: lastInterestCalculationDate
-#      backbase.api.extensions.property-sets.personal-data.property-name.type: string
+      SPRING_CONFIG_ADDITIONAL_LOCATION: /extraConfig/application.yml
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+      - ./configuration/arrangement-manager/application.yml:/extraConfig/application.yml
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]

@@ -1,0 +1,11 @@
+backbase:
+  api:
+    extensions:
+      classes:
+        com.backbase.stream.legalentity.model.SavingsAccount: personal-data
+        com.backbase.stream.legalentity.model.CurrentAccount: personal-data
+      property-sets:
+        personal-data:
+          properties:
+            - property-name: lastInterestCalculationDate
+              type: string
