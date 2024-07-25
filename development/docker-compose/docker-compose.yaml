@@ -1,9 +1,9 @@
-# https://docs.docker.com/compose/compose-file/
-
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=INFO
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=DEBUG
   SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
+  EXTERNAL_SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
+  EXTERNAL_ENC_SECRET_KEY: JWTEncKeyDontUseInProduction666!
   server.shutdown: graceful
   server.max-http-header-size: 64KB
   server.forward-headers-strategy: framework
@@ -23,7 +23,7 @@ x-common-variables: &common-variables
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   backbase.audit.enabled: false
-  backbase.security.public.paths: /integration-api/**,/oauth/token,/convert
+  backbase.security.public.paths: /integration-api/**,/oauth/token,/convert,/service-api/**
   backbase.security.mtls.enabled: false
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
@@ -116,6 +116,8 @@ services:
       backbase.oidc-token-converter.whitelistedDomains[0].internalHostScheme: http
       backbase.oidc-token-converter.whitelistedDomains[0].internalHost: backbase-identity:8080
       backbase.oidc-token-converter.whitelistedDomains[0].issuerHost: localhost
+      backbase.token-converter.claims-mapping.internal: exchangeApiKey
+      backbase.oidc-token-converter.bbusage-force-userinfo: single-use
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -133,9 +135,11 @@ services:
         IDENTITY_BUILDER: repo.backbase.com/backbase-docker-releases/auth-server-builder:${BB_VERSION}
     ports:
       - '8180:8080'
+      - "5666:5666"
     environment:
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
+      exchangeApiKey: "4e425f9510d57f6b736b1ddc"
       BACKBASE_HTTP_CORS: "true"
       BACKBASE_HTTP_CORS_EXPOSED_HEADERS: "Location"
       BACKBASE_HTTP_CORS_ORIGINS: "http://localhost:4200,http://localhost:8080"
@@ -149,6 +153,12 @@ services:
       KC_SPI_USER_MANAGER_CLIENT_DEFAULT_URL: "http://user-manager:8080"
       KC_SPI_CONNECTIONS_JPA_LEGACY_INITIALIZE_EMPTY: "true"
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
+      KC_SPI_WEB_AUTHENTICATION_SERVICE_CLIENT_DEFAULT_URL: "http://localhost:8180"
+      KC_SPI_STEP_UP_CONFIG_DEFAULT_CUSTOMERREALM_NAME: "customer"
+      KC_SPI_STEP_UP_CONFIG_DEFAULT_CUSTOMERREALM_CLIENTS_TESTCLIENT_NAME: "test-client"
+      KC_SPI_STEP_UP_CONFIG_DEFAULT_CUSTOMERREALM_CLIENTS_TESTCLIENT_ACR_VALUES_STEPUP_ACR: "gold"
+      KC_SPI_STEP_UP_CONFIG_DEFAULT_CUSTOMERREALM_CLIENTS_TESTCLIENT_ACR_VALUES_STEPUP_PRIORITY: "2"
+      KC_SPI_STEP_UP_CONFIG_DEFAULT_CUSTOMERREALM_CLIENTS_TESTCLIENT_ACR_VALUES_STEPUP_DEFAULT: "bb-su:change-email"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
@@ -186,6 +196,9 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+#      backbase.api.extensions.classes.<>: personal-data
+#      backbase.api.extensions.property-sets.personal-data.properties.property-name: lastInterestCalculationDate
+#      backbase.api.extensions.property-sets.personal-data.property-name.type: string
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -209,11 +222,70 @@ services:
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      backbase.security.rules-enabled: true
+      backbase.security.deny-all: false
+      backbase.security.rules.user-manager-client-api.step-up.acr-values: gold
+      backbase.security.rules.user-manager-client-api.to.0.methods: POST
+      backbase.security.rules.user-manager-client-api.to.0.paths: /client-api/v2/users/*/profile/electronic-addresses
+      backbase.security.rules.user-manager-client-api.to.1.methods: PUT
+      backbase.security.rules.user-manager-client-api.to.1.paths: /client-api/v2/users/*/profile/electronic-addresses/*
+      backbase.security.rules.user-manager-client-api.to.2.methods: DELETE
+      backbase.security.rules.user-manager-client-api.to.2.paths: /client-api/v2/users/*/profile/electronic-addresses/*
+      backbase.security.rules.user-manager-client-api.when.match: ALL
+      backbase.security.rules.user-manager-client-api.when.values.0: bb-su:change-email
+      backbase.security.rules.user-manager-client-api.when.token: CLIENT
+      backbase.security.rules.user-manager-client-api.order: 1
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  limit:
+    image: repo.backbase.com/backbase-docker-releases/limit:${BB_VERSION}
+    ports:
+      - "8350:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/limits?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "backbase.limits.defaults.currency": "USD"
+      "backbase.limits.global.enabled": "true"
+      "backbase.limits.integration.retry.attempts-number": "2"
+      "backbase.limits.defaults.firstDayOfWeek": "Sunday"
+      "backbase.limits.applicableCurrency.currencyList": "EUR,GBP,USD,AED,AUD,BRL,CAD,CNY,HKD,INR,JPY,JOD,RUB,SGD,ZAR"
+    volumes:
+      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/limit", "<status>UP</status>" ]
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - registry
+
+  contact-manager:
+    image: repo.backbase.com/backbase-docker-releases/contact-manager:${BB_VERSION}
+    ports:
+      - "8051:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/contact-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      backbase.contact.entitlements.set-context-legal-entity-with-extra-service-call: "false"
+      backbase.contact.approval.enabled: "false"
+      backbase.contact.supported-countries.fetch-payments-sanctioned-countries: "false"
+    volumes:
+      - ./scripts:/tmp/h
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -231,7 +303,11 @@ services:
       identity.masterAdmin.username: admin
       identity.masterAdmin.password: admin
       identity.realmConfiguration.fallbackOptions.enableUser: true
-      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: true
+      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: false
+      realmConfiguration.realms.customer.enableUser: true
+      realmConfiguration.realms.customer.useTemporaryPassword: true
+      realmConfiguration.realms.employee.enableUser: true
+      realmConfiguration.realms.employee.useTemporaryPassword: true
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -248,6 +324,7 @@ services:
     environment:
       <<: *common-variables
       spring.config.additional-location: file:/tmp/ingestion.yml
+      SPRING_PROFILES_ACTIVE: bootstrap
     volumes:
       - ../config/stream/ingestion.yml:/tmp/ingestion.yml
     depends_on:
@@ -313,17 +390,131 @@ services:
       user-manager:
         condition: service_healthy
 
-  # <EXAMPLE-SERVICE-NAME>:
-  #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
-  #   ports:
-  #     - "8090:8080"
-  #   environment:
-  #     <<: *common-variables
-  #     eureka.client.enabled: 'true'
-  #   volumes:
-  #     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
-  #   healthcheck:
-  #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
-  #   links:
-  #     - registry
+  employee-app:
+    image: repo.backbase.com/backbase-docker-releases/employee-app:2023.08-no-production
+    environment:
+      PORT: 8080
+      AUTH_URL: http://localhost:8180/auth/
+      API_ROOT: http://localhost:8080/api
+      AUTH_REALM: "employee"
+      AUTH_SCOPE: openids
+      AUTH_CLIENT_ID: bb-web-client
+      AUTH_LANDING_PAGE: select-context
+      AUTH_REDIRECT_PAGE: redirect
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/employee-app", "<status>UP</status>" ]
+
+    links:
+      - edge
+      - backbase-identity
+
+  retail-app:
+    image: crreference914.azurecr.io/retail-usa:2024.06.2
+    environment:
+      AUTH_URL: http://localhost:8180/auth/
+      PORT: 9090
+      "API_ROOT": /api/
+      "AUTH_CLIENT_ID": "bb-web-client"
+      "AUTH_LANDING_PAGE": "select-context"
+      "AUTH_REALM": "customer"
+      "AUTH_REDIRECT_PAGE": "redirect"
+      "AUTH_SCOPE": "openid"
+      "BASE_HREF": /
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./nginx/api.conf:/nginx-config/server/15-api.conf
+    healthcheck:
+      test: [ "CMD", "none" ]
+      disable: true
+    links:
+      - edge
+
+  web-authentication:
+    image: repo.backbase.com/backbase-docker-releases/web-authentication:2024.06
+    environment:
+      <<: [*common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/web-authentication?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      backbase.authenticators.ot.verificationAttemptsAllowed: 4
+      backbase.authenticators.channels.email: true
+      backbase.authenticators.otp.fromEmail: bootcamp@bb.com
+      backbase.authenticators.otp.fromSms: 123456789
+      backbase.pushnotification.pushToAppName: appName
+      backbase.pushnotification.pushPriority: 7
+      backbase.pushnotification.authCodePlaceHolder: authCode
+      backbase.pushnotification.pushTitleConfig.objectPath: /identity/push-notifications/web-auth-push-title
+      backbase.pushnotification.pushTitleConfig.repositoryId: resourceRepository
+      backbase.pushnotification.pushBodyConfig.objectPath: /identity/push-notifications/web-auth-push-body
+      backbase.pushnotification.pushBodyConfig.repositoryId: resourceRepository
+      backbase.contentservices.messagePriority: 7
+      backbase.contentservices.otpPlaceholder: OTP
+      backbase.contentservices.templateRendering: SIMPLE
+      backbase.contentservices.channel.email.title.contentId: titleId
+      backbase.contentservices.channel.email.title.objectPath: /identity/otp/web-auth-otp-email-title
+      backbase.contentservices.channel.email.title.repositoryId: resourceRepository
+      backbase.contentservices.channel.email.body.contentId: bodyId
+      backbase.contentservices.channel.email.body.objectPath: /identity/otp/web-auth-otp-email-body
+      backbase.contentservices.channel.email.body.repositoryId: resourceRepository
+    ports:
+      - "8980:8080"
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/web-authentication", "<status>UP</status>" ]
+
+    links:
+      - edge
+      - backbase-identity
+      - content-services
+      - communication-service
+
+  content-services:
+     image: repo.backbase.com/backbase-docker-releases/contentservices:2024.03-LTS
+     ports:
+       - "8383:8080"
+       - "5005:5005"
+     environment:
+       <<: [*common-variables, *message-broker-variables, *database-variables ]
+       spring.datasource.url: jdbc:mysql://mysql:3306/content-services?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+     volumes:
+       - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
+     healthcheck:
+       <<: *healthcheck-defaults
+       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/content-services", "<status>UP</status>" ]
+     links:
+       - registry
+       - mysql
+       - activemq
+
+
+  communication-service:
+   image: repo.backbase.com/backbase-docker-releases/communication:2024.06
+   ports:
+     - "8090:8080"
+   environment:
+     <<: [*common-variables, *message-broker-variables, *database-variables ]
+     eureka.client.enabled: 'true'
+     backbase.communication.channels.email."0": email-low-priority
+     backbase.communication.channels.email."1-6": email-high-priority
+     backbase.communication.channels.email."7": email-highest-priority
+     spring.cloud.stream.dynamicDestinations: false
+     spring.cloud.stream.default-binder: activemq
+     spring.cloud.stream.bindings.email-low-priority.destination: Backbase.communication.email-low-priority
+     spring.cloud.stream.bindings.email-high-priority.destination: Backbase.communication.email-high-priority
+     spring.cloud.stream.bindings.email-highest-priority.destination: Backbase.communication.email-highest-priority
+   volumes:
+     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
+   healthcheck:
+     <<: *healthcheck-defaults
+     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
+   links:
+     - registry
+     - mysql
+     - activemq

@@ -1,0 +1,27 @@
+backbase:
+  communication:
+    channels:
+      email:
+        "0": email-low-priority
+        "1-6": email-high-priority
+        "7": email-highest-priority
+      sms:
+        "0": sms-low-priority
+        "1-6": sms-high-priority
+        "7": sms-highest-priority
+      push-notification:
+        "0": push-low-priority
+        "1-6": push-high-priority
+        "7": push-highest-priority
+spring:
+  cloud:
+    stream:
+      dynamicDestinations: false
+      default-binder: activemq
+      bindings:
+        email-low-priority:
+          destination: Backbase.communication.email-low-priority
+        email-high-priority:
+          destination: Backbase.communication.email-high-priority
+        email-highest-priority:
+          destination: Backbase.communication.email-highest-priority

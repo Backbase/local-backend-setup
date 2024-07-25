@@ -27,6 +27,8 @@ ENV KC_METRICS_ENABLED "false"
 # Include custom realm configuration JSON files in `${kc.home.dir}/data/import/`.  These files will be imported once on first run of
 # Auth Server.
 COPY realms/* /opt/keycloak/data/import/
+COPY mappers/custom-authenticators-jar-with-dependencies.jar /opt/keycloak/providers/custom-authenticators-jar-with-dependencies.jar
+
 
 ENV JDK_JAVA_OPTIONS "-XX:+UseG1GC -XX:+AlwaysPreTouch -Dkc.home.dir=/opt/keycloak -Djboss.server.config.dir=/opt/keycloak/conf"
 RUN ["java", "-cp", "/opt/keycloak/lib/quarkus-run.jar:/opt/keycloak/lib/bootstrap/*",\
@@ -41,7 +43,8 @@ FROM gcr.io/distroless/java21-debian12
 # Copy the files prepared in the previous build-stage
 COPY --from=auth-server-builder /opt/keycloak /opt/keycloak
 
-ENV JDK_JAVA_OPTIONS "-XX:+UseG1GC -XX:+AlwaysPreTouch -Dkc.home.dir=/opt/keycloak -Djboss.server.config.dir=/opt/keycloak/conf"
+
+ENV JDK_JAVA_OPTIONS "-XX:+UseG1GC -XX:+AlwaysPreTouch -Dkc.home.dir=/opt/keycloak -Djboss.server.config.dir=/opt/keycloak/conf -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5666"
 ENTRYPOINT ["java", "-cp", "/opt/keycloak/lib/quarkus-run.jar:/opt/keycloak/lib/bootstrap/*",\
     "-Djava.net.preferIPv4Stack=true", "-Dfile.encoding=UTF-8",\
     "-Djava.util.logging.manager=org.jboss.logmanager.LogManager", "-Dquarkus-log-max-startup-records=10000",\

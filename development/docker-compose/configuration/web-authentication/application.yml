@@ -1,0 +1,25 @@
+backbase:
+  authenticators:
+    channels:
+      sms: false
+      email: true
+    otp:
+      fromEmail: test@example.com
+      fromSms: 123456789
+  contentservices:
+    messagePriority: 7
+    otpPlaceholder: otp
+    templateRendering: SIMPLE
+    templateLocalization:
+      enabled: true
+      defaultLanguage: eng
+    channel:
+      email:
+        title:
+          contentId: titleId
+          objectPath: /identity/otp/web-auth-otp-email-title
+          repositoryId: resourceRepository
+        body:
+          contentId: bodyId
+          objectPath: /identity/otp/web-auth-otp-email-body
+          repositoryId: resourceRepository

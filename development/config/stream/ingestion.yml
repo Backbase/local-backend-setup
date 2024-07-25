@@ -1,204 +1,350 @@
 bootstrap:
-  # Used by product-catalog-task
+  #product catalog ingestion
   productCatalog:
     productTypes:
-      - productKindName: "currentAccount"
-        productTypeName: "current-account"
-        typeName: "Current Account"
-        externalProductKindId: "kind1"
-        externalProductId: "current-account"
-      - productKindName: "savingsAccount"
-        productTypeName: "savings-account"
-        typeName: "Savings Accounts"
-        externalProductKindId: "kind2"
-        externalProductId: "savings-account"
-  # Used by legal-entity-bootstrap-task
+      - externalProductId: current-account
+        externalProductKindId: kind1
+        externalProductTypeId: current-account
+        typeName: Current Account
+      - externalProductId: savings-account
+        externalProductKindId: kind2
+        externalProductTypeId: savings-account
+        typeName: Savings Account
+  #legal entity structure
   legalEntity:
-    name: "Moustache Bank"
-    realmName: "backbase"
-    externalId: "moustache-bank"
-    legalEntityType: "BANK"
-    referenceJobRoles:
-      - name: "Entitlements - Manager"
-        description: "Full Entitlements administration."
-        functionGroups:
-          - name: "Manage Entitlements"
-            functions:
-              - functionId: "1019"
-                name: "Manage Data Groups"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-                  - privilege: "delete"
-              - functionId: "1020"
-                name: "Manage Function Groups"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-                  - privilege: "delete"
-              - functionId: "1010"
-                name: "Manage Users"
-                privileges:
-                  - privilege: "view"
-              - functionId: "1009"
-                name: "Assign Permissions"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-              - functionId: "1028"
-                name: "Manage Service Agreements"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-                  - privilege: "delete"
-              - functionId: "1119"
-                name: "Manage Self-approve Permissions"
-                privileges:
-                  - privilege: "view"
-              - functionId: "1007"
-                name: "Assign Users"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-              - functionId: "1035"
-                name: "Manage User Profiles"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "edit"
-              - functionId: "1011"
-                name: "Manage Legal Entities"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-                  - privilege: "delete"
-              - functionId: "1034"
-                name: "Manage Identities"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-              - functionId: "1049"
-                name: "Lock User"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-              - functionId: "1050"
-                name: "Unlock User"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "create"
-                  - privilege: "edit"
-              - functionId: "1084"
-                name: "Revoke access"
-                privileges:
-                  - privilege: "create"
-      - name: "Retail User"
-        description: "Retail User Permissions"
-        functionGroups:
-          - name: "Products and Profile"
-            functions:
-              - functionId: "1006"
-                name: "Product Summary"
-                functionCode: "product.summary"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "edit"
-              - functionId: "1035"
-                name: "Manage User Profiles"
-                functionCode: "manage.user.profiles"
-                privileges:
-                  - privilege: "view"
-                  - privilege: "edit"
+    name: Financial Institute Head Office
+    externalId: financial-institute-head-office
+    realmName: employee
+    legalEntityType: BANK
     users:
       - user:
-          externalId: "admin"
-          fullName: "Backbase Root Admin"
-          identityLinkStrategy: "CREATE_IN_IDENTITY"
+          externalId: fisa01
+          fullName: Wilma Croft
+          identityLinkStrategy: CREATE_IN_IDENTITY
           emailAddress:
-            address: "bbadmin@email.com"
+            address: fisa01@email.com
           mobileNumber:
-            number: "1234567890"
+            number: '1234567890'
         referenceJobRoleNames:
-          - "Entitlements - Manager"
+          - Bank Admin
+      - user:
+          externalId: JBANK
+          fullName: John Bank
+          identityLinkStrategy: CREATE_IN_IDENTITY
+          emailAddress:
+            address: jhon99@email.com
+          mobileNumber:
+            number: '1234567890'
+        referenceJobRoleNames:
+          - Bank Employee
+    masterServiceAgreement:
+      externalId: financial-institute-head-office
+      name: Financial Institute Head Office
+      description: Single service agreement for Financial Institute Head Office
+      status: ENABLED
+      isMaster: true
+      participants:
+        - externalId: financial-institute-head-office
+          sharingUsers: true
+          sharingAccounts: true
+          admins:
+            - fisa01
+          users: []
+    referenceJobRoles:
+      - name: Bank Admin
+        description: Bank Admin Permissions
+        functionGroups:
+          - name: Bank Admin
+            functions:
+              - functionId: '1007'
+                name: Assign Users
+                privileges:
+                  - privilege: create
+                  - privilege: edit
+              - functionId: '1019'
+                name: Manage Data Groups
+                privileges:
+                  - privilege: view
+                  - privilege: create
+                  - privilege: approve
+                  - privilege: edit
+                  - privilege: delete
+              - functionId: '1012'
+                name: Manage Limits
+                privileges:
+                  - privilege: view
+                  - privilege: create
+                  - privilege: approve
+                  - privilege: edit
+                  - privilege: delete
+              - functionId: '1009'
+                name: Assign Permissions
+                privileges:
+                  - privilege: view
+                  - privilege: create
+                  - privilege: edit
+                  - privilege: approve
+              - functionId: '1108'
+                name: Manage Own Profile
+                privileges:
+                  - privilege: view
+                  - privilege: edit
+                  - privilege: approve
+              - functionId: '1114'
+                name: Quick User Setup
+                privileges:
+                  - privilege: view
+                  - privilege: edit
+                  - privilege: approve
+              - functionId: '1109'
+                name: Customer Support - Live Chat
+                privileges:
+                  - privilege: execute
+                  - privilege: view
+              - functionId: '1110'
+                name: Customer Support - Voice Call
+                privileges:
+                  - privilege: execute
+              - functionId: '1111'
+                name: Customer Support - Video Call
+                privileges:
+                  - privilege: execute
+              - functionId: '1112'
+                name: RTC Support Request
+                privileges:
+                  - privilege: execute
+              - functionId: '1116'
+                name: Manage Projects, Apps, Releases
+                privileges:
+                  - privilege: create
+                  - privilege: delete
+                  - privilege: view
+                  - privilege: edit
+              - functionId: '1117'
+                name: Manage Configurations
+                privileges:
+                  - privilege: create
+                  - privilege: cancel
+                  - privilege: view
+                  - privilege: approve
+              - functionId: '1119'
+                name: Manage Self-approve Permissions
+                privileges:
+                  - privilege: approve
+                  - privilege: view
+                  - privilege: edit
+        metadata:
+          wizard_label: limited_access
+      - name: Bank Employee
+        description: Bank Employee Permissions
+        functionGroups:
+          - name: Bank Employee
+            functions:
+              - functionId: '1108'
+                name: Manage Own Profile
+                privileges:
+                  - privilege: view
+                  - privilege: approve
+                  - privilege: edit
+              - functionId: '1009'
+                name: Assign Permissions
+                privileges:
+                  - privilege: approve
+                  - privilege: view
+                  - privilege: edit
+              - functionId: '1109'
+                name: Customer Support - Live Chat
+                privileges:
+                  - privilege: execute
+                  - privilege: view
+              - functionId: '1110'
+                name: Customer Support - Voice Call
+                privileges:
+                  - privilege: execute
+              - functionId: '1111'
+                name: Customer Support - Video Call
+                privileges:
+                  - privilege: execute
+              - functionId: '1112'
+                name: RTC Support Request
+                privileges:
+                  - privilege: execute
+              - functionId: '1119'
+                name: Manage Self-approve Permissions
+                privileges:
+                  - privilege: approve
+                  - privilege: view
+                  - privilege: edit
+        metadata:
+          wizard_label: limited_access
     subsidiaries:
-      - name: "Moustache Bank USA"
-        realmName: "backbase"
-        externalId: "moustache-bank-usa"
-        legalEntityType: "BANK"
+    #financial insistute branch
+      - name: Financial Institute Branch 1
+        externalId: financial-institute-branch-1
+        realmName: employee
+        legalEntityType: BANK
+        parentExternalId: financial-institute-head-office
+        users:
+          - user:
+              externalId: fib1sa01
+              fullName: Lisa Morelli
+              identityLinkStrategy: CREATE_IN_IDENTITY
+              emailAddress:
+                address: fib1sa01@email.com
+              mobileNumber:
+                number: '1234567890'
+            referenceJobRoleNames:
+              - Bank Admin
+          - user:
+              externalId: jbranch
+              fullName: Jane Branch
+              identityLinkStrategy: CREATE_IN_IDENTITY
+              emailAddress:
+                address: jbranch@email.com
+              mobileNumber:
+                number: '1234567890'
+            referenceJobRoleNames:
+              - Bank Employee
+        masterServiceAgreement:
+          externalId: financial-institute-branch-1
+          name: Financial Institute branch 1
+          description: Single service agreement for Financial Institute Branch 1
+          status: ENABLED
+          isMaster: true
+          participants:
+            - externalId: financial-institute-branch-1
+              sharingUsers: true
+              sharingAccounts: true
+              admins:
+                - fib1sa01
+                - jbranch
+              users: [ ]
         subsidiaries:
-          - name: "Sara"
-            realmName: "backbase"
-            externalId: "sara"
-            legalEntityType: "CUSTOMER"
-            users:
-              - user:
-                  externalId: "sara"
-                  fullName: "Sara Jones"
-                  identityLinkStrategy: "CREATE_IN_IDENTITY"
-                  emailAddress:
-                    address: "sara@email.com"
-                  mobileNumber:
-                    number: "1234567890"
-            productGroups:
-              - name: "sara-arrangements"
-                users:
-                  - user:
-                      externalId: "sara"
-                      fullName: "Sara Jones"
-                      identityLinkStrategy: "CREATE_IN_IDENTITY"
-                      emailAddress:
-                        address: "sara@email.com"
-                      mobileNumber:
-                        number: "1234567890"
-                    referenceJobRoleNames:
-                      - "Retail User"
-                description: "Product group containing user arrangements"
-                currentAccounts:
-                  - externalId: "021000021"
-                    BBAN: "021000021"
-                    name: "Sara's Current Account 1"
-                    productTypeExternalId: "current-account"
-                    currency: "USD"
-                    externalTransferAllowed: "true"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "1055.5"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "1055.5"
-                savingAccounts:
-                  - externalId: "021000022"
-                    BBAN: "021000022"
-                    name: "Sara's Savings Account 1"
-                    productTypeExternalId: "savings-account"
-                    currency: "USD"
-                    externalTransferAllowed: "false"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "3820.2"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "3820.2"
-                    accountInterestRate: "0.05"
-                    termUnit: "Quarterly"
-                  - externalId: "021000023"
-                    BBAN: "021000023"
-                    name: "Sara's Savings Account 2"
-                    productTypeExternalId: "savings-account"
-                    currency: "USD"
-                    externalTransferAllowed: "false"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "155.5"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "155.5"
-                    accountInterestRate: "0.05"
-                    termUnit: "Quarterly"
+        #financial institute branch customer
+        - name: John
+          realmName: customer
+          externalId: john
+          legalEntityType: CUSTOMER
+          customerCategory: RETAIL
+          parentExternalId: financial-institute-branch-1
+          users:
+            - user:
+                externalId: john99
+                fullName: John Doe
+                identityLinkStrategy: CREATE_IN_IDENTITY
+                emailAddress:
+                  address: john99@email.com
+                mobileNumber:
+                  number: '1234567890'
+                userProfile:
+                  addresses:
+                    - streetAddress: 630 Bellaire Drive
+                      locality: Hurst Texas 76053
+                      country: USA
+                      type: home
+                      primary: 'true'
+          customServiceAgreement:
+            externalId: john_csa
+            name: John Single CSA
+            description: Single Service Agreement for John
+            status: ENABLED
+            isMaster: false
+            jobRoles:
+              - name: Retail Customer John
+                description: Retail Customer John
+                functionGroups:
+                  - name: "retail customer"
+                    functions:
+                      - functionId: "1113"
+                        name: "Financial Insights"
+                        privileges:
+                          - privilege: view
+                      - functionId: "1118"
+                        name: "Manage External Accounts"
+                        privileges:
+                          - privilege: view
+                          - privilege: create
+                          - privilege: delete
+                      - functionId: "1120"
+                        name: "Billpay SSO"
+                        privileges:
+                          - privilege: create
+                      - functionId: "1108"
+                        name: "Manage Own Profile"
+                        privileges:
+                          - privilege: view
+                          - privilege: edit
+                          - privilege: approve
+            participants:
+              - externalId: john
+                sharingUsers: true
+                sharingAccounts: true
+                admins:
+                  - john99
+          productGroups:
+            - internalId: johndag1
+              name: john-arrangements
+              description: Product group containing John arrangements
+              users:
+                - user:
+                    externalId: john99
+                    fullName: John Doe
+                  referenceJobRoleNames:
+                    - Retail Customer John
+              currentAccounts:
+                - externalId: '2390039319292450'
+                  BBAN: '2390039319292450'
+                  name: Payroll Account USD 2450
+                  productTypeExternalId: current-account
+                  BIC: CITIUS33
+                  currency: USD
+                  bankBranchCode: '322271724'
+                  externalTransferAllowed: true
+                  debitAccount: true
+                  creditAccount: true
+                  availableBalance:
+                    currencyCode: USD
+                    amount: 1450
+                  accruedInterest: 3
+                  creditLimit:
+                    currencyCode: USD
+                    amount: 2808.29
+                  accountHolderName: John Doe
+                - externalId: '2440140029471120'
+                  BBAN: '2440140029471120'
+                  name: Checking Account USD 1120
+                  productTypeExternalId: current-account
+                  BIC: BOFAUS3N
+                  currency: USD
+                  bankBranchCode: '322271724'
+                  externalTransferAllowed: true
+                  debitAccount: true
+                  creditAccount: true
+                  availableBalance:
+                    currencyCode: USD
+                    amount: 23240
+                  accruedInterest: 140
+                  creditLimit:
+                    currencyCode: USD
+                    amount: 7445
+                  accountHolderName: John Doe
+              savingAccounts:
+                - externalId: '2737465548489112'
+                  BBAN: '2737465548489112'
+                  name: Savings Account USD 9112
+                  productTypeExternalId: savings-account
+                  BIC: CITIUS33
+                  currency: USD
+                  bankBranchCode: '322271724'
+                  externalTransferAllowed: true
+                  debitAccount: true
+                  creditAccount: true
+                  availableBalance:
+                    currencyCode: USD
+                    amount: 2500
+                  creditLimit:
+                    currencyCode: USD
+                    amount: 1
+                  accountInterestRate: 0.05
+                  termUnit: Quarterly
+                  accountHolderName: John Doe

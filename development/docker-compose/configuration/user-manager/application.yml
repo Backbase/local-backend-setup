@@ -1,0 +1,25 @@
+backbase:
+  users:
+    identity-endpoints-enabled: true
+    identity-integration-enabled: true
+    sync-primary-to-identity-enabled: true
+  security:
+    rules-enabled: true
+    deny-all: false
+    rules:
+      user-manager-client-api:
+        step-up:
+          acr-values: gold
+          to:
+            - methods: "POST"
+              paths: /client-api/v2/users/me/profile/electronic-addresses
+            - methods: "PUT"
+              paths: /client-api/v2/users/me/profile/electronic-addresses
+            - methods: "DELETE"
+              paths: /client-api/v2/users/me/profile/electronic-addresses
+        when:
+          match: ALL
+          values:
+            - bb-su:change-email
+          token: CLIENT
+        order: 1
