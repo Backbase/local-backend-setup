@@ -243,6 +243,8 @@ bootstrap:
                       country: USA
                       type: home
                       primary: 'true'
+                referenceJobRoleNames:
+                  - Retail Customer John
           customServiceAgreement:
             externalId: john_csa
             name: John Single CSA
