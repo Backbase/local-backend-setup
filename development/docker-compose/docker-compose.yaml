@@ -190,7 +190,7 @@ services:
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement;upsertLegalEntity
       spring.liquibase.enabled: true
       "backbase.security.public.paths": "/service-api/v3/resume-topic/**"
       "management.endpoints.web.exposure.include": bindings
@@ -199,6 +199,7 @@ services:
       RCH_KAFKA_GROUP_ID: kafka-connect
       RCH_KAFKA_UPSERT_DATA_GROUP_ERROR_TOPIC_NAME: UpsertDataGroupsFailureEvent
       RCH_KAFKA_UPSERT_SERVICE_AGREEMENT_ERROR_TOPIC_NAME: UpsertServiceAgreementsFailureEvent
+      RCH_KAFKA_UPSERT_LEGAL_ENTITIES_ERROR_TOPIC_NAME: UpsertLegalEntityFailureEvent
       spring.cloud.stream.bindings.upsertDataGroup-in-0.destination: rch-30730-kep-data-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.group: rch-30730-upsert-data-groups-event-group
       spring.cloud.stream.bindings.upsertDataGroup-in-0.content-type: application/json
@@ -213,6 +214,20 @@ services:
       spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.message-key-expression: headers['kafka_messageKey']
       spring.cloud.stream.kafka.bindings.upsertDataGroup-out-0.producer.configuration.key.serializer: org.apache.kafka.common.serialization.StringSerializer
       spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.partitionCount: 12
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.destination: rch-30730-kep-legal-entity
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.group: rch-30730-upsert-legal-entity-event-group
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.content-type: application/json
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.consumer.concurrency: 4
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.consumer.auto-commit-offset: true
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.consumer.max-attempts: 1
+      spring.cloud.stream.bindings.upsertLegalEntity-in-0.consumer.partitioned: true # Ensure input binding is partitioned
+      spring.cloud.stream.kafka.bindings.upsertLegalEntity-in-0.consumer.configuration.key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      spring.cloud.stream.bindings.upsertLegalEntity-out-0.destination: rch-30730-kep-legal-entity-push-success
+      spring.cloud.stream.bindings.upsertLegalEntity-out-0.group: rch-30730-upsert-legal-entity-success-event-group
+      spring.cloud.stream.bindings.upsertLegalEntity-out-0.content-type: application/json
+      spring.cloud.stream.kafka.bindings.upsertLegalEntity-out-0.producer.message-key-expression: headers['kafka_messageKey']
+      spring.cloud.stream.kafka.bindings.upsertLegalEntity-out-0.producer.configuration.key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      spring.cloud.stream.bindings.upsertLegalEntity-out-0.producer.partitionCount: 12
       #spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.replica-count: 3
 
 

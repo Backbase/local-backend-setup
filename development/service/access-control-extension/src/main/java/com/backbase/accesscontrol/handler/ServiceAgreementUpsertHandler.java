@@ -2,13 +2,9 @@ package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.constant.KafkaConstants;
-import com.backbase.accesscontrol.dto.ServiceAgreementDto;
 import com.backbase.accesscontrol.exception.DataProcessingException;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.kafka.KafkaErrorTopicChecker;
-import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
 import com.backbase.accesscontrol.processor.ServiceAgreementProcessor;
-import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.backbase.integration.accessgroup.rest.spec.v3.ServiceAgreement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.PrintWriter;
@@ -31,7 +27,6 @@ import org.springframework.stereotype.Component;
 public class ServiceAgreementUpsertHandler implements Function<Message<String>, ServiceAgreement> {
     private final ServiceAgreementProcessor serviceAgreementProcessor;
     private final StreamBridge streamBridge;
-    private final KafkaErrorTopicChecker kafkaErrorTopicChecker;
     private final RchKafkaGenericProperties rchKafkaGenericProperties;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;

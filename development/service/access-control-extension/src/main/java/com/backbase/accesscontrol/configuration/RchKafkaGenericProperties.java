@@ -21,6 +21,8 @@ public class RchKafkaGenericProperties {
     private String upsertDataGroupErrorTopicName;
     @NotEmpty
     private String upsertServiceAgreementErrorTopicName;
+    @NotEmpty
+    private String upsertLegalEntitiesErrorTopicName;
     @Value("${rch.kafka.poll-duration:5000}")
     private long pollDuration;
 }

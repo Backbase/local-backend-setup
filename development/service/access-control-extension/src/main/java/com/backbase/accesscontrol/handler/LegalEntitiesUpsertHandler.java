@@ -1,17 +1,22 @@
 package com.backbase.accesscontrol.handler;
 
+import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
+
 import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.constant.KafkaConstants;
-import com.backbase.accesscontrol.exception.DataProcessingException;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
-import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
+import com.backbase.accesscontrol.processor.LegalEntitiesUpsertProcessor;
+import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityPut;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -22,43 +27,52 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("upsertDataGroup")
+@Component("upsertLegalEntity")
 @AllArgsConstructor
-public class DataGroupUpsertHandler implements Function<Message<String>, IntegrationDataGroupItemBatchPutRequestBody> {
-    private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
+public class LegalEntitiesUpsertHandler implements Function<Message<String>, List<LegalEntityPut>> {
+    private final LegalEntitiesUpsertProcessor legalEntitiesUpsertProcessor;
     private final StreamBridge streamBridge;
     private final RchKafkaGenericProperties rchKafkaGenericProperties;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
-    public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
-        log.info("Upsert Data Group Message received: {}", message);
+    public List<LegalEntityPut> apply(Message<String> message) {
+        log.info("Create Legal Entities Message received: {}", message);
         try {
-            IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
+            List<LegalEntityPut> requestPayload = parsePayload(message.getPayload());
 
-            RetryCallback<IntegrationDataGroupItemBatchPutRequestBody, RuntimeException> retryCallback =
-                context -> dataGroupUpsertProcessor.process(requestPayload);
+            RetryCallback<List<LegalEntityPut>, RuntimeException> retryCallback =
+                context -> {
+                    if (context.getRetryCount() > KAFKA_RETRY_PAUSE_COUNT) {
+                        pauseConsumer(message);
+                    }
+                    return legalEntitiesUpsertProcessor.process(requestPayload);
+                };
 
-            RecoveryCallback<IntegrationDataGroupItemBatchPutRequestBody> recoveryCallback = context -> {
+            RecoveryCallback<List<LegalEntityPut>> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message);
-
                 Exception finalException = (Exception) context.getLastThrowable();
-                throw new DataProcessingException("Couldn't process the message after retries.", finalException);
+                handleFailure(message, finalException);
+
+                return Collections.emptyList();
             };
 
-            return retryTemplate.execute(retryCallback, recoveryCallback);
+            List<LegalEntityPut> result = retryTemplate.execute(retryCallback, recoveryCallback);
+            resumeConsumer(message);
+            return result;
         } catch (Exception e) {
             log.error("Unexpected error occurred", e);
             handleFailure(message, e);
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
-    public IntegrationDataGroupItemBatchPutRequestBody parsePayload(String payload) {
+    public List<LegalEntityPut> parsePayload(String payload) {
         try {
-            return objectMapper.readValue(payload, IntegrationDataGroupItemBatchPutRequestBody.class);
+            return objectMapper.readValue(payload, new TypeReference<>() {
+            });
         } catch (Exception e) {
             log.error("Error parsing message payload", e);
             throw new PayloadParsingException("Error parsing message payload", e);
@@ -66,34 +80,30 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
     }
 
     private void handleFailure(Message<String> message, Exception e) {
+        if (e instanceof PayloadParsingException) {
+            sendMessageToErrorTopic(message, e);
+        }
+    }
+
+    private void pauseConsumer(Message<String> message) {
         var consumer = message.getHeaders()
             .get(KafkaHeaders.CONSUMER, org.apache.kafka.clients.consumer.Consumer.class);
         var topic = message.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, String.class);
         var partitionId = message.getHeaders().get(KafkaHeaders.RECEIVED_PARTITION, Integer.class);
 
-        sendMessageToErrorTopic(message, e);
-/*
         log.info("Pausing the consumer for topic {} and partition {}", topic, partitionId);
         consumer.pause(Collections.singleton(new TopicPartition(topic, partitionId)));
-
-        waitForErrorTopicToClear(KAFKA_ERROR_TOPIC, partitionId);
-
-        log.info("Resuming the consumer for topic {} and partition {}", topic, partitionId);
-        consumer.resume(Collections.singleton(new TopicPartition(topic, partitionId)));*/
     }
 
-/*    private void waitForErrorTopicToClear(String errorTopic) {
-        while (kafkaErrorTopicChecker.areMessagesOnErrorTopic(errorTopic)) {
-            try {
-                log.info("Sleeping for 10 seconds");
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                log.error("Interrupted while waiting for error topic to clear", ex);
-                break;
-            }
-        }
-    }*/
+    private void resumeConsumer(Message<String> message) {
+        var consumer = message.getHeaders()
+            .get(KafkaHeaders.CONSUMER, org.apache.kafka.clients.consumer.Consumer.class);
+        var topic = message.getHeaders().get(KafkaHeaders.RECEIVED_TOPIC, String.class);
+        var partitionId = message.getHeaders().get(KafkaHeaders.RECEIVED_PARTITION, Integer.class);
+
+        log.info("Resuming the consumer for topic {} and partition {}", topic, partitionId);
+        consumer.resume(Collections.singleton(new TopicPartition(topic, partitionId)));
+    }
 
     private void sendMessageToErrorTopic(Message<String> originalMessage, Exception e) {
         MessageBuilder<String> errorMessageBuilder = MessageBuilder.withPayload(originalMessage.getPayload())
@@ -103,7 +113,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             .setHeader(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(e));
 
         Message<String> errorMessage = errorMessageBuilder.build();
-        streamBridge.send(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(), errorMessage);
+        streamBridge.send(rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(), errorMessage);
         log.info("Message Sent to ErrorTopic");
     }
 
