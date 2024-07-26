@@ -1,12 +1,12 @@
 package com.backbase.accesscontrol.processor;
 
-import com.backbase.accesscontrol.dto.legalentity.BatchUpdateLegalEntityItemDto;
+import com.backbase.accesscontrol.domain.enums.CustomerCategory;
+import com.backbase.accesscontrol.domain.enums.LegalEntityType;
 import com.backbase.accesscontrol.dto.legalentity.CreateLegalEntityRequest;
 import com.backbase.accesscontrol.mapper.PutLegalEntityEventMapper;
 import com.backbase.accesscontrol.service.facades.v3.LegalEntityServiceFacade;
-import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityPut;
+import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,31 +19,25 @@ public class LegalEntitiesUpsertProcessor {
     private final LegalEntityServiceFacade legalEntityServiceFacade;
     private final PutLegalEntityEventMapper mapper;
 
-    public List<LegalEntityPut> process(List<LegalEntityPut> requestPayload) {
+    public LegalEntityCreateItem process(LegalEntityCreateItem requestPayload) {
         try {
-            List<BatchUpdateLegalEntityItemDto> batchUpdateLegalEntityItemDtoList =
-                mapper.mapBatchUpdateLegalEntityItems(requestPayload);
-            requestPayload.forEach(legalEntityItem -> {
-                try {
-                    // Pipeline for Existing Legal Entity
-                    var legalEntity =
-                        legalEntityServiceFacade.getLegalEntityByExternalId(legalEntityItem.getCurrentExternalId());
-                    log.debug("Legal Entity found: {}", legalEntity.getName());
-                } catch (NotFoundException e) {
-                    // Pipeline for Creating a New Legal Entity
-                    log.debug("Legal Entity not found, creating new one for: {}",
-                        legalEntityItem.getNewValues().getName());
-                    CreateLegalEntityRequest createLegalEntityRequest =
-                        mapper.mapToCreateLegalEntity(legalEntityItem.getNewValues());
-                    legalEntityServiceFacade.createLegalEntity(createLegalEntityRequest);
-                    batchUpdateLegalEntityItemDtoList.removeIf(dto -> dto.currentExternalId().equals(legalEntityItem.getCurrentExternalId()));
-                }
-            });
-            legalEntityServiceFacade.updateBatchLegalEntities(batchUpdateLegalEntityItemDtoList);
-        } catch (Exception e) {
-            // Handle any unexpected exceptions
-            e.printStackTrace();
+            var searchResult =
+                legalEntityServiceFacade.getLegalEntityByExternalId(requestPayload.getExternalId());
+            log.debug("Legal Entity found: {}", searchResult.getName());
+            LegalEntityType newLegalEntityType = mapper.toLegalEntityDomainType(requestPayload.getType());
+            CustomerCategory newCustomerCategory =
+                mapper.toCustomerCategoryDomainType(requestPayload.getCustomerCategory());
+            log.debug("Updating Legal Entity: {}", requestPayload);
+            legalEntityServiceFacade.updateLegalEntityByExternalId(newLegalEntityType, newCustomerCategory,
+                requestPayload.getExternalId());
+
+        } catch (NotFoundException exception) {
+            log.debug("Legal Entity not found: {}", requestPayload.getExternalId());
+            CreateLegalEntityRequest createDto = mapper.mapToCreateLegalEntity(requestPayload);
+            log.debug("Creating Legal Entity: {}", createDto);
+            legalEntityServiceFacade.createLegalEntity(createDto);
         }
+
         return requestPayload;
     }
 

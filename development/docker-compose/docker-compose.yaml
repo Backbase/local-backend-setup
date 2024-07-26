@@ -227,6 +227,7 @@ services:
       spring.cloud.stream.bindings.upsertLegalEntity-out-0.content-type: application/json
       spring.cloud.stream.kafka.bindings.upsertLegalEntity-out-0.producer.message-key-expression: headers['kafka_messageKey']
       spring.cloud.stream.kafka.bindings.upsertLegalEntity-out-0.producer.configuration.key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      spring.cloud.stream.kafka.bindings.upsertLegalEntity-out-0.producer.configuration.value.serializer: org.apache.kafka.common.serialization.StringSerializer
       spring.cloud.stream.bindings.upsertLegalEntity-out-0.producer.partitionCount: 12
       #spring.cloud.stream.bindings.upsertDataGroup-out-0.producer.replica-count: 3
 

@@ -1,14 +1,33 @@
 package com.backbase.accesscontrol.mapper;
 
-import com.backbase.accesscontrol.dto.legalentity.BatchUpdateLegalEntityItemDto;
+import com.backbase.accesscontrol.domain.enums.CustomerCategory;
+import com.backbase.accesscontrol.domain.enums.LegalEntityType;
 import com.backbase.accesscontrol.dto.legalentity.CreateLegalEntityRequest;
 import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
-import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityPut;
-import java.util.List;
 
 @org.mapstruct.Mapper(componentModel = "spring")
 public interface PutLegalEntityEventMapper {
 
     CreateLegalEntityRequest mapToCreateLegalEntity(LegalEntityCreateItem createLegalEntity);
-    List<BatchUpdateLegalEntityItemDto> mapBatchUpdateLegalEntityItems(List<LegalEntityPut> legalEntityPuts);
+
+    default LegalEntityType toLegalEntityDomainType(com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityType updatedLegalEntityType) {
+        if (updatedLegalEntityType == null) {
+            throw new IllegalArgumentException("specType cannot be null");
+        }
+        return switch (updatedLegalEntityType) {
+            case CUSTOMER -> LegalEntityType.CUSTOMER;
+            case BANK -> LegalEntityType.BANK;
+        };
+    }
+
+    default CustomerCategory toCustomerCategoryDomainType(
+        com.backbase.accesscontrol.service.rest.spec.v3.model.CustomerCategory updatedCustomerCategory) {
+        if (updatedCustomerCategory == null) {
+            throw new IllegalArgumentException("Customer Category cannot be null");
+        }
+        return switch (updatedCustomerCategory) {
+            case RETAIL -> CustomerCategory.RETAIL;
+            case BUSINESS -> CustomerCategory.BUSINESS;
+        };
+    }
 }
