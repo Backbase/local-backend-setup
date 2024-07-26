@@ -39,7 +39,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
             LegalEntityCreateItem requestPayload = parsePayload(message.getPayload());
 
             RetryCallback<LegalEntityCreateItem, RuntimeException> retryCallback = context -> {
-                if (context.getRetryCount() > KAFKA_RETRY_PAUSE_COUNT) {
+                if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
                     consumerControlService.controlConsumer(message, true);
                 }
                 return legalEntitiesUpsertProcessor.process(requestPayload);
@@ -47,13 +47,11 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
 
             RecoveryCallback<LegalEntityCreateItem> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message, context.getLastThrowable());
+                consumerControlService.controlConsumer(message, false);
                 errorHandlingService.handleFailure(message, (Exception) context.getLastThrowable());
                 return null;
             };
-
-            LegalEntityCreateItem result = retryTemplate.execute(retryCallback, recoveryCallback);
-            consumerControlService.controlConsumer(message, false);
-            return result;
+            return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred while processing message: {}", message, e);
             errorHandlingService.handleFailure(message, e);
@@ -64,7 +62,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
 
     private LegalEntityCreateItem parsePayload(String payload) {
         try {
-            return objectMapper.readValue(payload, new TypeReference<LegalEntityCreateItem>() {
+            return objectMapper.readValue(payload, new TypeReference<>() {
             });
         } catch (Exception e) {
             log.error("Error parsing message payload. Payload: {}", payload, e);

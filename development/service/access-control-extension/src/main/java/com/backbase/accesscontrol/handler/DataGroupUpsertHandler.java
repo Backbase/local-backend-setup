@@ -34,7 +34,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
             RetryCallback<IntegrationDataGroupItemBatchPutRequestBody, RuntimeException> retryCallback = context -> {
-                if (context.getRetryCount() > KAFKA_RETRY_PAUSE_COUNT) {
+                if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
                     consumerControlService.controlConsumer(message, true);
                 }
                 return dataGroupUpsertProcessor.process(requestPayload);
@@ -43,20 +43,16 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             RecoveryCallback<IntegrationDataGroupItemBatchPutRequestBody> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message, context.getLastThrowable());
                 errorHandlingService.handleFailure(message, (Exception) context.getLastThrowable());
+                consumerControlService.controlConsumer(message, false);
                 return null;
             };
-
-            IntegrationDataGroupItemBatchPutRequestBody result = retryTemplate.execute(retryCallback, recoveryCallback);
-
-            consumerControlService.controlConsumer(message, false);
-
-            return result;
+            return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred while processing message: {}", message, e);
             errorHandlingService.handleFailure(message, e);
         }
 
-        return null; // Return null or an appropriate default value if needed
+        return null;
     }
 
     private IntegrationDataGroupItemBatchPutRequestBody parsePayload(String payload) {
