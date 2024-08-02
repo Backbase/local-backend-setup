@@ -3,6 +3,7 @@ package com.backbase.accesscontrol.handler;
 import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
 
 import com.backbase.accesscontrol.exception.PayloadParsingException;
+import com.backbase.accesscontrol.manager.ConsumerManager;
 import com.backbase.accesscontrol.processor.LegalEntitiesUpsertProcessor;
 import com.backbase.accesscontrol.service.ConsumerControlService;
 import com.backbase.accesscontrol.service.ErrorHandlingService;
@@ -27,7 +28,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
 
-    private final ConsumerControlService consumerControlService;
+    private final ConsumerManager consumerManager;
 
     private final ErrorHandlingService errorHandlingService;
 
@@ -39,18 +40,38 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
             LegalEntityCreateItem requestPayload = parsePayload(message.getPayload());
 
             RetryCallback<LegalEntityCreateItem, RuntimeException> retryCallback = context -> {
-                if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
-                    consumerControlService.controlConsumer(message, true);
+                try {
+                    // Pause the consumer if retry attempts have started (1)
+                    if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
+                        consumerManager.pauseConsumer(message);
+                    }
+
+                    // Attempt to process the message
+                    legalEntitiesUpsertProcessor.process(requestPayload);
+
+                    // Resume the consumer after successful processing if it was previously paused
+                    if (context.getRetryCount() > 0 && consumerManager.isConsumerPaused()) {
+                        consumerManager.resumeConsumer(message);
+                    }
+
+                    return requestPayload; // Return the payload to signal success
+                } catch (Exception e) {
+                    log.error("Error during processing, will retry. Error: {}", e.getMessage());
+                    throw e; // Trigger a retry by rethrowing the exception
                 }
-                return legalEntitiesUpsertProcessor.process(requestPayload);
             };
 
             RecoveryCallback<LegalEntityCreateItem> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message, context.getLastThrowable());
-                consumerControlService.controlConsumer(message, false);
+
+                // Consumer is resumed after retries are exhausted if it was paused
+                if (consumerManager.isConsumerPaused()) {
+                    consumerManager.resumeConsumer(message);
+                }
                 errorHandlingService.handleFailure(message, (Exception) context.getLastThrowable());
                 return null;
             };
+
             return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred while processing message: {}", message, e);
@@ -59,6 +80,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
 
         return null;
     }
+
 
     private LegalEntityCreateItem parsePayload(String payload) {
         try {

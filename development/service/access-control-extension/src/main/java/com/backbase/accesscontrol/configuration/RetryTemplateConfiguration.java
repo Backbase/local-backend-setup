@@ -15,12 +15,19 @@ import org.springframework.retry.support.RetryTemplate;
 @Configuration
 public class RetryTemplateConfiguration {
 
+    private final RchKafkaGenericProperties properties;
+
+    public RetryTemplateConfiguration(RchKafkaGenericProperties properties) {
+        this.properties = properties;
+    }
+
     @Bean
     public RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
 
+        // Use configurable properties for retry attempts
         SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-        retryPolicy.setMaxAttempts(3);
+        retryPolicy.setMaxAttempts(properties.getMaxRetryAttempts());
 
         ExceptionClassifierRetryPolicy retryPolicyClassifier = new ExceptionClassifierRetryPolicy();
 
@@ -36,11 +43,11 @@ public class RetryTemplateConfiguration {
         // Set retry policy in the retry template
         retryTemplate.setRetryPolicy(retryPolicyClassifier);
 
-        // Configure exponential back-off policy
+        // Configure exponential back-off policy using properties
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(5000); // Initial interval in milliseconds
-        backOffPolicy.setMultiplier(2.0); // Multiplier to increase the interval
-        backOffPolicy.setMaxInterval(30000); // Maximum interval in milliseconds
+        backOffPolicy.setInitialInterval(properties.getBackOffInitialInterval());
+        backOffPolicy.setMultiplier(properties.getBackOffMultiplier());
+        backOffPolicy.setMaxInterval(properties.getBackOffMaxInterval());
 
         // Set back-off policy in the retry template
         retryTemplate.setBackOffPolicy(backOffPolicy);
@@ -48,4 +55,5 @@ public class RetryTemplateConfiguration {
         return retryTemplate;
     }
 }
+
 
