@@ -1,6 +1,6 @@
 FROM node:16 AS builder
 
-RUN --mount=type=secret,id=repo,dst=./.netrc curl -v --netrc-file .netrc -s "https://repo.backbase.com/artifactory/backbase-releases/com/backbase/apps/business-banking-universal-app/business-banking-universal-app-2024.03.1-LTS.zip" -o business-banking-universal-app-package.zip
+RUN --mount=type=secret,id=repo,dst=./.netrc curl -v --netrc-file .netrc -s "https://repo.backbase.com/artifactory/backbase-releases/com/backbase/apps/business-banking-universal-app/business-banking-universal-app-2024.07.2.zip" -o business-banking-universal-app-package.zip
 RUN unzip business-banking-universal-app-package.zip -d /tmp/business-banking-universal-app-package
 
 WORKDIR /tmp/business-banking-universal-app-package

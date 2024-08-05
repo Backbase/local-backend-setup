@@ -1,0 +1,368 @@
+global-mappings:
+- &user-preferences-mapping
+ alias: userPreferences.alias
+ favorite: userPreferences.favorite
+ visible: userPreferences.visible
+
+- &basic-mapping
+ '[currency]': currency
+ '[displayName]': displayName
+ '[productKindUri]': productKind.uri
+ '[bookedBalance]': bookedBalance
+ '[outstandingPrincipalAmount]': outstandingPrincipalAmount
+ '[creditLimit]': creditLimit
+ '[currentInvestmentValue]': currentInvestmentValue
+ '[productKindName]': productKind.name
+
+global-categorizers:
+ - &cat-savings-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'savings-account'
+   mappings:
+     '[primaryBalance]':
+       attribute: bookedBalance
+       key: bookedBalance
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-current-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'current-account'
+   mappings:
+     '[primaryBalance]':
+       attribute: bookedBalance
+       key: bookedBalance
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-debit-card-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'debit-card'
+   mappings:
+     '[primaryBalance]':
+       attribute: bookedBalance
+       key: bookedBalance
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-credit-card-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'credit-card'
+   mappings:
+     '[primaryBalance]':
+       attribute: creditLimitUsage
+       key: creditLimitUsage
+     '[accountNumber]':
+       attribute: panSuffix
+       key: number
+
+ - &cat-loan-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'loan'
+   mappings:
+     '[primaryBalance]':
+       attribute: bookedBalance
+       key: bookedBalance
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-term-deposit-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'term-deposit'
+   mappings:
+     '[primaryBalance]':
+       attribute: outstandingPrincipalAmount
+       key: outstandingPrincipalAmount
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-investment-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri == 'investment-account'
+   mappings:
+     '[primaryBalance]':
+       attribute: currentInvestmentValue
+       key: currentInvestmentValue
+     '[accountNumber]':
+       attribute: bban
+       key: BBAN
+
+ - &cat-custom-product-kind-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite == true
+       - productKind.uri != 'savings-account'
+       - productKind.uri != 'current-account'
+       - productKind.uri != 'debit-card'
+       - productKind.uri != 'credit-card'
+       - productKind.uri != 'loan'
+       - productKind.uri != 'term-deposit'
+       - productKind.uri != 'investment-account'
+       - productKind.uri != 'pocket'
+       - productKind.uri != 'pocket-parent'
+
+ - &cat-savings-account-non-favorites-ref
+   <<: *cat-savings-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'savings-account'
+
+ - &cat-current-account-non-favorites-ref
+   <<: *cat-current-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'current-account'
+
+ - &cat-debit-card-non-favorites-ref
+   <<: *cat-debit-card-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'debit-card'
+
+ - &cat-credit-card-non-favorites-ref
+   <<: *cat-credit-card-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'credit-card'
+
+ - &cat-loan-non-favorites-ref
+   <<: *cat-loan-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'loan'
+
+ - &cat-term-deposit-non-favorites-ref
+   <<: *cat-term-deposit-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'term-deposit'
+
+ - &cat-investment-account-non-favorites-ref
+   <<: *cat-investment-account-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri == 'investment-account'
+
+ - &cat-custom-product-kind-non-favorites-ref
+   expression:
+     kind: all
+     rules:
+       - userPreferences.favorite != true
+       - productKind.uri != 'savings-account'
+       - productKind.uri != 'current-account'
+       - productKind.uri != 'debit-card'
+       - productKind.uri != 'credit-card'
+       - productKind.uri != 'loan'
+       - productKind.uri != 'term-deposit'
+       - productKind.uri != 'investment-account'
+       - productKind.uri != 'pocket'
+       - productKind.uri != 'pocket-parent'
+
+dashboard-views: &dashboard-views
+ dashboard:
+   includeLiveDetail: false
+   retrieveLiveData: "BEFORE"
+   categorizers:
+     cat-savings-account-favorites: *cat-savings-account-favorites-ref
+     cat-current-account-favorites: *cat-current-account-favorites-ref
+     cat-debit-card-favorites: *cat-debit-card-favorites-ref
+     cat-credit-card-favorites: *cat-credit-card-favorites-ref
+     cat-loan-favorites: *cat-loan-favorites-ref
+     cat-term-deposit-favorites: *cat-term-deposit-favorites-ref
+     cat-investment-account-favorites: *cat-investment-account-favorites-ref
+     cat-custom-product-kind-favorites: *cat-custom-product-kind-favorites-ref
+     cat-savings-account-non-favorites: *cat-savings-account-non-favorites-ref
+     cat-current-account-non-favorites: *cat-current-account-non-favorites-ref
+     cat-debit-card-non-favorites: *cat-debit-card-non-favorites-ref
+     cat-credit-card-non-favorites: *cat-credit-card-non-favorites-ref
+     cat-loan-non-favorites: *cat-loan-non-favorites-ref
+     cat-term-deposit-non-favorites: *cat-term-deposit-non-favorites-ref
+     cat-investment-account-non-favorites: *cat-investment-account-non-favorites-ref
+     cat-custom-product-kind-non-favorites: *cat-custom-product-kind-non-favorites-ref
+   groups:
+     favorites:
+       categories:
+         - cat-savings-account-favorites
+         - cat-current-account-favorites
+         - cat-debit-card-favorites
+         - cat-credit-card-favorites
+         - cat-loan-favorites
+         - cat-term-deposit-favorites
+         - cat-investment-account-favorites
+         - cat-custom-product-kind-favorites
+       mappings:
+         <<: [ *basic-mapping, *user-preferences-mapping ]
+         '[accountNumber]': bban
+         '[primaryBalance]': bookedBalance
+       limit: 5
+       sort-by:
+         - displayName
+         - -primaryBalance
+       category-mappings:
+         cat-savings-account-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-current-account-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-debit-card-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-credit-card-favorites:
+           '[primaryBalance]':
+             attribute: creditLimitUsage
+             key: creditLimitUsage
+           '[accountNumber]': panSuffix
+         cat-loan-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-term-deposit-favorites:
+           '[primaryBalance]':
+             attribute: outstandingPrincipalAmount
+             key: outstandingPrincipalAmount
+         cat-investment-account-favorites:
+           '[primaryBalance]':
+             attribute: currentInvestmentValue
+             key: currentInvestmentValue
+         cat-custom-product-kind-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+     non-favorites:
+       categories:
+         - cat-savings-account-non-favorites
+         - cat-current-account-non-favorites
+         - cat-debit-card-non-favorites
+         - cat-credit-card-non-favorites
+         - cat-loan-non-favorites
+         - cat-term-deposit-non-favorites
+         - cat-investment-account-non-favorites
+         - cat-custom-product-kind-non-favorites
+       mappings:
+         <<: [ *basic-mapping, *user-preferences-mapping ]
+         '[accountNumber]': bban
+         '[primaryBalance]': bookedBalance
+       limit: 5
+       sort-by:
+         - displayName
+         - -primaryBalance
+       category-mappings:
+         cat-savings-account-non-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-current-account-non-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-debit-card-non-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-credit-card-non-favorites:
+           '[primaryBalance]':
+             attribute: creditLimitUsage
+             key: creditLimitUsage
+           '[accountNumber]': panSuffix
+         cat-loan-non-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+         cat-term-deposit-non-favorites:
+           '[primaryBalance]':
+             attribute: outstandingPrincipalAmount
+             key: outstandingPrincipalAmount
+         cat-investment-account-non-favorites:
+           '[primaryBalance]':
+             attribute: currentInvestmentValue
+             key: currentInvestmentValue
+         cat-custom-product-kind-non-favorites:
+           '[primaryBalance]':
+             attribute: bookedBalance
+             key: bookedBalance
+   balance-aggregations:
+     all:
+       cat-current-account-favorites: bookedBalance
+       cat-savings-account-favorites: bookedBalance
+       cat-credit-card-favorites: bookedBalance
+       cat-loan-favorites: bookedBalance
+       cat-term-deposit-favorites: outstandingPrincipalAmount
+       cat-investment-account-favorites: currentInvestmentValue
+       cat-custom-product-kind-favorites: bookedBalance
+       cat-current-account-non-favorites: bookedBalance
+       cat-savings-account-non-favorites: bookedBalance
+       cat-credit-card-non-favorites: bookedBalance
+       cat-loan-non-favorites: bookedBalance
+       cat-term-deposit-non-favorites: outstandingPrincipalAmount
+       cat-investment-account-non-favorites: currentInvestmentValue
+       cat-custom-product-kind-non-favorites: bookedBalance
+     savings:
+       cat-savings-account-favorites: bookedBalance
+       cat-savings-account-non-favorites: bookedBalance
+     loans:
+       cat-loan-favorites: bookedBalance
+       cat-loan-non-favorites: bookedBalance
+     current-accounts:
+       cat-current-account-favorites: bookedBalance
+       cat-current-account-non-favorites: bookedBalance
+     credit-cards:
+       cat-credit-card-favorites: bookedBalance
+       cat-credit-card-non-favorites: bookedBalance
+     investments:
+       cat-investment-account-favorites: currentInvestmentValue
+       cat-investment-account-non-favorites: currentInvestmentValue
+     term-deposits:
+       cat-term-deposit-favorites: outstandingPrincipalAmount
+       cat-term-deposit-non-favorites: outstandingPrincipalAmount
+     custom-product-kinds:
+       cat-custom-product-kind-favorites: bookedBalance
+       cat-custom-product-kind-non-favorites: bookedBalance
+backbase:
+ arrangement:
+   arrangement-views:
+     views: *dashboard-views
