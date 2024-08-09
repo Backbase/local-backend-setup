@@ -1,8 +1,6 @@
 package com.backbase.accesscontrol.service;
 
-import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.constant.KafkaConstants;
-import com.backbase.accesscontrol.exception.PayloadParsingException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import lombok.AllArgsConstructor;
@@ -18,15 +16,12 @@ import org.springframework.stereotype.Service;
 public class ErrorHandlingService {
 
     private final StreamBridge streamBridge;
-    private final RchKafkaGenericProperties rchKafkaGenericProperties;
 
-    public void handleFailure(Message<String> message, Exception e) {
-        if (e instanceof PayloadParsingException) {
-            sendMessageToErrorTopic(message, e);
-        }
+    public void handleFailure(Message<String> message, String errorTopicName, Exception e) {
+        sendMessageToErrorTopic(message, errorTopicName, e);
     }
 
-    private void sendMessageToErrorTopic(Message<String> originalMessage, Exception e) {
+    private void sendMessageToErrorTopic(Message<String> originalMessage, String errorTopicName, Exception e) {
         Message<String> errorMessage = MessageBuilder.withPayload(originalMessage.getPayload())
             .copyHeaders(originalMessage.getHeaders())
             .setHeader(KafkaConstants.ERROR_CODE_HEADER, e.getClass().getSimpleName())
@@ -34,7 +29,7 @@ public class ErrorHandlingService {
             .setHeader(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(e))
             .build();
 
-        streamBridge.send(rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(), errorMessage);
+        streamBridge.send(errorTopicName, errorMessage);
         log.info("Message sent to error topic");
     }
 

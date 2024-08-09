@@ -2,10 +2,10 @@ package com.backbase.accesscontrol.handler;
 
 import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
 
+import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.manager.ConsumerManager;
 import com.backbase.accesscontrol.processor.LegalEntitiesUpsertProcessor;
-import com.backbase.accesscontrol.service.ConsumerControlService;
 import com.backbase.accesscontrol.service.ErrorHandlingService;
 import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,6 +31,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
     private final ConsumerManager consumerManager;
 
     private final ErrorHandlingService errorHandlingService;
+    private final RchKafkaGenericProperties rchKafkaGenericProperties;
 
 
     @Override
@@ -50,7 +51,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
                     legalEntitiesUpsertProcessor.process(requestPayload);
 
                     // Resume the consumer after successful processing if it was previously paused
-                    if (context.getRetryCount() > 0 && consumerManager.isConsumerPaused()) {
+                    if (consumerManager.isConsumerPaused()) {
                         consumerManager.resumeConsumer(message);
                     }
 
@@ -68,14 +69,17 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
                 if (consumerManager.isConsumerPaused()) {
                     consumerManager.resumeConsumer(message);
                 }
-                errorHandlingService.handleFailure(message, (Exception) context.getLastThrowable());
+                errorHandlingService.handleFailure(message,
+                    rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(),
+                    (Exception) context.getLastThrowable());
                 return null;
             };
 
             return retryTemplate.execute(retryCallback, recoveryCallback);
         } catch (Exception e) {
             log.error("Unexpected error occurred while processing message: {}", message, e);
-            errorHandlingService.handleFailure(message, e);
+            errorHandlingService.handleFailure(message,
+                rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(), e);
         }
 
         return null;
