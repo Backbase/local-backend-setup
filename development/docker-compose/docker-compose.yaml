@@ -58,15 +58,13 @@ x-healthcheck-defaults: &healthcheck-defaults
   timeout: 15s
   retries: 15
 
+name: backbase
+
 volumes:
   mysql_data:
     driver: local
   demo_mysql_data:
   grafana-storage:
-
-networks:
-  mynetwork:
-    driver: bridge
 
 services:
   mysql:
@@ -116,8 +114,8 @@ services:
       management.tracing.sampling.probability: 1.0
       management.tracing.baggage.remote-fields: client-id
       management.tracing.baggage.correlation.fields: client-id
-#      management.otlp.tracing.endpoint: http://localhost:4318/v1/traces
-      management.zipkin.tracing.endpoint: http://localhost:9511/api/v2/spans
+      management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
+#      management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -200,24 +198,24 @@ services:
       - activemq
       - registry
 
-#  arrangement-manager:
-#    image: repo.backbase.com/backbase-docker-releases/arrangement-manager:${BB_VERSION}
-#    ports:
-#      - "8050:8080"
-#    environment:
-#      <<: [*common-variables, *message-broker-variables, *database-variables]
-#      spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-#    volumes:
-#      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
-#    healthcheck:
-#      <<: *healthcheck-defaults
-#      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#    links:
-#      - activemq
-#      - registry
+  arrangement-manager:
+    image: repo.backbase.com/backbase-docker-releases/arrangement-manager:${BB_VERSION}
+    ports:
+      - "8050:8080"
+    environment:
+      <<: [*common-variables, *message-broker-variables, *database-variables]
+      spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
 
   user-manager:
     image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
@@ -262,45 +260,45 @@ services:
       - registry
       - backbase-identity
 
-#  product-catalog-task:
-#    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
-#    profiles:
-#      - bootstrap
-#    environment:
-#      <<: *common-variables
-#      spring.config.additional-location: file:/tmp/ingestion.yml
-#    volumes:
-#      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-#    depends_on:
-#      token-converter:
-#        condition: service_healthy
-#      arrangement-manager:
-#        condition: service_healthy
-#
-#  legal-entity-bootstrap-task:
-#    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
-#    profiles:
-#      - bootstrap
-#    environment:
-#      <<: *common-variables
-#      spring.config.additional-location: file:/tmp/ingestion.yml
-#    volumes:
-#      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-#    depends_on:
-#      token-converter:
-#        condition: service_healthy
-#      access-control:
-#        condition: service_healthy
-#      arrangement-manager:
-#        condition: service_healthy
-#      user-manager:
-#        condition: service_healthy
-#      identity-integration-service:
-#        condition: service_healthy
-#      backbase-identity:
-#        condition: service_healthy
-#      product-catalog-task:
-#        condition: service_completed_successfully
+  product-catalog-task:
+    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
+    profiles:
+      - bootstrap
+    environment:
+      <<: *common-variables
+      spring.config.additional-location: file:/tmp/ingestion.yml
+    volumes:
+      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
+    depends_on:
+      token-converter:
+        condition: service_healthy
+      arrangement-manager:
+        condition: service_healthy
+
+  legal-entity-bootstrap-task:
+    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
+    profiles:
+      - bootstrap
+    environment:
+      <<: *common-variables
+      spring.config.additional-location: file:/tmp/ingestion.yml
+    volumes:
+      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
+    depends_on:
+      token-converter:
+        condition: service_healthy
+      access-control:
+        condition: service_healthy
+      arrangement-manager:
+        condition: service_healthy
+      user-manager:
+        condition: service_healthy
+      identity-integration-service:
+        condition: service_healthy
+      backbase-identity:
+        condition: service_healthy
+      product-catalog-task:
+        condition: service_completed_successfully
 
   wiremock:
     image: wiremock/wiremock:2.32.0
@@ -334,19 +332,6 @@ services:
       user-manager:
         condition: service_healthy
 
-
-  limits-service:
-    image: harbor.backbase.eu/stable/limit:${BB_VERSION}
-    ports:
-      - "7050:8080"
-    environment:
-      <<: [ *common-variables, *message-broker-variables, *database-variables ]
-      spring.datasource.url: jdbc:mysql://mysql:3306/limits?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-    volumes:
-      - ./scripts:/tmp/h
-    depends_on:
-      mysql:
-        condition: service_healthy
   # <EXAMPLE-SERVICE-NAME>:
   #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
   #   ports:
@@ -378,11 +363,11 @@ services:
       - management.tracing.baggage.remote-fields=client-id
       - management.tracing.baggage.correlation.fields=client-id
 #      - management.otlp.tracing.endpoint=http://localhost:4318/v1/traces
-      - management.zipkin.tracing.endpoint=http://zipkin:9511/api/v2/spans
+      - management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans
       - eureka.client.service-url.defaultZone=http://registry:8080/eureka
       - eureka.instance.non-secure-port=8080
       - SPRING_ZIPKIN_ENABLED='true'
-      - SPRING_ZIPKIN_BASEURL='http://zipkin:9511'
+      - SPRING_ZIPKIN_BASEURL='http://zipkin:9411'
       # debug mode for development
       - RUN_IN_DEBUG=true
       - logging.secured.enabled=false
@@ -391,8 +376,7 @@ services:
       - backbase.azure.blob.storage.connector.accounts.account1.connectionString=AccountName=account1;AccountKey=key1;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite:10000/account1;QueueEndpoint=http://azurite:10001/account1;TableEndpoint=http://azurite:10002/account1;
       - backbase.azure.blob.storage.connector.accounts.account2.connectionString=AccountName=account2;AccountKey=key2;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite:10000/account2;QueueEndpoint=http://azurite:10001/account2;TableEndpoint=http://azurite:10002/account2;
       - backbase.azure.blob.storage.connector.accounts.default.connectionString=AccountName=account3;AccountKey=key3;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite:10000/account3;QueueEndpoint=http://azurite:10001/account3;TableEndpoint=http://azurite:10002/account3;
-    networks:
-      - mynetwork
+
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     ports:
@@ -444,7 +428,6 @@ services:
 
   zipkin:
     image: openzipkin/zipkin
-    container_name: zipkin
     environment:
       - STORAGE_TYPE=mem
       # - STORAGE_TYPE=mysql
@@ -455,23 +438,3 @@ services:
       - 9511:9411
     # depends_on:
     #     - storage
-    networks:
-      - mynetwork
-
-
-#  testservice:
-#    image:  harbor.backbase.eu/development/testevents:custom1
-#    ports:
-#      - "8040:8080"
-##    volumes:
-##    - /Users/fredy/tmp/:/Users/fredy/
-#    environment:
-#      <<: *common-variables
-#      <<: *message-broker-variables
-#      BACKBASE_SECURITY_PUBLIC_PATHS: "/trigger-events, /actuator/**, /**"
-#      SPRING_CLOUD_STREAM_DYNAMIC_DESTINATION_CACHE_SIZE: 2
-##      SPRING_PROFILES_ACTIVE: ${COMPOSE_APP_PROFILE}
-##      JAVA_TOOL_OPTIONS: -javaagent:/Users/fredy/BackbaseSpy-1.0-SNAPSHOT-jar-with-dependencies.jar
-#    links:
-#      - registry
-#      - message-broker
