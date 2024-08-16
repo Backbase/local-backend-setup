@@ -190,7 +190,7 @@ services:
       waiting: 0
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement;upsertLegalEntity
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertLegalEntity
       spring.liquibase.enabled: true
       "management.endpoints.web.exposure.include": bindings
       logging.level.com.backbase: DEBUG
@@ -292,7 +292,7 @@ services:
       RCH_KAFKA_UPSERT_USER_ERROR_TOPIC_NAME: UpsertUserEntityFailureEvent
       "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement;upsertLegalEntity
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertUser
       spring.liquibase.enabled: true
       "management.endpoints.web.exposure.include": bindings
       logging.level.com.backbase: DEBUG

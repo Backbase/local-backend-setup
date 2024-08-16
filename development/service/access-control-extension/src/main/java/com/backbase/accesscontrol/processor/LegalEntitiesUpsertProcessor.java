@@ -19,7 +19,7 @@ public class LegalEntitiesUpsertProcessor {
     private final LegalEntityServiceFacade legalEntityServiceFacade;
     private final PutLegalEntityEventMapper mapper;
 
-    public LegalEntityCreateItem process(LegalEntityCreateItem requestPayload) {
+    public void process(LegalEntityCreateItem requestPayload) {
         try {
             var searchResult =
                 legalEntityServiceFacade.getLegalEntityByExternalId(requestPayload.getExternalId());
@@ -38,7 +38,6 @@ public class LegalEntitiesUpsertProcessor {
             legalEntityServiceFacade.createLegalEntity(createDto);
         }
 
-        return requestPayload;
     }
 
 }

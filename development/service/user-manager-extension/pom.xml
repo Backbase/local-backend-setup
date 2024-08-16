@@ -178,7 +178,7 @@
                                 <useTags>true</useTags>
                                 <java8>true</java8>
                                 <useOptional>false</useOptional>
-                                <apiPackage>com.backbase.integration.usermaanger.rest.spec.v3.serviceapi</apiPackage>
+                                <apiPackage>com.backbase.integration.usermanager.rest.spec.v3.serviceapi</apiPackage>
                                 <modelPackage>com.backbase.integration.usermanager.rest.spec.v3</modelPackage>
                             </configOptions>
                         </configuration>

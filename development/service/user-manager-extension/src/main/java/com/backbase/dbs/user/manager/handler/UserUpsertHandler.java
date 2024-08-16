@@ -1,13 +1,13 @@
-package com.backbase.accesscontrol.handler;
+package com.backbase.dbs.user.manager.handler;
 
-import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
+import static com.backbase.dbs.user.manager.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
 
-import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
-import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.manager.ConsumerManager;
-import com.backbase.accesscontrol.processor.LegalEntitiesUpsertProcessor;
-import com.backbase.accesscontrol.service.ErrorHandlingService;
-import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
+import com.backbase.dbs.user.manager.ConsumerManager;
+import com.backbase.dbs.user.manager.configuration.RchKafkaGenericProperties;
+import com.backbase.dbs.user.manager.exception.PayloadParsingException;
+import com.backbase.dbs.user.manager.processor.UserUpsertProcessor;
+import com.backbase.dbs.user.manager.service.ErrorHandlingService;
+import com.backbase.integration.usermanager.rest.spec.v3.UserExternal;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
@@ -20,11 +20,11 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("upsertLegalEntity")
+@Component("upsertUser")
 @AllArgsConstructor
 
-public class LegalEntitiesUpsertHandler implements Function<Message<String>, LegalEntityCreateItem> {
-    private final LegalEntitiesUpsertProcessor legalEntitiesUpsertProcessor;
+public class UserUpsertHandler implements Function<Message<String>, UserExternal> {
+    private final UserUpsertProcessor userUpsertProcessor;
     private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
 
@@ -34,12 +34,12 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
     private final RchKafkaGenericProperties rchKafkaGenericProperties;
 
     @Override
-    public LegalEntityCreateItem apply(Message<String> message) {
-        log.info("Upsert Legal Entity Message received: {}", message);
+    public UserExternal apply(Message<String> message) {
+        log.info("Upsert User Message received: {}", message);
         try {
-            LegalEntityCreateItem requestPayload = parsePayload(message.getPayload());
+            UserExternal requestPayload = parsePayload(message.getPayload());
 
-            RetryCallback<LegalEntityCreateItem, RuntimeException> retryCallback = context -> {
+            RetryCallback<UserExternal, RuntimeException> retryCallback = context -> {
                 try {
                     // Pause the consumer if retry attempts have started (1)
                     if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
@@ -47,7 +47,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
                     }
 
                     // Attempt to process the message
-                    legalEntitiesUpsertProcessor.process(requestPayload);
+                    userUpsertProcessor.process(requestPayload);
 
                     // Resume the consumer after successful processing if it was previously paused
                     if (consumerManager.isConsumerPaused()) {
@@ -61,7 +61,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
                 }
             };
 
-            RecoveryCallback<LegalEntityCreateItem> recoveryCallback = context -> {
+            RecoveryCallback<UserExternal> recoveryCallback = context -> {
                 log.error("Retries exhausted for message: {}", message, context.getLastThrowable());
 
                 // Consumer is resumed after retries are exhausted if it was paused
@@ -69,7 +69,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
                     consumerManager.resumeConsumer(message);
                 }
                 errorHandlingService.handleFailure(message,
-                    rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(),
+                    rchKafkaGenericProperties.getUpsertUserErrorTopicName(),
                     (Exception) context.getLastThrowable());
                 return null;
             };
@@ -78,14 +78,14 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
         } catch (Exception e) {
             log.error("Unexpected error occurred while processing message: {}", message, e);
             errorHandlingService.handleFailure(message,
-                rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(), e);
+                rchKafkaGenericProperties.getUpsertUserErrorTopicName(), e);
         }
 
         return null;
     }
 
 
-    private LegalEntityCreateItem parsePayload(String payload) {
+    private UserExternal parsePayload(String payload) {
         try {
             return objectMapper.readValue(payload, new TypeReference<>() {
             });
