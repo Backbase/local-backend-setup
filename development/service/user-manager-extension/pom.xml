@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.backbase.dbs.accesscontrol</groupId>
-    <artifactId>access-control-extension</artifactId>
+    <groupId>com.backbase.dbs.usermanager</groupId>
+    <artifactId>user-manager-extension</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.6</version>
+    <version>0.0.10</version>
 
     <properties>
         <java.version>17</java.version>
@@ -27,14 +27,14 @@
 
         <!-- Dependencies -->
         <backbase-bom.version>2023.10</backbase-bom.version>
-        <access-control-openapi-spec.version>3.1.1</access-control-openapi-spec.version>
+        <user-manager-integration-inbound-spec.version>2.5.2</user-manager-integration-inbound-spec.version>
 
         <!-- Plugin version -->
         <gitflow-maven-plugin.version>1.19.0</gitflow-maven-plugin.version>
         <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
 
         <!-- base image TODO change it to desired capability -->
-        <docker.base.name>repo.backbase.com/backbase-docker-releases/access-control</docker.base.name>
+        <docker.base.name>repo.backbase.com/backbase-docker-releases/user-manager</docker.base.name>
         <docker.base.tag>2023.10</docker.base.tag>
 
         <!-- Sonar -->
@@ -59,8 +59,8 @@
     <dependencies>
         <!-- TODO Replace with desired capability -->
         <dependency>
-            <groupId>com.backbase.dbs.accesscontrol</groupId>
-            <artifactId>access-control</artifactId>
+            <groupId>com.backbase.dbs.user</groupId>
+            <artifactId>user-manager</artifactId>
             <classifier>classes</classifier>
             <scope>provided</scope>
         </dependency>
@@ -77,13 +77,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>3.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
         <!-- Lombok and Mapstruct -->
         <dependency>
@@ -124,7 +124,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>unpack-access-control-spec</id>
+                        <id>unpack-user-manager-spec</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>unpack</goal>
@@ -132,9 +132,9 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.backbase.dbs.accesscontrol</groupId>
-                                    <artifactId>access-control-openapi-spec</artifactId>
-                                    <version>${access-control-openapi-spec.version}</version>
+                                    <groupId>com.backbase.dbs.user</groupId>
+                                    <artifactId>user-manager</artifactId>
+                                    <version>${user-manager-integration-inbound-spec.version}</version>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                     <classifier>api</classifier>
                                     <type>zip</type>
@@ -164,7 +164,7 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <inputSpec>
-                                ${project.build.directory}/accessgroup-integration-service/accessgroup-integration-inbound-api-v3.2.3.yaml
+                                ${project.build.directory}/user-manager/user-manager-integration-inbound-api-v2.2.0.yaml
                             </inputSpec>
                             <configOptions>
                                 <library>spring-boot</library>
@@ -178,8 +178,8 @@
                                 <useTags>true</useTags>
                                 <java8>true</java8>
                                 <useOptional>false</useOptional>
-                                <apiPackage>com.backbase.integration.accessgroup.rest.spec.v3.serviceapi</apiPackage>
-                                <modelPackage>com.backbase.integration.accessgroup.rest.spec.v3</modelPackage>
+                                <apiPackage>com.backbase.integration.usermaanger.rest.spec.v3.serviceapi</apiPackage>
+                                <modelPackage>com.backbase.integration.usermanager.rest.spec.v3</modelPackage>
                             </configOptions>
                         </configuration>
                     </execution>

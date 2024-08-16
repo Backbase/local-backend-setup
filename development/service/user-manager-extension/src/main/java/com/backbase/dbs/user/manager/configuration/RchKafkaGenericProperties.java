@@ -1,6 +1,7 @@
-package com.backbase.accesscontrol.configuration;
+package com.backbase.dbs.user.manager.configuration;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,10 +23,7 @@ public class RchKafkaGenericProperties {
     private String groupId;
 
     @NotEmpty
-    private String upsertDataGroupErrorTopicName;
-
-    @NotEmpty
-    private String upsertLegalEntitiesErrorTopicName;
+    private String upsertUserErrorTopicName;
 
     @Value("${rch.kafka.poll-duration:5000}")
     private long pollDuration;

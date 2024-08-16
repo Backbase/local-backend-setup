@@ -278,16 +278,24 @@ services:
       - registry
 
   user-manager:
-    image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
+    image: repo.backbase.com/user-manager-extension:2023.10-0.0.10
+    deploy:
+      replicas: 1
     ports:
       - "8060:8080"
     environment:
-      <<: [*common-variables, *message-broker-variables, *database-variables]
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
       spring.datasource.url: jdbc:mysql://mysql:3306/user-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
-      backbase.users.identity-endpoints-enabled: true
-      backbase.users.identity-integration-enabled: true
-      backbase.users.sync-primary-to-identity-enabled: true
-      spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      waiting: 0
+      RCH_KAFKA_BOOTSTRAP_SERVER: kafka:9092
+      RCH_KAFKA_GROUP_ID: kafka-connect
+      RCH_KAFKA_UPSERT_USER_ERROR_TOPIC_NAME: UpsertUserEntityFailureEvent
+      "spring.cloud.stream.kafka.bindings.input.consumer.ackMode": "MANUAL"
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertServiceAgreement;upsertLegalEntity
+      spring.liquibase.enabled: true
+      "management.endpoints.web.exposure.include": bindings
+      logging.level.com.backbase: DEBUG
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
