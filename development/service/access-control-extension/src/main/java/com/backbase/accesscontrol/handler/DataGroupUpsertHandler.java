@@ -1,8 +1,8 @@
 package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.manager.ConsumerManager;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
+import com.backbase.accesscontrol.service.AsyncRetryService;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class DataGroupUpsertHandler implements Function<Message<String>, IntegrationDataGroupItemBatchPutRequestBody> {
     private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
     private final ObjectMapper objectMapper;
-    private final ConsumerManager consumerManager;
+    private final AsyncRetryService asyncRetryService;
 
     @Override
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
@@ -27,28 +27,25 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
-            dataGroupUpsertProcessor.process(requestPayload);
+            // Asynchronously process the message with retries
+            asyncRetryService.retryAsync(() -> processMessage(requestPayload, message));
 
-            // Manually acknowledge the message by committing the offset
-            acknowledgeMessage(message);
-
-            // Resume the consumer if it was paused previously
-            consumerManager.resumeConsumer(message);
-
-            return requestPayload;
+            // Return null since the actual processing is handled asynchronously
+            return null;
         } catch (PayloadParsingException e) {
-            // Handle PayloadParsingException by sending the message to the DLQ
             log.error("Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
             throw e; // Let Kafka move it to the DLQ
-        } catch (Exception e) {
-            // Handle all other exceptions as temporary errors
-            log.error("Temporary error occurred, Kafka will retry. Error: {}", e.getMessage());
-
-            consumerManager.pauseConsumer(message);
-            // Do not acknowledge the message; Kafka will retry it on the next poll
         }
+    }
 
-        return null; // Return null if processing failed, leaving the message unacknowledged
+    private void processMessage(IntegrationDataGroupItemBatchPutRequestBody requestPayload, Message<String> message) {
+        try {
+            dataGroupUpsertProcessor.process(requestPayload);
+            acknowledgeMessage(message);
+        } catch (Exception e) {
+            log.error("Error processing message: {}", message, e);
+            throw e; // Trigger retry by rethrowing the exception
+        }
     }
 
     private void acknowledgeMessage(Message<?> message) {
@@ -69,5 +66,6 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             throw new PayloadParsingException("Error parsing message payload", e);
         }
     }
+
 }
 
