@@ -26,7 +26,7 @@
         <jib.to.image>${docker.image.name}:${backbase-bom.version}-${project.version}</jib.to.image>
 
         <!-- Dependencies -->
-        <backbase-bom.version>2023.10</backbase-bom.version>
+        <backbase-bom.version>2024.03-LTS</backbase-bom.version>
         <user-manager-integration-inbound-spec.version>2.5.2</user-manager-integration-inbound-spec.version>
 
         <!-- Plugin version -->
@@ -35,7 +35,7 @@
 
         <!-- base image TODO change it to desired capability -->
         <docker.base.name>repo.backbase.com/backbase-docker-releases/user-manager</docker.base.name>
-        <docker.base.tag>2023.10</docker.base.tag>
+        <docker.base.tag>2024.03-LTS</docker.base.tag>
 
         <!-- Sonar -->
         <!--suppress UnresolvedMavenProperty -->

@@ -278,7 +278,7 @@ services:
       - registry
 
   user-manager:
-    image: repo.backbase.com/user-manager-extension:2023.10-0.0.10
+    image: repo.backbase.com/user-manager-extension:2024.03-LTS-0.0.10
     deploy:
       replicas: 1
     ports:
