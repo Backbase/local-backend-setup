@@ -184,8 +184,8 @@ services:
       replicas: 3
     ports:
       - "8040:8080"  # First replica
-      - "8041:8080"  # Second replica
-      - "8042:8080"  # Third replica
+      - "8098:8080"  # Second replica
+      - "8099:8080"  # Third replica
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
@@ -296,6 +296,9 @@ services:
       spring.liquibase.enabled: true
       "management.endpoints.web.exposure.include": bindings
       logging.level.com.backbase: DEBUG
+      backbase.users.identity-endpoints-enabled: true
+      backbase.users.identity-integration-enabled: true
+      backbase.users.sync-primary-to-identity-enabled: true
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
