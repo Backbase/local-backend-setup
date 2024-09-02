@@ -1,10 +1,9 @@
 package com.backbase.accesscontrol.mapper;
 
-import com.backbase.accesscontrol.domain.dto.DataGroupBaseDto;
-import com.backbase.accesscontrol.domain.dto.PresentationDataGroupUpdateDto;
-import com.backbase.accesscontrol.domain.dto.PresentationSearchDataGroupsRequestDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.DataGroupBaseDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationDataGroupUpdateDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationSearchDataGroupsRequestDto;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
-import java.util.List;
 import org.mapstruct.Mapping;
 
 @org.mapstruct.Mapper(componentModel = "spring")

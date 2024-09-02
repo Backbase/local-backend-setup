@@ -1,21 +1,16 @@
 package com.backbase.accesscontrol.handler;
 
-import static com.backbase.accesscontrol.constant.KafkaConstants.KAFKA_RETRY_PAUSE_COUNT;
-
-import com.backbase.accesscontrol.configuration.RchKafkaGenericProperties;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.manager.ConsumerManager;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
-import com.backbase.accesscontrol.service.ErrorHandlingService;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
-import org.springframework.retry.RecoveryCallback;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -23,11 +18,8 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class DataGroupUpsertHandler implements Function<Message<String>, IntegrationDataGroupItemBatchPutRequestBody> {
     private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
-    private final RetryTemplate retryTemplate;
     private final ObjectMapper objectMapper;
-    private final ErrorHandlingService errorHandlingService;
     private final ConsumerManager consumerManager;
-    private final RchKafkaGenericProperties rchKafkaGenericProperties;
 
     @Override
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
@@ -35,51 +27,39 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
-            RetryCallback<IntegrationDataGroupItemBatchPutRequestBody, RuntimeException> retryCallback = context -> {
-                try {
-                    // Pause the consumer if retry attempts have started (1)
-                    if (context.getRetryCount() == KAFKA_RETRY_PAUSE_COUNT) {
-                        consumerManager.pauseConsumer(message);
-                    }
+            dataGroupUpsertProcessor.process(requestPayload);
 
-                    // Attempt to process the message
-                    dataGroupUpsertProcessor.process(requestPayload);
+            // Manually acknowledge the message by committing the offset
+            acknowledgeMessage(message);
 
-                    // Resume the consumer after successful processing if it was previously paused
-                    if (consumerManager.isConsumerPaused()) {
-                        consumerManager.resumeConsumer(message);
-                    }
+            // Resume the consumer if it was paused previously
+            consumerManager.resumeConsumer(message);
 
-                    return requestPayload; // Return the payload to signal success
-                } catch (Exception e) {
-                    log.error("Error during processing, will retry. Error: {}", e.getMessage());
-                    throw e; // Trigger a retry by rethrowing the exception
-                }
-            };
-
-            RecoveryCallback<IntegrationDataGroupItemBatchPutRequestBody> recoveryCallback = context -> {
-                log.error("Retries exhausted for message: {}", message, context.getLastThrowable());
-
-                // Consumer is resumed after retries are exhausted if it was paused
-                if (consumerManager.isConsumerPaused()) {
-                    consumerManager.resumeConsumer(message);
-                }
-                errorHandlingService.handleFailure(message,
-                    rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(),
-                    (Exception) context.getLastThrowable());
-                return null;
-            };
-
-            return retryTemplate.execute(retryCallback, recoveryCallback);
+            return requestPayload;
+        } catch (PayloadParsingException e) {
+            // Handle PayloadParsingException by sending the message to the DLQ
+            log.error("Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
+            throw e; // Let Kafka move it to the DLQ
         } catch (Exception e) {
-            log.error("Unexpected error occurred while processing message: {}", message, e);
-            errorHandlingService.handleFailure(message, rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(),
-                e);
+            // Handle all other exceptions as temporary errors
+            log.error("Temporary error occurred, Kafka will retry. Error: {}", e.getMessage());
+
+            consumerManager.pauseConsumer(message);
+            // Do not acknowledge the message; Kafka will retry it on the next poll
         }
 
-        return null;
+        return null; // Return null if processing failed, leaving the message unacknowledged
     }
 
+    private void acknowledgeMessage(Message<?> message) {
+        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+        if (acknowledgment != null) {
+            acknowledgment.acknowledge();
+            log.info("Message acknowledged: {}", message);
+        } else {
+            log.warn("Acknowledgment is null, message not acknowledged: {}", message);
+        }
+    }
 
     private IntegrationDataGroupItemBatchPutRequestBody parsePayload(String payload) {
         try {
@@ -89,5 +69,5 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             throw new PayloadParsingException("Error parsing message payload", e);
         }
     }
-
 }
+

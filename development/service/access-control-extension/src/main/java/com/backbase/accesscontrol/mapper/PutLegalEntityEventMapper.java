@@ -1,8 +1,8 @@
 package com.backbase.accesscontrol.mapper;
 
-import com.backbase.accesscontrol.domain.enums.CustomerCategory;
-import com.backbase.accesscontrol.domain.enums.LegalEntityType;
-import com.backbase.accesscontrol.dto.legalentity.CreateLegalEntityRequest;
+import com.backbase.accesscontrol.domain.dto.legalentity.CreateLegalEntityRequest;
+import com.backbase.accesscontrol.persistence.enums.CustomerCategory;
+import com.backbase.accesscontrol.persistence.enums.LegalEntityType;
 import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
 
 @org.mapstruct.Mapper(componentModel = "spring")

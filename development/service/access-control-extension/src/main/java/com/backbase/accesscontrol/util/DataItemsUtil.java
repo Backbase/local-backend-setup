@@ -1,8 +1,8 @@
 package com.backbase.accesscontrol.util;
 
-import com.backbase.accesscontrol.domain.dto.DataGroupBaseDto;
-import com.backbase.accesscontrol.domain.dto.PresentationDataGroupUpdateDto;
-import com.backbase.accesscontrol.domain.dto.PresentationItemIdentifierDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.DataGroupBaseDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationDataGroupUpdateDto;
+import com.backbase.accesscontrol.domain.dto.datagroup.PresentationItemIdentifierDto;
 import com.backbase.buildingblocks.presentation.errors.Error;
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
 import com.backbase.dbs.arrangement.api.client.v2.ArrangementsApi;

@@ -1,10 +1,10 @@
 package com.backbase.accesscontrol.processor;
 
-import com.backbase.accesscontrol.domain.enums.CustomerCategory;
-import com.backbase.accesscontrol.domain.enums.LegalEntityType;
-import com.backbase.accesscontrol.dto.legalentity.CreateLegalEntityRequest;
+import com.backbase.accesscontrol.domain.dto.legalentity.CreateLegalEntityRequest;
+import com.backbase.accesscontrol.domain.service.facades.LegalEntityServiceFacade;
 import com.backbase.accesscontrol.mapper.PutLegalEntityEventMapper;
-import com.backbase.accesscontrol.service.facades.v3.LegalEntityServiceFacade;
+import com.backbase.accesscontrol.persistence.enums.CustomerCategory;
+import com.backbase.accesscontrol.persistence.enums.LegalEntityType;
 import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
 import lombok.RequiredArgsConstructor;
