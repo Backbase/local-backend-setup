@@ -12,11 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.backoff.BackOff;
 import org.springframework.util.backoff.FixedBackOff;
 
@@ -39,15 +36,16 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(DefaultErrorHandler errorHandler) {
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+        DefaultErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
             new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(4);  // Increase concurrency to allow parallel processing of partitions
 
-        // Set manual acknowledgment mode
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        // Remove manual acknowledgment mode to rely on Kafka's auto-commit
+        // factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // REMOVE this line
 
         // Set the error handler to handle exceptions and send to DLQ if needed
         factory.setCommonErrorHandler(errorHandler);
@@ -57,7 +55,8 @@ public class KafkaConsumerConfig {
 
     @Bean
     public DefaultErrorHandler errorHandler() {
-        BackOff fixedBackOff = new FixedBackOff(1000L, FixedBackOff.UNLIMITED_ATTEMPTS);
+        BackOff fixedBackOff =
+            new FixedBackOff(1000L, 5); // Infinite retries with 1 sec delay
 
         // Create the DefaultErrorHandler with DeadLetterPublishingRecoverer and BackOff
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(deadLetterPublishingRecoverer, fixedBackOff);
@@ -67,21 +66,6 @@ public class KafkaConsumerConfig {
 
         return errorHandler;
     }
-
-    @Bean
-    public RetryTemplate retryTemplate() {
-        RetryTemplate retryTemplate = new RetryTemplate();
-
-        // Exponential backoff strategy
-        ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(1000); // 1 second initial interval
-        backOffPolicy.setMultiplier(2); // Exponential multiplier
-        backOffPolicy.setMaxInterval(30000); // Cap the interval at 30 seconds
-        retryTemplate.setBackOffPolicy(backOffPolicy);
-
-        return retryTemplate;
-    }
-
 }
 
 
