@@ -336,8 +336,10 @@ services:
   #     - registry
 
   business-app:
-    image: harbor.backbase.eu/development/business-universal:2024.07.2
+    image: harbor.backbase.eu/reference/business-universal:2024.07
     platform: linux/amd64
+    profiles:
+      - web
     deploy:
       resources:
         limits:
