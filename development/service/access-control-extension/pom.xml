@@ -105,6 +105,11 @@
             <artifactId>service-sdk-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>3.2.3</version> <!-- Use the latest version -->
+        </dependency>
         <!-- For Maven -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

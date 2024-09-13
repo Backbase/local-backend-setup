@@ -26,19 +26,4 @@ public class RchKafkaGenericProperties {
 
     @NotEmpty
     private String upsertLegalEntitiesErrorTopicName;
-
-    @Value("${rch.kafka.poll-duration:5000}")
-    private long pollDuration;
-
-    @Value("${rch.kafka.retry.max-attempts:3}")
-    private int maxRetryAttempts;
-
-    @Value("${rch.kafka.backoff.initial-interval:5000}")
-    private long backOffInitialInterval;
-
-    @Value("${rch.kafka.backoff.multiplier:2.0}")
-    private double backOffMultiplier;
-
-    @Value("${rch.kafka.backoff.max-interval:30000}")
-    private long backOffMaxInterval;
 }

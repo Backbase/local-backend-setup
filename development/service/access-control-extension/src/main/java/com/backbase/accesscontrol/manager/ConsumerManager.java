@@ -1,53 +1,44 @@
 package com.backbase.accesscontrol.manager;
 
 import com.backbase.accesscontrol.service.ConsumerControlService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 
 @Component
-@AllArgsConstructor
 @Slf4j
+@AllArgsConstructor
 public class ConsumerManager {
 
-    private final AtomicBoolean isConsumerPaused = new AtomicBoolean(false);
     private final ConsumerControlService consumerControlService;
+    private final AtomicBoolean isConsumerPaused = new AtomicBoolean(false);
 
-    public void pauseConsumer(Message<?> message) {
+    public void pauseAndResumeAfterDelay(Message<String> message, long delay) {
         if (!isConsumerPaused.get()) {
+            log.info("Pausing consumer for retryable exception.");
             consumerControlService.controlConsumer(message, true);
             isConsumerPaused.set(true);
-            log.info("Consumer paused for message: {}", message);
+
+            // Schedule the resume action after the specified delay
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+                log.info("Resuming consumer after delay.");
+                consumerControlService.controlConsumer(message, false);
+                isConsumerPaused.set(false);
+            }, delay, TimeUnit.MILLISECONDS);
         }
     }
 
-    public void resumeConsumer(Message<?> message) {
+    public void resumeConsumer(Message<String> message) {
         if (isConsumerPaused.get()) {
+            log.info("Resuming consumer manually.");
             consumerControlService.controlConsumer(message, false);
             isConsumerPaused.set(false);
-            log.info("Consumer resumed for message: {}", message);
         }
     }
 
-    // New Method for Automatic Resuming after a delay
-    @Async
-    public void pauseAndResumeAfterDelay(Message<?> message, long delayMillis) {
-        pauseConsumer(message);  // Pause the consumer
-
-        try {
-            Thread.sleep(delayMillis);  // Simulate a delay before resuming
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        resumeConsumer(message);  // Resume the consumer after delay
-    }
-
-    public boolean isConsumerPaused() {
-        return isConsumerPaused.get();
-    }
 }
