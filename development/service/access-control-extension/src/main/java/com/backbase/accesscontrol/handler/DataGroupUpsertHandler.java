@@ -1,13 +1,14 @@
 package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.manager.ConsumerManager;
 import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +19,12 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
 
     private final DataGroupUpsertProcessor dataGroupUpsertProcessor;
     private final ObjectMapper objectMapper;
-    private final ConsumerManager consumerManager;
 
     @Override
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
         log.info("Upsert Data Group Message received: {}", message);
+
+        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
 
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
@@ -30,22 +32,18 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             // Process the parsed payload
             dataGroupUpsertProcessor.process(requestPayload);
 
-            // Resume consumer after successful processing
-            consumerManager.resumeConsumer(message);
+            // Commit offset only after successful processing
+            if (acknowledgment != null) {
+                acknowledgment.acknowledge();
+            }
 
         } catch (PayloadParsingException e) {
-            // Non-retryable exception, directly send to DLQ using the error handler (configured in the customizer)
-            log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}",
-                message, e);
+            // Non-retryable exception, directly send to DLQ using the error handler
+            log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
             throw e;
-
         } catch (Exception e) {
             // Retryable exception
-            log.error("Temporary error occurred, pausing consumer for retry. Kafka will retry: {}", e.getMessage());
-
-            // Pause consumer for retryable exceptions
-            consumerManager.pauseAndResumeAfterDelay(message, 2);
-
+            log.error("Temporary error occurred, Kafka will retry: {}", e.getMessage());
             throw e;
         }
 
@@ -56,7 +54,7 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         try {
             return objectMapper.readValue(payload, IntegrationDataGroupItemBatchPutRequestBody.class);
         } catch (Exception e) {
-            log.error("Error parsing message payload: {}", payload, e);
+            log.error("Error parsing message payload: {}", payload);
             throw new PayloadParsingException("Error parsing message payload", e);  // Non-retryable
         }
     }

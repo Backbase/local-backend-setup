@@ -2,8 +2,13 @@ package com.backbase.accesscontrol.configuration;
 
 import com.backbase.accesscontrol.constant.KafkaConstants;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
+import com.backbase.accesscontrol.model.TopicConfig;
+import com.backbase.buildingblocks.presentation.errors.BadRequestException;
+import com.backbase.buildingblocks.presentation.errors.NotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
@@ -27,6 +32,7 @@ import org.springframework.util.backoff.FixedBackOff;
 public class KafkaListenerCustomizerConfig {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final RchKafkaGenericProperties rchKafkaGenericProperties;
 
     @Bean
     public ListenerContainerWithDlqAndRetryCustomizer customizer() {
@@ -34,57 +40,84 @@ public class KafkaListenerCustomizerConfig {
 
             @Override
             public void configure(AbstractMessageListenerContainer<?, ?> container, String destinationName,
-                                  String group,
-                                  @Nullable
+                                  String group, @Nullable
                                   BiFunction<ConsumerRecord<?, ?>, Exception, TopicPartition> dlqDestinationResolver,
                                   @Nullable BackOff backOff) {
 
+                Map<String, TopicConfig> topicConfigs = getTopicConfigurations();
+
+                // Fetch configuration for the current destination (topic)
+                TopicConfig topicConfig = topicConfigs.getOrDefault(destinationName, getDefaultTopicConfig());
+
                 // Custom DeadLetterPublishingRecoverer with dynamic DLQ topic resolution
                 ConsumerRecordRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                    (record, exception) -> {
-                        String dlqTopic = resolveDlqTopic(record.topic());
-                        log.info("Sending message to DLQ with custom headers for topic {}", record.topic());
+                    (consumerRecord, exception) -> {
+                        String dlqTopic = topicConfig.getDlqTopic();
+                        log.info("Sending message to DLQ with custom headers for topic {}", consumerRecord.topic());
 
                         // Add custom headers for error information
-                        record.headers()
+                        consumerRecord.headers()
                             .add(KafkaConstants.ERROR_CODE_HEADER, exception.getClass().getSimpleName().getBytes());
-                        record.headers().add(KafkaConstants.ERROR_MESSAGE_HEADER, exception.getMessage().getBytes());
-                        record.headers()
+                        consumerRecord.headers().add(KafkaConstants.ERROR_MESSAGE_HEADER, exception.getMessage().getBytes());
+                        consumerRecord.headers()
                             .add(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(exception).getBytes());
 
                         // Send message to DLQ with dynamic topic
-                        return new TopicPartition(dlqTopic, record.partition());
+                        return new TopicPartition(dlqTopic, consumerRecord.partition());
                     });
 
-                // Customize error handling for specific topics
-                if (destinationName.equals("rch-30730-kep-data-group")) {
-                    FixedBackOff retryBackOff = new FixedBackOff(1000L, 3L); // 3 retries, 1-second delay
-                    DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, retryBackOff);
+                // Create a DefaultErrorHandler with custom backoff and retries
+                DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, topicConfig.getBackOff());
 
-                    // Mark PayloadParsingException as non-retryable
-                    errorHandler.addNotRetryableExceptions(PayloadParsingException.class);
-                    container.setCommonErrorHandler(errorHandler);
-                }
+                // Mark non-retryable exceptions
+                errorHandler.addNotRetryableExceptions(PayloadParsingException.class);
+                errorHandler.addNotRetryableExceptions(NotFoundException.class);
+                errorHandler.addNotRetryableExceptions(BadRequestException.class);
+
+                container.setCommonErrorHandler(errorHandler);
             }
 
             @Override
             public boolean retryAndDlqInBinding(String destinationName, String group) {
-                // Disable Spring Cloud Stream's default retry and DLQ handling for this topic
-                return !destinationName.equals("rch-30730-kep-data-group");
+                // Disable Spring Cloud Stream's default retry and DLQ handling for topics we manage in custom config
+                return !getTopicConfigurations().containsKey(destinationName);
             }
         };
     }
 
-    // Utility method for dynamically resolving the DLQ topic name based on the source topic
-    private String resolveDlqTopic(String originalTopic) {
-        switch (originalTopic) {
-            case "rch-30730-kep-data-group":
-                return "rch-30730-kep-data-group-dlt";  // DLQ for this topic
-            case "another-topic":
-                return "another-topic-dlt";  // DLQ for another topic
-            default:
-                return "generic-dlt";  // Default DLQ if not explicitly mapped
-        }
+    // Dynamically manage topic-specific configurations (backoff, retries, DLQ topics)
+    private Map<String, TopicConfig> getTopicConfigurations() {
+        Map<String, TopicConfig> topicConfigs = new HashMap<>();
+
+        // Set UNLIMITED_ATTEMPTS if retryAttempts is -1
+        long dataGroupRetryAttempts = rchKafkaGenericProperties.getUpsertDataGroupRetryAttempts() == -1
+            ? FixedBackOff.UNLIMITED_ATTEMPTS
+            : rchKafkaGenericProperties.getUpsertDataGroupRetryAttempts();
+
+        long legalEntityRetryAttempts = rchKafkaGenericProperties.getUpsertLegalEntityRetryAttempts() == -1
+            ? FixedBackOff.UNLIMITED_ATTEMPTS
+            : rchKafkaGenericProperties.getUpsertLegalEntityRetryAttempts();
+
+        topicConfigs.put(rchKafkaGenericProperties.getUpsertDataGroupTopicName(),
+            new TopicConfig(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(),
+                new FixedBackOff(rchKafkaGenericProperties.getUpsertDataGroupBackOffDelay(), dataGroupRetryAttempts)));
+
+        topicConfigs.put(rchKafkaGenericProperties.getUpsertLegalEntityTopicName(),
+            new TopicConfig(rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(),
+                new FixedBackOff(rchKafkaGenericProperties.getUpsertLegalEntityBackOffDelay(),
+                    legalEntityRetryAttempts)));
+
+        return topicConfigs;
+    }
+
+    // Configurable default topic configuration in case no specific config is found
+    private TopicConfig getDefaultTopicConfig() {
+        // Use configurable default values from properties
+        return new TopicConfig(
+            rchKafkaGenericProperties.getDefaultDlqTopicName(),
+            new FixedBackOff(rchKafkaGenericProperties.getDefaultBackOffDelay(),
+                rchKafkaGenericProperties.getDefaultRetryAttempts())
+        );
     }
 
     // Utility method for extracting stack trace
