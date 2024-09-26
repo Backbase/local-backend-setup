@@ -19,7 +19,14 @@ x-common-variables: &common-variables
   management.security.roles: ANONYMOUS,ACTUATOR,USER
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
-  management.tracing.enabled: false
+  management.tracing.enabled: true
+  management.tracing.propagation.type: b3
+  management.tracing.sampling.probability: 1.0
+  management.tracing.baggage.remote-fields: client-id
+  management.tracing.baggage.correlation.fields: client-id
+#  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+  spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
+  management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   backbase.audit.enabled: false
@@ -79,7 +86,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    environment:
+      - STORAGE_TYPE=mem
+    ports:
+      - "9411:9411"
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.82.0
+    restart: always
+    command:
+      - --config=/etc/otelcol-contrib/otel-collector.yml
+    volumes:
+      - ./docker/collector/otel-collector.yml:/etc/otelcol-contrib/otel-collector.yml
+    ports:
+      - "1888:1888" # pprof extension
+      - "8888:8888" # Prometheus metrics exposed by the collector
+      - "8889:8889" # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP http receiver
+      - "55679:55679" # zpages extension
+    depends_on:
+      - zipkin
   registry:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
@@ -91,11 +121,12 @@ services:
       test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar" ]
 
   edge:
-    image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
+    image: harbor.backbase.eu/development/edge:3.5.0-debug-02
     ports:
       - "8280:8080"
     environment:
       <<: *common-variables
+      spring.application.name: "edge"
       gateway.actuator.security.enabled: false
       gateway.csrf.enabled: false
     volumes:
@@ -161,11 +192,12 @@ services:
         condition: service_healthy
 
   access-control:
-    image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
+    image: harbor.backbase.eu/staging/access-control:ACCESS-CONTROL-2024.10-rc.1
     ports:
       - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
+      spring.application.name: access-control
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -199,15 +231,21 @@ services:
       - registry
 
   user-manager:
-    image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
+    image: harbor.backbase.eu/development/user-manager:4.0.19-02-debug
     ports:
       - "8060:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
+      spring.application.name: user-manager
       spring.datasource.url: jdbc:mysql://mysql:3306/user-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
+      resilience4j.circuitbreaker.instances.accesscontrol.to[0].paths: .*/service-api/v3/accesscontrol/legal-entities/.*
+      resilience4j.circuitbreaker.instances.accesscontrol.to[0].order: 1
+      resilience4j.circuitbreaker.instances.accesscontrol.slidingWindowSize: 5
+      resilience4j.circuitbreaker.instances.accesscontrol.minimumNumberOfCalls: 5
+      spring.profiles.active: bb-circuit-breaker-lenient
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -242,11 +280,12 @@ services:
       - backbase-identity
 
   product-catalog-task:
-    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
+    image: harbor.backbase.eu/development/product-catalog-task:5.11.1-01-debug
     profiles:
       - bootstrap
     environment:
       <<: *common-variables
+      spring.application.name: product-catalog-task
       spring.config.additional-location: file:/tmp/ingestion.yml
     volumes:
       - ../config/stream/ingestion.yml:/tmp/ingestion.yml
@@ -257,11 +296,12 @@ services:
         condition: service_healthy
 
   legal-entity-bootstrap-task:
-    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
+    image: harbor.backbase.eu/development/legal-entity-bootstrap-task:5.11.1-01-debug
     profiles:
       - bootstrap
     environment:
       <<: *common-variables
+      spring.application.name: legal-entity-bootstrap-task
       spring.config.additional-location: file:/tmp/ingestion.yml
     volumes:
       - ../config/stream/ingestion.yml:/tmp/ingestion.yml
