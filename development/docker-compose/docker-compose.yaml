@@ -241,11 +241,6 @@ services:
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
-      resilience4j.circuitbreaker.instances.accesscontrol.to[0].paths: .*/service-api/v3/accesscontrol/legal-entities/.*
-      resilience4j.circuitbreaker.instances.accesscontrol.to[0].order: 1
-      resilience4j.circuitbreaker.instances.accesscontrol.slidingWindowSize: 5
-      resilience4j.circuitbreaker.instances.accesscontrol.minimumNumberOfCalls: 5
-      spring.profiles.active: bb-circuit-breaker-lenient
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
