@@ -29,7 +29,6 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
-            // Process the parsed payload
             dataGroupUpsertProcessor.process(requestPayload);
 
             // Commit offset only after successful processing
@@ -38,11 +37,9 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
             }
 
         } catch (PayloadParsingException e) {
-            // Non-retryable exception, directly send to DLQ using the error handler
             log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
             throw e;
         } catch (Exception e) {
-            // Retryable exception
             log.error("Temporary error occurred, Kafka will retry: {}", e.getMessage());
             throw e;
         }

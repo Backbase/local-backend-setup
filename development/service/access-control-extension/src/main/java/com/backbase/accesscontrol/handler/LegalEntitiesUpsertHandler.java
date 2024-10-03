@@ -27,10 +27,8 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
         Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
 
         try {
-            // Parse the message payload
             LegalEntityCreateItem requestPayload = parsePayload(message.getPayload());
 
-            // Process the parsed payload
             legalEntitiesUpsertProcessor.process(requestPayload);
 
             // Commit offset only after successful processing
@@ -42,12 +40,10 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
             return requestPayload;
 
         } catch (PayloadParsingException e) {
-            // Non-retryable exception, directly send to DLQ using the error handler
             log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
             throw e;
 
         } catch (Exception e) {
-            // Retryable exception
             log.error("Temporary error occurred, Kafka will retry: {}", e.getMessage());
             throw e;
         }
