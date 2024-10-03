@@ -103,8 +103,8 @@
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{jwtToken}}"
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -321,14 +321,14 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/employee/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"backbase",
+										"employee",
 										"protocol",
 										"openid-connect",
 										"token"
@@ -496,7 +496,7 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseUrl}}/api/access-control/client-api/v2/accessgroups/usercontext",
+									"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -504,9 +504,9 @@
 										"api",
 										"access-control",
 										"client-api",
-										"v2",
+										"v3",
 										"accessgroups",
-										"usercontext"
+										"user-context"
 									]
 								},
 								"description": "Returns current user's service agreements"
@@ -609,14 +609,14 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/employee/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"backbase",
+										"employee",
 										"protocol",
 										"openid-connect",
 										"token"

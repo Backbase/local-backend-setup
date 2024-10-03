@@ -40,7 +40,13 @@ For the setup, you must have the following:
     ```shell
     docker login repo.backbase.com
     ```
-3. Test your setup:
+3. Log in to the acr:
+    ```shell
+    az login
+    az account set --subscription [YOUR_SUBSCRIPTION]
+    az acr login -n 'crreference914.azurecr.io'
+    ```
+4. Test your setup:
     ```shell
     docker pull repo.backbase.com/backbase-docker-releases/edge:2023.04
     ```

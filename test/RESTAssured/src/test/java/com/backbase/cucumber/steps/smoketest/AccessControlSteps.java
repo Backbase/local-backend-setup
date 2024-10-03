@@ -12,7 +12,7 @@ public class AccessControlSteps extends IdentityAuthentication {
 
     @Given("a user has authenticated for access control")
     public void aUserHasAuthenticatedForAccessControl() {
-        aUserHasAuthenticatedToRealm(Constants.backbaseRealmName, Constants.bbToolingClient);
+        aUserHasAuthenticatedToRealm(Constants.employeeRealmName, Constants.bbToolingClient);
     }
 
     @When("the User Requests To Get User Context Service Agreements")

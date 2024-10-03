@@ -12,21 +12,21 @@ public class AccessControlTests {
 
     @Test
     public void canGetGetUserContextServiceAgreements() {
-        identity.aUserHasAuthenticated("backbase", Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.employeeRealmName, Constants.bbToolingClient);
         accessControl.theUserRequestsToGetUserContextServiceAgreements(identity.token);
         accessControl.theResponseReturnsOK();
     }
 
     @Test
     public void canSetUserContextServiceAgreements() {
-        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.employeeRealmName, Constants.bbToolingClient);
         accessControl.theUserRequestsToSetUserContextServiceAgreements(identity.token);
         accessControl.theResponseReturnsCode(204);
     }
 
     @Test
     public void canGetUserPermissionsSummary() {
-        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.employeeRealmName, Constants.bbToolingClient);
         accessControl.theUserRequestsToGetUserPermissionsSummary(identity.token);
         accessControl.theResponseReturnsOK();
     }

@@ -241,30 +241,43 @@ services:
       - registry
       - backbase-identity
 
-  product-catalog-task:
-    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
+  bootstrap-job:
+    image: crreference914.azurecr.io/stable/bootstrap-job:1.22.0
     profiles:
       - bootstrap
     environment:
       <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
-    volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-    depends_on:
-      token-converter:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-
-  legal-entity-bootstrap-task:
-    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
-    profiles:
-      - bootstrap
-    environment:
-      <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
-    volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
+      backbase.bootstrap.data.data-sets[0].name: test
+      backbase.bootstrap.data.data-sets[0].description: test data set
+      backbase.bootstrap.data.data-sets[0].legal-entity-files: classpath:base/legal-entities/le-flow-base-le2.json
+      backbase.bootstrap.data.data-sets[0].product-catalog-files: classpath:base/product-catalog/0003-products.json
+      backbase.bootstrap.data.data-sets[0].permission-set-files: classpath:base/permission-sets/permissions-set.json
+      backbase.bootstrap.data.legal-entity-prefix.value: ""
+      backbase.bootstrap.data.active-data-sets: test
+      spring.cloud.config.enabled: false
+      spring.cloud.discovery.enabled: false
+      spring.cloud.loadbalancer.enabled: false
+      spring.cloud.kubernetes.enabled: true
+      eureka.client.enabled: false
+      backbase.bootstrap.ingestions.messages.enabled: false
+      backbase.bootstrap.ingestions.push-integration.enabled: false
+      backbase.bootstrap.ingestions.permissionSet.enabled: false
+      backbase.bootstrap.ingestions.global-limits.enabled: false
+      backbase.bootstrap.ingestions.fido-applications.enabled: false
+      backbase.bootstrap.ingestions.content-repository.enabled: false
+      backbase.bootstrap.ingestions.wealth.enabled: false
+      backbase.bootstrap.ingestions.approvals.enabled: false
+      split-thread-allow-core-thread-timeout: true
+      backbase.communication.services.access-control.directUri: http://access-control:8080
+      backbase.communication.services.usermanager.directUri: http://user-manager:8080
+      backbase.communication.services.identity.integration.directUri: http://identity-integration-service:8080
+      spring.security.oauth2.client.provider.bb.token-uri: http://token-converter:8080/oauth/token
+      backbase.communication.http.access-token-uri: http://token-converter:8080/oauth/token
+      admin.baseUrl: http://backbase-identity:8080
+      backbase.communication.services.arrangement.manager.directUri: http://arrangement-manager:8080
+      backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
+      spring.cloud.azure.eventhubs.kafka.enabled: false
+      spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration,org.springframework.cloud.kubernetes.fabric8.loadbalancer.Fabric8LoadBalancerAutoConfiguration
     depends_on:
       token-converter:
         condition: service_healthy
@@ -278,8 +291,6 @@ services:
         condition: service_healthy
       backbase-identity:
         condition: service_healthy
-      product-catalog-task:
-        condition: service_completed_successfully
 
   wiremock:
     image: wiremock/wiremock:2.32.0
