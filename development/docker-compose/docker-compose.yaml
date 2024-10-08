@@ -209,6 +209,9 @@ services:
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      backbase.users.realms[0].realm-name: "employee"
+      backbase.users.realms[1].realm-name: "retail"
+      backbase.users.realms[2].realm-name: "business"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -231,34 +234,70 @@ services:
       identity.masterAdmin.username: admin
       identity.masterAdmin.password: admin
       identity.realmConfiguration.fallbackOptions.enableUser: true
-      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: true
+      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
+
+  contact-manager-service:
+    image: repo.backbase.com/backbase-docker-releases/contact-manager:${BB_VERSION}
+    ports:
+      - "8090:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/contact?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/contact-manager", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
     links:
+      - activemq
       - registry
-      - backbase-identity
+
+  limits-service:
+    image: repo.backbase.com/backbase-docker-releases/limit:${BB_VERSION}
+    ports:
+      - "8100:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/limits?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/limit", "<status>UP</status>" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
 
   bootstrap-job:
-    image: crreference914.azurecr.io/stable/bootstrap-job:1.22.0
+    image: crreference914.azurecr.io/stable/bootstrap-job:${BOOTSTRAP_JOB_VERSION}
     profiles:
       - bootstrap
     environment:
       <<: *common-variables
       backbase.bootstrap.data.data-sets[0].name: test
       backbase.bootstrap.data.data-sets[0].description: test data set
-      backbase.bootstrap.data.data-sets[0].legal-entity-files: classpath:base/legal-entities/le-flow-base-le2.json
-      backbase.bootstrap.data.data-sets[0].product-catalog-files: classpath:base/product-catalog/0003-products.json
-      backbase.bootstrap.data.data-sets[0].permission-set-files: classpath:base/permission-sets/permissions-set.json
-      backbase.bootstrap.data.legal-entity-prefix.value: ""
+      backbase.bootstrap.data.data-sets[0].legal-entity-files: classpath:base/legal-entities/le-paolo-bory.json
+      backbase.bootstrap.data.data-sets[0].product-catalog-files: classpath:ce/product-catalog/001-products.json
+      backbase.bootstrap.data.data-sets[0].remote-config-users-files: classpath:base/remote-config/remote-config-users.json
+      backbase.bootstrap.identity.admin-realm: employee
+      backbase.bootstrap.identity.admin-username: admin
+      backbase.bootstrap.identity.master-admin-password: admin
+      backbase.bootstrap.identity.default-admin-password: admin
+      backbase.bootstrap.identity.defaultUserPassword: Pass1234
+      backbase.bootstrap.identity.realms: employee,business,retail
+      backbase.bootstrap.data.legal-entity-prefix.enabled: false
       backbase.bootstrap.data.active-data-sets: test
-      spring.cloud.config.enabled: false
-      spring.cloud.discovery.enabled: false
-      spring.cloud.loadbalancer.enabled: false
-      spring.cloud.kubernetes.enabled: true
-      eureka.client.enabled: false
       backbase.bootstrap.ingestions.messages.enabled: false
       backbase.bootstrap.ingestions.push-integration.enabled: false
       backbase.bootstrap.ingestions.permissionSet.enabled: false
@@ -267,8 +306,10 @@ services:
       backbase.bootstrap.ingestions.content-repository.enabled: false
       backbase.bootstrap.ingestions.wealth.enabled: false
       backbase.bootstrap.ingestions.approvals.enabled: false
-      split-thread-allow-core-thread-timeout: true
+      backbase.bootstrap.ingestions.regions.enabled: false
+      backbase.bootstrap.ingestions.cards: false
       backbase.communication.services.access-control.directUri: http://access-control:8080
+      backbase.communication.services.limit.directUri: http://limits-service:8080
       backbase.communication.services.usermanager.directUri: http://user-manager:8080
       backbase.communication.services.identity.integration.directUri: http://identity-integration-service:8080
       spring.security.oauth2.client.provider.bb.token-uri: http://token-converter:8080/oauth/token
@@ -276,8 +317,7 @@ services:
       admin.baseUrl: http://backbase-identity:8080
       backbase.communication.services.arrangement.manager.directUri: http://arrangement-manager:8080
       backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
-      spring.cloud.azure.eventhubs.kafka.enabled: false
-      spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration,org.springframework.cloud.kubernetes.fabric8.loadbalancer.Fabric8LoadBalancerAutoConfiguration
+      spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
     depends_on:
       token-converter:
         condition: service_healthy
@@ -290,6 +330,10 @@ services:
       identity-integration-service:
         condition: service_healthy
       backbase-identity:
+        condition: service_healthy
+      contact-manager-service:
+        condition: service_healthy
+      limits-service:
         condition: service_healthy
 
   wiremock:
@@ -323,11 +367,10 @@ services:
         condition: service_healthy
       user-manager:
         condition: service_healthy
-
   # <EXAMPLE-SERVICE-NAME>:
   #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
   #   ports:
-  #     - "8090:8080"
+  #     - "8110:8080"
   #   environment:
   #     <<: *common-variables
   #     eureka.client.enabled: 'true'

@@ -1,6 +1,5 @@
 {
-  "realm": "customer",
-  "id": "customer",
+  "realm": "backbase",
   "enabled": true,
   "users": [
     {
@@ -30,8 +29,7 @@
     ]
   },
   "defaultRoles": [
-    "ROLE_USER",
-    "ROLE_ADMIN"
+    "ROLE_USER"
   ],
   "clients": [
     {
