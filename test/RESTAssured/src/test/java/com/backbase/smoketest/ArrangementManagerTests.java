@@ -11,14 +11,14 @@ public class ArrangementManagerTests {
 
     @Test
     public void canGetBalancesAggregations() {
-        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.employeeRealmName, Constants.bbToolingClient);
         arrangementManager.theUserRequestsToGetBalancesAggregations(identity.token);
         arrangementManager.theResponseReturnsOK();
     }
 
     @Test
     public void canGetProductKinds() {
-        identity.aUserHasAuthenticated(Constants.backbaseRealmName, Constants.bbToolingClient);
+        identity.aUserHasAuthenticated(Constants.employeeRealmName, Constants.bbToolingClient);
         arrangementManager.theUserRequestsToGetProductKinds(identity.token);
         arrangementManager.theResponseReturnsOK();
     }

@@ -322,14 +322,14 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/employee/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"backbase",
+										"employee",
 										"protocol",
 										"openid-connect",
 										"token"
@@ -590,12 +590,12 @@
 									"urlencoded": [
 										{
 											"key": "username",
-											"value": "admin",
+											"value": "paolo",
 											"type": "text"
 										},
 										{
 											"key": "password",
-											"value": "admin",
+											"value": "Pass1234",
 											"type": "text"
 										},
 										{
@@ -611,19 +611,124 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/retail/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"backbase",
+										"retail",
 										"protocol",
 										"openid-connect",
 										"token"
 									]
 								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get User Context Service Agreements",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 200\", function() {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"",
+											"var jsonData = JSON.parse(responseBody);",
+											"postman.setGlobalVariable(\"MSA_ID\", jsonData[0].id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context/service-agreements",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"access-control",
+										"client-api",
+										"v3",
+										"accessgroups",
+										"user-context",
+										"service-agreements"
+									]
+								},
+								"description": "Returns current user's service agreements"
+							},
+							"response": []
+						},
+						{
+							"name": "Set User Context Service Agreements",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status is 204\", function() {",
+											"  pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"serviceAgreementId\": \"{{MSA_ID}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"access-control",
+										"client-api",
+										"v3",
+										"accessgroups",
+										"user-context"
+									]
+								},
+								"description": "Returns current user's service agreements"
 							},
 							"response": []
 						}
