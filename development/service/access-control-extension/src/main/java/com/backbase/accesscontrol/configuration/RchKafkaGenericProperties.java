@@ -25,10 +25,16 @@ public class RchKafkaGenericProperties {
     private String upsertDataGroupTopicName;
 
     @NotEmpty
+    private String upsertFunctionGroupTopicName;
+
+    @NotEmpty
     private String upsertLegalEntityTopicName;
 
     @NotEmpty
     private String upsertDataGroupErrorTopicName;
+
+    @NotEmpty
+    private String upsertFunctionGroupErrorTopicName;
 
     @NotEmpty
     private String upsertLegalEntitiesErrorTopicName;
@@ -37,10 +43,16 @@ public class RchKafkaGenericProperties {
     private long upsertDataGroupBackOffDelay;
 
     @NotNull
+    private long upsertFunctionGroupBackOffDelay;
+
+    @NotNull
     private long upsertLegalEntityBackOffDelay;
 
     @NotNull
     private long upsertDataGroupRetryAttempts;
+
+    @NotNull
+    private long upsertFunctionGroupRetryAttempts;
 
     @NotNull
     private long upsertLegalEntityRetryAttempts;

@@ -1,10 +1,11 @@
 package com.backbase.accesscontrol.mapper;
 
+import org.mapstruct.Mapping;
+
 import com.backbase.accesscontrol.domain.dto.datagroup.DataGroupBaseDto;
 import com.backbase.accesscontrol.domain.dto.datagroup.PresentationDataGroupUpdateDto;
 import com.backbase.accesscontrol.domain.dto.datagroup.PresentationSearchDataGroupsRequestDto;
 import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
-import org.mapstruct.Mapping;
 
 @org.mapstruct.Mapper(componentModel = "spring")
 public interface PutDataGroupsEventMapper {
@@ -28,4 +29,6 @@ public interface PutDataGroupsEventMapper {
     @Mapping(target = "legalEntityIdentifier", ignore = true)
     PresentationSearchDataGroupsRequestDto mapToPresentationSearchDataGroupsRequestDto(
         IntegrationDataGroupItemBatchPutRequestBody requestPayload);
+
+
 }

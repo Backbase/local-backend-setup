@@ -21,7 +21,7 @@ public class DataGroupUpsertProcessor {
     private final DataGroupServiceFacade dataGroupServiceFacade;
     private final PutDataGroupsEventMapper mapper;
 
-    public void process(IntegrationDataGroupItemBatchPutRequestBody requestPayload) {
+    public IntegrationDataGroupItemBatchPutRequestBody process(IntegrationDataGroupItemBatchPutRequestBody requestPayload) {
         var searchDataGroupRequest = mapper.mapToPresentationSearchDataGroupsRequestDto(requestPayload);
         var searchResult = dataGroupServiceFacade.searchDataGroups(searchDataGroupRequest,
             requestPayload.getType());
@@ -40,7 +40,9 @@ public class DataGroupUpsertProcessor {
             dataGroupServiceFacade.createDataGroup(createDto);
         }
 
-        log.warn("Upsert Data Event processed successfully");
+        log.info("Upsert Data Event processed successfully");
+
+        return requestPayload;
     }
 
     private boolean isDataGroupExist(List<PresentationServiceAgreementWithDataGroupsDto> searchResult, String name) {

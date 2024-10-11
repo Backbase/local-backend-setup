@@ -1,18 +1,10 @@
 package com.backbase.accesscontrol.configuration;
 
-import com.backbase.accesscontrol.constant.KafkaConstants;
-import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.model.TopicConfig;
-import com.backbase.buildingblocks.presentation.errors.BadRequestException;
-import com.backbase.buildingblocks.presentation.errors.NotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
-import javax.annotation.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.cloud.stream.binder.kafka.ListenerContainerWithDlqAndRetryCustomizer;
@@ -21,10 +13,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.ConsumerRecordRecoverer;
+import org.springframework.kafka.listener.ContainerPausingBackOffHandler;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.listener.ListenerContainerPauseService;
+import org.springframework.kafka.listener.ListenerContainerRegistry;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.backoff.BackOff;
 import org.springframework.util.backoff.FixedBackOff;
+
+import com.backbase.accesscontrol.exception.PayloadParsingException;
+import com.backbase.accesscontrol.model.TopicConfig;
+import com.backbase.buildingblocks.presentation.errors.BadRequestException;
+import com.backbase.buildingblocks.presentation.errors.NotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
@@ -33,6 +36,8 @@ public class KafkaListenerCustomizerConfig {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final RchKafkaGenericProperties rchKafkaGenericProperties;
+    private final ListenerContainerRegistry registry;
+    private final TaskScheduler scheduler;
 
     @Bean
     public ListenerContainerWithDlqAndRetryCustomizer customizer() {
@@ -55,19 +60,13 @@ public class KafkaListenerCustomizerConfig {
                         String dlqTopic = topicConfig.getDlqTopic();
                         log.info("Sending message to DLQ with custom headers for topic {}", consumerRecord.topic());
 
-                        // Add custom headers for error information
-                        consumerRecord.headers()
-                            .add(KafkaConstants.ERROR_CODE_HEADER, exception.getClass().getSimpleName().getBytes());
-                        consumerRecord.headers().add(KafkaConstants.ERROR_MESSAGE_HEADER, exception.getMessage().getBytes());
-                        consumerRecord.headers()
-                            .add(KafkaConstants.ERROR_STACKTRACE_HEADER, getStackTrace(exception).getBytes());
-
                         // Send message to DLQ with dynamic topic
                         return new TopicPartition(dlqTopic, consumerRecord.partition());
                     });
 
                 // Create a DefaultErrorHandler with custom backoff and retries
-                DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, topicConfig.getBackOff());
+                DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, topicConfig.getBackOff(),
+                          new ContainerPausingBackOffHandler(new ListenerContainerPauseService(registry, scheduler)));
 
                 // Mark non-retryable exceptions
                 errorHandler.addNotRetryableExceptions(PayloadParsingException.class);
@@ -94,18 +93,9 @@ public class KafkaListenerCustomizerConfig {
             ? FixedBackOff.UNLIMITED_ATTEMPTS
             : rchKafkaGenericProperties.getUpsertDataGroupRetryAttempts();
 
-        long legalEntityRetryAttempts = rchKafkaGenericProperties.getUpsertLegalEntityRetryAttempts() == -1
-            ? FixedBackOff.UNLIMITED_ATTEMPTS
-            : rchKafkaGenericProperties.getUpsertLegalEntityRetryAttempts();
-
         topicConfigs.put(rchKafkaGenericProperties.getUpsertDataGroupTopicName(),
             new TopicConfig(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(),
                 new FixedBackOff(rchKafkaGenericProperties.getUpsertDataGroupBackOffDelay(), dataGroupRetryAttempts)));
-
-        topicConfigs.put(rchKafkaGenericProperties.getUpsertLegalEntityTopicName(),
-            new TopicConfig(rchKafkaGenericProperties.getUpsertLegalEntitiesErrorTopicName(),
-                new FixedBackOff(rchKafkaGenericProperties.getUpsertLegalEntityBackOffDelay(),
-                    legalEntityRetryAttempts)));
 
         return topicConfigs;
     }
@@ -118,12 +108,5 @@ public class KafkaListenerCustomizerConfig {
             new FixedBackOff(rchKafkaGenericProperties.getDefaultBackOffDelay(),
                 rchKafkaGenericProperties.getDefaultRetryAttempts())
         );
-    }
-
-    // Utility method for extracting stack trace
-    private String getStackTrace(Exception e) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
-        return sw.toString();
     }
 }

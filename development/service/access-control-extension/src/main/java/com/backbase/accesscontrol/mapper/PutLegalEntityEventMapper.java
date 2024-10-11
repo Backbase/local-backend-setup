@@ -3,14 +3,15 @@ package com.backbase.accesscontrol.mapper;
 import com.backbase.accesscontrol.domain.dto.legalentity.CreateLegalEntityRequest;
 import com.backbase.accesscontrol.persistence.enums.CustomerCategory;
 import com.backbase.accesscontrol.persistence.enums.LegalEntityType;
-import com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityCreateItem;
+import com.backbase.integration.legalentity.rest.spec.v3.LegalEntityCreateItem;
 
 @org.mapstruct.Mapper(componentModel = "spring")
 public interface PutLegalEntityEventMapper {
 
     CreateLegalEntityRequest mapToCreateLegalEntity(LegalEntityCreateItem createLegalEntity);
 
-    default LegalEntityType toLegalEntityDomainType(com.backbase.accesscontrol.service.rest.spec.v3.model.LegalEntityType updatedLegalEntityType) {
+    default LegalEntityType toLegalEntityDomainType(
+        com.backbase.integration.legalentity.rest.spec.v3.LegalEntityType updatedLegalEntityType) {
         if (updatedLegalEntityType == null) {
             throw new IllegalArgumentException("specType cannot be null");
         }
@@ -21,7 +22,7 @@ public interface PutLegalEntityEventMapper {
     }
 
     default CustomerCategory toCustomerCategoryDomainType(
-        com.backbase.accesscontrol.service.rest.spec.v3.model.CustomerCategory updatedCustomerCategory) {
+        com.backbase.integration.legalentity.rest.spec.v3.CustomerCategory updatedCustomerCategory) {
         if (updatedCustomerCategory == null) {
             throw new IllegalArgumentException("Customer Category cannot be null");
         }

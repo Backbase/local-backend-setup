@@ -1,16 +1,18 @@
 package com.backbase.accesscontrol.handler;
 
-import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
-import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
+
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
+
+import com.backbase.accesscontrol.exception.PayloadParsingException;
+import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
+import com.backbase.buildingblocks.presentation.errors.BadRequestException;
+import com.backbase.buildingblocks.presentation.errors.NotFoundException;
+import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component("upsertDataGroup")
@@ -24,27 +26,17 @@ public class DataGroupUpsertHandler implements Function<Message<String>, Integra
     public IntegrationDataGroupItemBatchPutRequestBody apply(Message<String> message) {
         log.info("Upsert Data Group Message received: {}", message);
 
-        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-
         try {
             IntegrationDataGroupItemBatchPutRequestBody requestPayload = parsePayload(message.getPayload());
 
-            dataGroupUpsertProcessor.process(requestPayload);
-
-            // Commit offset only after successful processing
-            if (acknowledgment != null) {
-                acknowledgment.acknowledge();
-            }
-
-        } catch (PayloadParsingException e) {
-            log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
+            return dataGroupUpsertProcessor.process(requestPayload);
+        } catch (PayloadParsingException | NotFoundException | BadRequestException e) {
+            log.error("Non-retryable exception: Message will be moved to DLQ: {}", message, e);
             throw e;
         } catch (Exception e) {
             log.error("Temporary error occurred, Kafka will retry: {}", e.getMessage());
             throw e;
         }
-
-        return null;
     }
 
     private IntegrationDataGroupItemBatchPutRequestBody parsePayload(String payload) {
