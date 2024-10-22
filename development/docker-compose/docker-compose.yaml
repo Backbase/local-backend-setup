@@ -28,6 +28,12 @@ x-common-variables: &common-variables
   logging.level.com.backbase: INFO
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: INFO
 
+  MANAGEMENT_TRACING_ENABLED: "true"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "w3c"
+  MANAGEMENT_TRACING_BAGGAGE_CORRELATION_ENABLED: "true"
+  MANAGEMENT_TRACING_BAGGAGE_CORRELATION_FIELDS: "client-id"
+  MANAGEMENT_TRACING_BAGGAGE_REMOTE_FIELDS_FIELDS: "client-id"
+
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
   spring.liquibase.enabled: true
@@ -344,26 +350,26 @@ services:
       - registry
       - activemq
 
-  customer-integration-service:
-    image: harbor.backbase.eu/development/customer-integration-outbound-mock:1.1.0
-    ports:
-      - "9367:8080"
-    environment:
-      <<: [ *common-variables, *database-variables, *message-broker-variables ]
-      eureka.client.enabled: 'true'
-      spring.application.name: 'customer-integration-service'
-      backbase.security.public.paths: /service-api/**,/integration-api/**
-      backbase.security.service.enabled: false
-      logging.level.com.backbase: DEBUG
-      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-    volumes:
-      - ./scripts:/tmp/h
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/customer-integration-service", "<status>UP</status>" ]
-    links:
-      - registry
-      - activemq
+#  customer-integration-service:
+#    image: harbor.backbase.eu/development/customer-integration-outbound-mock:1.1.0
+#    ports:
+#      - "9367:8080"
+#    environment:
+#      <<: [ *common-variables, *database-variables, *message-broker-variables ]
+#      eureka.client.enabled: 'true'
+#      spring.application.name: 'customer-integration-service'
+#      backbase.security.public.paths: /service-api/**,/integration-api/**
+#      backbase.security.service.enabled: false
+#      logging.level.com.backbase: DEBUG
+#      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+#    volumes:
+#      - ./scripts:/tmp/h
+#    healthcheck:
+#      <<: *healthcheck-defaults
+#      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/customer-integration-service", "<status>UP</status>" ]
+#    links:
+#      - registry
+#      - activemq
 
   deposit-account-integration-service:
     image: harbor.backbase.eu/development/deposit-account-integration-outbound-mock:latest
