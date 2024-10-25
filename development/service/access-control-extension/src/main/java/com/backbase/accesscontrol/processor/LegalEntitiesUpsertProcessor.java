@@ -21,9 +21,6 @@ public class LegalEntitiesUpsertProcessor {
 
     public Legalentityitem process(Legalentityitem requestPayload) {
         try {
-            var searchResult =
-                legalEntityServiceFacade.getLegalEntityByExternalId(requestPayload.getExternalId());
-            log.debug("Legal Entity found: {}", searchResult.getName());
             LegalEntityType newLegalEntityType =
                 mapper.toLegalEntityDomainType(requestPayload.getLegalEntity().getType());
             CustomerCategory newCustomerCategory =

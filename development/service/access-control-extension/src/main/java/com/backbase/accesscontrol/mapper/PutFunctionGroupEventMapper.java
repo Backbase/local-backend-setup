@@ -15,6 +15,9 @@ import org.mapstruct.ValueMapping;
 @Mapper(componentModel = "spring")
 public interface PutFunctionGroupEventMapper {
 
+    @Mapping(target = "functionGroup.functionGroupId", ignore = true)
+    PresentationFunctionGroupPutRequestBodyDto mapToFunctionGroupUpdateDto(FunctionGroupUpsertDTO event);
+
     @Mapping(target = "externalServiceAgreementId", source = "identifier.nameIdentifier.externalServiceAgreementId")
     @Mapping(target = "validFrom", source = ".", qualifiedByName = "combineValidFromDateAndTime")
     @Mapping(target = "validUntil", source = ".", qualifiedByName = "combineValidUntilDateAndTime")
@@ -47,6 +50,6 @@ public interface PutFunctionGroupEventMapper {
             return null;
         }
     }
-    PresentationFunctionGroupPutRequestBodyDto mapToFunctionGroupUpdateDto(FunctionGroupUpsertDTO event);
+
 
 }
