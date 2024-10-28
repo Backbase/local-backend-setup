@@ -3,6 +3,8 @@ package com.backbase.accesscontrol.handler;
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.model.FunctionGroupUpsertDTO;
 import com.backbase.accesscontrol.processor.FunctionGroupUpsertProcessor;
+import com.backbase.buildingblocks.presentation.errors.BadRequestException;
+import com.backbase.buildingblocks.presentation.errors.NotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
@@ -26,8 +28,8 @@ public class FunctionGroupUpsertHandler implements Function<Message<String>, Fun
             FunctionGroupUpsertDTO requestPayload = parsePayload(message.getPayload());
 
             return functionGroupUpsertProcessor.process(requestPayload);
-        } catch (PayloadParsingException e) {
-            log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}", message, e);
+        } catch (PayloadParsingException | NotFoundException | BadRequestException e) {
+            log.error("Non-retryable exception: Message will be moved to DLQ: {}", message, e);
             throw e;
         } catch (Exception e) {
             log.error("Temporary error occurred, Kafka will retry: {}", e.getMessage());

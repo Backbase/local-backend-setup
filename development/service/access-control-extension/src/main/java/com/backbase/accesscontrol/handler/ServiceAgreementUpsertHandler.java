@@ -1,11 +1,9 @@
 package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.exception.PayloadParsingException;
-import com.backbase.accesscontrol.processor.DataGroupUpsertProcessor;
 import com.backbase.accesscontrol.processor.ServiceAgreementUpsertProcessor;
 import com.backbase.buildingblocks.presentation.errors.BadRequestException;
 import com.backbase.buildingblocks.presentation.errors.NotFoundException;
-import com.backbase.integration.accessgroup.rest.spec.v3.IntegrationDataGroupItemBatchPutRequestBody;
 import com.backbase.integration.accessgroup.rest.spec.v3.ServiceAgreement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
@@ -15,7 +13,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component("upsertDataGroup")
+@Component("upsertServiceAgreement")
 @AllArgsConstructor
 public class ServiceAgreementUpsertHandler implements Function<Message<String>, ServiceAgreement> {
 

@@ -2,6 +2,8 @@ package com.backbase.accesscontrol.handler;
 
 import com.backbase.accesscontrol.exception.PayloadParsingException;
 import com.backbase.accesscontrol.processor.LegalEntitiesUpsertProcessor;
+import com.backbase.buildingblocks.presentation.errors.BadRequestException;
+import com.backbase.buildingblocks.presentation.errors.NotFoundException;
 import com.backbase.integration.legalentity.rest.spec.v3.Legalentityitem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.function.Function;
@@ -26,7 +28,7 @@ public class LegalEntitiesUpsertHandler implements Function<Message<String>, Leg
             Legalentityitem requestPayload = parsePayload(message.getPayload());
 
             return legalEntitiesUpsertProcessor.process(requestPayload);
-        } catch (PayloadParsingException e) {
+        } catch (PayloadParsingException | NotFoundException | BadRequestException e) {
             log.error("Non-retryable exception: Payload parsing error occurred, message will be moved to DLQ: {}",
                 message, e);
             throw e;

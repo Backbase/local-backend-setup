@@ -93,9 +93,17 @@ public class KafkaListenerCustomizerConfig {
             ? FixedBackOff.UNLIMITED_ATTEMPTS
             : rchKafkaGenericProperties.getUpsertDataGroupRetryAttempts();
 
+        long functionGroupRetryAttempts = rchKafkaGenericProperties.getUpsertFunctionGroupRetryAttempts() == -1
+            ? FixedBackOff.UNLIMITED_ATTEMPTS
+            : rchKafkaGenericProperties.getUpsertFunctionGroupRetryAttempts();
+
         topicConfigs.put(rchKafkaGenericProperties.getUpsertDataGroupTopicName(),
             new TopicConfig(rchKafkaGenericProperties.getUpsertDataGroupErrorTopicName(),
                 new FixedBackOff(rchKafkaGenericProperties.getUpsertDataGroupBackOffDelay(), dataGroupRetryAttempts)));
+
+        topicConfigs.put(rchKafkaGenericProperties.getUpsertFunctionGroupTopicName(),
+            new TopicConfig(rchKafkaGenericProperties.getUpsertFunctionGroupErrorTopicName(),
+                new FixedBackOff(rchKafkaGenericProperties.getUpsertFunctionGroupBackOffDelay(), functionGroupRetryAttempts)));
 
         return topicConfigs;
     }
