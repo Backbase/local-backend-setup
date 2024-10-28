@@ -27,7 +27,7 @@ public class FunctionGroupPermissionsUtil {
     public void mapBusinessFunctionIds(PresentationFunctionGroupPutRequestBodyDto updateDto,
                                        FunctionGroupUpsertDTO upsertRequestDto) {
         log.debug("Mapping business function ids by function names.");
-
+        //TODO it can be refactored
         if (upsertRequestDto.getFunctionGroup() != null
             && containsFunctionName(upsertRequestDto.getFunctionGroup().getPermissions())) {
 
@@ -36,10 +36,9 @@ public class FunctionGroupPermissionsUtil {
                     String functionId = businessFunctionsService.getBusinessFunctionIdByName(p.getFunctionName());
 
                     if (functionId == null) {
-                        log.debug("The business function not found for the business function name: {}", p.getFunctionName());
-                        throw new NotFoundException().withMessage("Business Function not found")
-                            .withErrors(Collections.singletonList(
-                                new Error().withMessage(ERR_FG_016.getErrorMessage()).withKey(ERR_FG_016.getErrorCode())));
+                        log.debug("The business function not found for the business function name: {}",
+                            p.getFunctionName());
+                        throw getNotFoundException("Business Function not found", ERR_FG_016.getErrorMessage());
                     }
 
                     Permission newPermission = new Permission();
