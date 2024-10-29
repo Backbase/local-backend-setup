@@ -294,6 +294,7 @@ services:
       "backbase.flow.integrations.customer-and-account-creation.mode": "direct"
       logging.level.com.backbase: DEBUG
       logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+      logging.pattern.level: "%5p [$${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
     volumes:
       - ./scripts:/tmp/h
     healthcheck:
