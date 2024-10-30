@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "7ba8e217-3365-4363-84ed-9fe8eced5d40",
+		"_postman_id": "3e534466-012e-4345-979b-55a1e43d7f48",
 		"name": "Smoke Test Local Backend Environment",
 		"description": "Specs for Message Service API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22854479"
 	},
 	"item": [
 		{
@@ -162,8 +163,8 @@
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{jwtToken}}"
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -206,8 +207,8 @@
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{jwtToken}}"
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -321,14 +322,14 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/employee/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"employee",
+										"backbase",
 										"protocol",
 										"openid-connect",
 										"token"
@@ -403,7 +404,8 @@
 											"  pm.response.to.have.status(204);",
 											"});"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -588,12 +590,12 @@
 									"urlencoded": [
 										{
 											"key": "username",
-											"value": "paolo",
+											"value": "admin",
 											"type": "text"
 										},
 										{
 											"key": "password",
-											"value": "Pass1234",
+											"value": "admin",
 											"type": "text"
 										},
 										{
@@ -609,124 +611,19 @@
 									]
 								},
 								"url": {
-									"raw": "{{identityUrl}}/auth/realms/retail/protocol/openid-connect/token",
+									"raw": "{{identityUrl}}/auth/realms/backbase/protocol/openid-connect/token",
 									"host": [
 										"{{identityUrl}}"
 									],
 									"path": [
 										"auth",
 										"realms",
-										"retail",
+										"backbase",
 										"protocol",
 										"openid-connect",
 										"token"
 									]
 								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get User Context Service Agreements",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Response status is 200\", function() {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"",
-											"var jsonData = JSON.parse(responseBody);",
-											"postman.setGlobalVariable(\"MSA_ID\", jsonData[0].id);"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Accept",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{authToken}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context/service-agreements",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"api",
-										"access-control",
-										"client-api",
-										"v3",
-										"accessgroups",
-										"user-context",
-										"service-agreements"
-									]
-								},
-								"description": "Returns current user's service agreements"
-							},
-							"response": []
-						},
-						{
-							"name": "Set User Context Service Agreements",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Response status is 204\", function() {",
-											"  pm.response.to.have.status(204);",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Accept",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{authToken}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"serviceAgreementId\": \"{{MSA_ID}}\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{baseUrl}}/api/access-control/client-api/v3/accessgroups/user-context",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"api",
-										"access-control",
-										"client-api",
-										"v3",
-										"accessgroups",
-										"user-context"
-									]
-								},
-								"description": "Returns current user's service agreements"
 							},
 							"response": []
 						}
