@@ -11,6 +11,7 @@ import com.backbase.integration.accessgroup.rest.spec.v3.Participant;
 import com.backbase.integration.accessgroup.rest.spec.v3.ServiceAgreement;
 import com.backbase.integration.accessgroup.rest.spec.v3.UserApsIdentifiers;
 import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import org.mapstruct.Mapper;
@@ -24,14 +25,18 @@ public interface PutServiceAgreementEventMapper {
     ServiceAgreementDto mapToServiceAgreementCreateDto(ServiceAgreement event);
 
     default List<ServiceAgreementParticipantDto> mapParticipants(List<Participant> participants) {
+        if (participants == null) {
+            return Collections.emptyList();
+        }
+
         return participants.stream()
             .map(participant -> {
                 ServiceAgreementParticipantDto dto = new ServiceAgreementParticipantDto();
                 dto.setExternalId(participant.getExternalId());
                 dto.setSharingUsers(participant.getSharingUsers());
                 dto.setSharingAccounts(participant.getSharingAccounts());
-                dto.setAdmins(new LinkedHashSet<>(participant.getAdmins()));
-                dto.setUsers(new LinkedHashSet<>(participant.getUsers()));
+                dto.setAdmins(participant.getAdmins() != null ? new LinkedHashSet<>(participant.getAdmins()) : new LinkedHashSet<>());
+                dto.setUsers(participant.getUsers() != null ? new LinkedHashSet<>(participant.getUsers()) : new LinkedHashSet<>());
                 return dto;
             })
             .toList();
