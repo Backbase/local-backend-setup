@@ -48,6 +48,8 @@ public class FunctionGroupUpsertProcessor {
 
     private boolean isFunctionGroupNotFoundError(ResponseItemExtended response) {
         return response.getStatus().equals(ItemStatusCode.HTTP_STATUS_BAD_REQUEST) &&
+            response.getErrors() != null &&
+            !response.getErrors().isEmpty() &&
             response.getErrors().get(0).equalsIgnoreCase(ERR_AC_002.getErrorMessage());
     }
 
