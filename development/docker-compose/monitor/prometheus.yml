@@ -12,18 +12,18 @@ alerting:
 
 scrape_configs:
   - job_name: 'usermanager-metrics'
-    metrics_path: /actuator/metrics
+    metrics_path: /actuator/prometheus
     scheme: http
     static_configs:
       - targets:
-          - user-manager:8060
+          - user-manager:8080
 
   - job_name: 'edge-metrics'
-    metrics_path: /actuator/metrics
+    metrics_path: /actuator/prometheus
     scheme: http
     static_configs:
       - targets:
-          - edge:8280
+          - edge:8080
 
   - job_name: 'prometheus'
 

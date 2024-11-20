@@ -20,10 +20,9 @@ x-common-variables: &common-variables
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
   # Observability - Tracing and Prometheus Configuration
-  management.tracing.enabled: true
-  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+#  management.tracing.enabled: true
   management.endpoint.prometheus.enabled: true
-  management.tracing.sampling.probability: 1.0
+#  management.tracing.sampling.probability: 1.0
 
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
