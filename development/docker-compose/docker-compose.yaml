@@ -20,7 +20,7 @@ x-common-variables: &common-variables
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
   management.tracing.enabled: true
-  management.tracing.propagation.type: b3
+  management.tracing.propagation.type: w3c
   management.tracing.sampling.probability: 1.0
   management.tracing.baggage.remote-fields: client-id
   management.tracing.baggage.correlation.fields: client-id
