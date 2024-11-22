@@ -191,7 +191,7 @@ services:
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       waiting: 0
       spring.liquibase.enabled: true
-      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertLegalEntity;upsertFunctionGroup;upsertServiceAgreement
+      SPRING_CLOUD_FUNCTION_DEFINITION: upsertDataGroup;upsertLegalEntity;upsertFunctionGroup;upsertServiceAgreement;upsertServiceAgreementParticipant
 
       # Kafka Binding Configuration for all consumers
       spring.kafka.consumer.properties.max.poll.interval.ms: 3000
@@ -274,6 +274,27 @@ services:
       spring.cloud.stream.kafka.bindings.upsertServiceAgreement-in-0.consumer.configuration.value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
       spring.cloud.stream.kafka.bindings.upsertServiceAgreement-in-0.consumer.configuration.heartbeat.interval.ms: 3000  # 3 seconds for heartbeats
       spring.cloud.stream.kafka.bindings.upsertServiceAgreement-in-0.consumer.configuration.max.poll.interval.ms: 300000  # 5 minutes for max poll interval
+
+      # Kafka Binding Configuration for upsertServiceAgreementParticipant
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-in-0.destination: rch-30730-kep-service-agreement-participant
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-in-0.group: rch-30730-kep-service-agreement-participant-event-group
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-in-0.content-type: application/json
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-in-0.consumer.concurrency: 4
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-in-0.consumer.partitioned: true  # Ensure input binding is partitioned
+
+      # Kafka Producer Configuration for upsertServiceAgreementParticipant
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-out-0.destination: rch-30730-kep-service-agreement-participant-success
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-out-0.group: rch-30730-upsert-service-agreement-participant-success-event-group
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-out-0.content-type: application/json
+      spring.cloud.stream.bindings.upsertServiceAgreementParticipant-out-0.producer.partitionCount: 12
+      spring.cloud.stream.kafka.bindings.upsertServiceAgreementParticipant-out-0.producer.message-key-expression: headers['kafka_receivedMessageKey']
+
+      # Kafka Consumer Configuration for upsertServiceAgreementParticipant
+      spring.cloud.stream.kafka.bindings.upsertServiceAgreementParticipant-in-0.consumer.configuration.key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      spring.cloud.stream.kafka.bindings.upsertServiceAgreementParticipant-in-0.consumer.configuration.value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      spring.cloud.stream.kafka.bindings.upsertServiceAgreementParticipant-in-0.consumer.configuration.heartbeat.interval.ms: 3000  # 3 seconds for heartbeats
+      spring.cloud.stream.kafka.bindings.upsertServiceAgreementParticipant-in-0.consumer.configuration.max.poll.interval.ms: 300000  # 5 minutes for max poll interval
+
 
       # Logging Configuration
       logging.level.com.backbase: DEBUG
