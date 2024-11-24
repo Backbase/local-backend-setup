@@ -37,7 +37,7 @@ For the setup, you must have the following:
     ```
    Workaround to fix Colima issue [#764](https://github.com/abiosoft/colima/issues/764) in order to build the Identity Auth Server image using docker compose:
    ```shell
-    docker buildx create --driver-opt 'image=moby/buildkit:rootless' 
+    docker-buildx create --driver-opt 'image=moby/buildkit:rootless' 
     ```
    > **NOTE**: Installing Colima is only for macOS. For Windows-based systems, you can install Docker Desktop and run it to start the Docker service before going to the next step.
 2. Log in to the Backbase repo:

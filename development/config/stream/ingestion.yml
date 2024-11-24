@@ -24,6 +24,15 @@ bootstrap:
         functionGroups:
           - name: "Manage Entitlements"
             functions:
+              - functionId: "5000"
+                name: "Manage Case Definitions"
+                privileges:
+                  - privilege: "view"
+                  - privilege: "execute"
+              - functionId: "5001"
+                name: "Manage Case Instances"
+                privileges:
+                  - privilege: "view"
               - functionId: "1019"
                 name: "Manage Data Groups"
                 privileges:
@@ -104,6 +113,15 @@ bootstrap:
         functionGroups:
           - name: "Products and Profile"
             functions:
+              - functionId: "5000"
+                name: "Manage Case Definitions"
+                privileges:
+                  - privilege: "view"
+                  - privilege: "execute"
+              - functionId: "5001"
+                name: "Manage Case Instances"
+                privileges:
+                  - privilege: "view"
               - functionId: "1006"
                 name: "Product Summary"
                 functionCode: "product.summary"
@@ -127,12 +145,118 @@ bootstrap:
             number: "1234567890"
         referenceJobRoleNames:
           - "Entitlements - Manager"
+    productGroups:
+      - name: "my-case-def-group"
+        productGroupType: "CASE_DEFINITION"
+        description: "My case definitions"
+        customDataGroupItems:
+          - internalId: "my-case-def"
+        users:
+          - user:
+              externalId: "admin"
+              fullName: "Backbase Root Admin"
+              identityLinkStrategy: "CREATE_IN_IDENTITY"
+              emailAddress:
+                address: "bbadmin@email.com"
+              mobileNumber:
+                number: "1234567890"
+            referenceJobRoleNames:
+              - "Entitlements - Manager"
+      - name: "my-case-definitions"
+        productGroupType: "CASE_DEFINITION"
+        description: "My case definitions"
+        customDataGroupItems:
+          - internalId: "my-case-def"
+        users:
+          - user:
+              externalId: "admin"
+              fullName: "Backbase Root Admin"
+              identityLinkStrategy: "CREATE_IN_IDENTITY"
+              emailAddress:
+                address: "bbadmin@email.com"
+              mobileNumber:
+                number: "1234567890"
+            referenceJobRoleNames:
+              - "Entitlements - Manager"
     subsidiaries:
       - name: "Moustache Bank USA"
         realmName: "backbase"
         externalId: "moustache-bank-usa"
         legalEntityType: "BANK"
+        productGroups:
+          - name: "my-employee-case-definitions"
+            productGroupType: "CASE_DEFINITION"
+            description: "My employee case definitions"
+            customDataGroupItems:
+              - internalId: "my-case-def"
+            users:
+              - user:
+                  externalId: "employee"
+                  fullName: "Backbase Root Employee"
+                  identityLinkStrategy: "CREATE_IN_IDENTITY"
+                  emailAddress:
+                    address: "bbemployee@email.com"
+                  mobileNumber:
+                    number: "1234567890"
+                referenceJobRoleNames:
+                  - "Entitlements - Employee"
+        users:
+          - user:
+              externalId: "employee"
+              fullName: "Backbase Root Employee"
+              identityLinkStrategy: "CREATE_IN_IDENTITY"
+              emailAddress:
+                address: "bbemployee@email.com"
+              mobileNumber:
+                number: "1234567890"
+            referenceJobRoleNames:
+              - "Entitlements - Employee"
+        referenceJobRoles:
+          - name: "Entitlements - Employee"
+            description: "Employee Entitlements employee."
+            functionGroups:
+              - name: "Manage Employee Entitlements"
+                functions:
+                  - functionId: "5000"
+                    name: "Manage Case Definitions"
+                    privileges:
+                      - privilege: "view"
+                      - privilege: "execute"
+                  - functionId: "5001"
+                    name: "Manage Case Instances"
+                    privileges:
+                      - privilege: "view"
         subsidiaries:
+          - name: "Niels"
+            realmName: "backbase"
+            externalId: "niels"
+            legalEntityType: "CUSTOMER"
+            users:
+              - user:
+                  externalId: "niels"
+                  fullName: "Niels"
+                  identityLinkStrategy: "CREATE_IN_IDENTITY"
+                  emailAddress:
+                    address: "niels@email.com"
+                  mobileNumber:
+                    number: "1234567890"
+            productGroups:
+              - name: "my-case-instances"
+                productGroupType: "CASE_INSTANCE"
+                description: "My case instances"
+                customDataGroupItems:
+                  - internalId: "559deb8c1ac84f7dbba2a8986f1eea6b"
+                users:
+                  - user:
+                      externalId: "niels"
+                      fullName: "Niels"
+                      identityLinkStrategy: "CREATE_IN_IDENTITY"
+                      emailAddress:
+                        address: "niels@email.com"
+                      mobileNumber:
+                        number: "1234567890"
+                    referenceJobRoleNames:
+                      - "Retail User"
           - name: "Sara"
             realmName: "backbase"
             externalId: "sara"
@@ -159,46 +283,3 @@ bootstrap:
                         number: "1234567890"
                     referenceJobRoleNames:
                       - "Retail User"
-                description: "Product group containing user arrangements"
-                currentAccounts:
-                  - externalId: "021000021"
-                    BBAN: "021000021"
-                    name: "Sara's Current Account 1"
-                    productTypeExternalId: "current-account"
-                    currency: "USD"
-                    externalTransferAllowed: "true"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "1055.5"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "1055.5"
-                savingAccounts:
-                  - externalId: "021000022"
-                    BBAN: "021000022"
-                    name: "Sara's Savings Account 1"
-                    productTypeExternalId: "savings-account"
-                    currency: "USD"
-                    externalTransferAllowed: "false"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "3820.2"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "3820.2"
-                    accountInterestRate: "0.05"
-                    termUnit: "Quarterly"
-                  - externalId: "021000023"
-                    BBAN: "021000023"
-                    name: "Sara's Savings Account 2"
-                    productTypeExternalId: "savings-account"
-                    currency: "USD"
-                    externalTransferAllowed: "false"
-                    availableBalance:
-                      currencyCode: "USD"
-                      amount: "155.5"
-                    bookedBalance:
-                      currencyCode: "USD"
-                      amount: "155.5"
-                    accountInterestRate: "0.05"
-                    termUnit: "Quarterly"
