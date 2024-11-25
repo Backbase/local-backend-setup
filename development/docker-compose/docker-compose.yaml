@@ -22,6 +22,7 @@ x-common-variables: &common-variables
   management.tracing.enabled: false
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
+  spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
   backbase.security.public.paths: /integration-api/**,/oauth/token,/convert
   backbase.security.mtls.enabled: false
@@ -61,7 +62,7 @@ secrets:
 
 services:
   mysql:
-    image: mysql:8.4.0
+    image: mysql:8.0.31
     ports:
       - "3306:3306"
     environment:
