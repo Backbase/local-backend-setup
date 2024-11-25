@@ -19,7 +19,10 @@ x-common-variables: &common-variables
   management.security.roles: ANONYMOUS,ACTUATOR,USER
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
+  # Observability - Tracing and Prometheus Configuration
   management.tracing.enabled: false
+  management.endpoint.prometheus.enabled: true
+
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
@@ -328,3 +331,27 @@ services:
   #     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
   #   links:
   #     - registry
+
+  prometheus:
+    image: prom/prometheus
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
