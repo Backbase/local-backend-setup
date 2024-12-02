@@ -19,16 +19,20 @@ x-common-variables: &common-variables
   management.security.roles: ANONYMOUS,ACTUATOR,USER
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
+  # Observability - Tracing and Prometheus Configuration
+  management.endpoint.prometheus.enabled: true
   management.tracing.enabled: true
   management.tracing.propagation.type: w3c
   management.tracing.sampling.probability: 1.0
   management.tracing.baggage.remote-fields: client-id
   management.tracing.baggage.correlation.fields: client-id
-#  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+  #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
+
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
+  spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
   backbase.security.public.paths: /integration-api/**,/oauth/token,/convert
   backbase.security.mtls.enabled: false
@@ -121,7 +125,7 @@ services:
       test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar" ]
 
   edge:
-    image: harbor.backbase.eu/development/edge:3.5.0-debug-02
+    image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
     ports:
       - "8280:8080"
     environment:
@@ -192,7 +196,7 @@ services:
         condition: service_healthy
 
   access-control:
-    image: harbor.backbase.eu/staging/access-control:ACCESS-CONTROL-2024.10-rc.1
+    image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
     ports:
       - "8040:8080"
     environment:
@@ -231,7 +235,7 @@ services:
       - registry
 
   user-manager:
-    image: harbor.backbase.eu/development/user-manager:4.0.19-02-debug
+    image: repo.backbase.com/backbase-docker-releases/user-manager:${BB_VERSION}
     ports:
       - "8060:8080"
     environment:
@@ -275,7 +279,7 @@ services:
       - backbase-identity
 
   product-catalog-task:
-    image: harbor.backbase.eu/development/product-catalog-task:5.11.1-01-debug
+    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
     profiles:
       - bootstrap
     environment:
@@ -291,7 +295,7 @@ services:
         condition: service_healthy
 
   legal-entity-bootstrap-task:
-    image: harbor.backbase.eu/development/legal-entity-bootstrap-task:5.11.1-01-debug
+    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
     profiles:
       - bootstrap
     environment:
@@ -362,3 +366,27 @@ services:
   #     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
   #   links:
   #     - registry
+
+  prometheus:
+    image: prom/prometheus
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
