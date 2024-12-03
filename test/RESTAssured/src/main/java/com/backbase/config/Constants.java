@@ -14,17 +14,17 @@ public class Constants {
     public static final String upRegistryAppResponseBody = "<status>UP</status>";
 
     // Realm Names
-    public static final String backbaseRealmName = "backbase";
+    public static final String employeeRealmName = "employee";
     public static final String masterRealmName = "master";
 
     // Client Ids
     public static final String adminCliClientId = "admin-cli";
     public static final String bbToolingClient = "bb-tooling-client";
 
-    public static final String identityWellKnowConfigPath = "/auth/realms/" + backbaseRealmName + "/.well-known/openid-configuration";
+    public static final String identityWellKnowConfigPath = "/auth/realms/" + employeeRealmName + "/.well-known/openid-configuration";
     public static final String identityRealmPath = "/auth/realms/";
     public static final String identityAuthPath = "/protocol/openid-connect/token";
-    public static final String identityUsersPath = "/auth/admin/realms/" + backbaseRealmName + "/users";
+    public static final String identityUsersPath = "/auth/admin/realms/" + employeeRealmName + "/users";
 
     // Service Names
     public static final String accessControlServiceName = "access-control";
