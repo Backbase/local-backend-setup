@@ -5,7 +5,7 @@ import com.backbase.services.services.Identity;
 import org.junit.Test;
 
 public class UserTests extends Identity {
-    private final Identity identity = new Identity();
+    private final Identity identity = new Identity(true);
 
     @Test
     public void canMakeUserRequests() {

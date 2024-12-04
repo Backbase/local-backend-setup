@@ -325,7 +325,7 @@
                 "sharingUsers" : true,
                 "sharingAccounts" : true,
                 "admins" : [
-                  "admin"
+                  "sara"
                 ]
               }
             ],
@@ -333,7 +333,6 @@
             "isMaster" : true,
             "productGroups" : [
               {
-                "productGroupType" : "REPOSITORIES",
                 "name" : "sara-arrangements",
                 "description" : "Product group containing user arrangements",
                 "users" : [
@@ -341,7 +340,7 @@
                     "user" : {
                       "externalId" : "sara",
                       "fullName" : "Sara Jones",
-                      "identityLinkStrategy" : "IDENTITY_AGNOSTIC",
+                      "identityLinkStrategy" : "CREATE_IN_IDENTITY",
                       "emailAddress": {
                         "address": "sara@email.com"
                       },
@@ -363,6 +362,11 @@
                     "BBAN": "021000021",
                     "name": "Sara's Current Account 1",
                     "productTypeExternalId": "current-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
                     "currency": "USD",
                     "externalTransferAllowed": "true",
                     "availableBalance": {
@@ -381,6 +385,11 @@
                     "BBAN": "021000022",
                     "name": "Sara's Savings Account 1",
                     "productTypeExternalId": "savings-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
                     "currency": "USD",
                     "externalTransferAllowed": "false",
                     "availableBalance": {
@@ -399,6 +408,11 @@
                     "BBAN": "021000023",
                     "name": "Sara's Savings Account 2",
                     "productTypeExternalId": "savings-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
                     "currency": "USD",
                     "externalTransferAllowed": "false",
                     "availableBalance": {

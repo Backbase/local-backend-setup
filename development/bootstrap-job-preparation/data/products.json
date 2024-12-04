@@ -1,18 +1,16 @@
 {
   "productTypes": [
     {
-      "productKindName": "currentAccount",
-      "productTypeName": "current-account",
-      "typeName": "Current Account",
+      "externalProductId": "current-account",
       "externalProductKindId": "kind1",
-      "externalProductId": "current-account"
+      "externalProductTypeId": "current-account",
+      "typeName": "Current Account"
     },
     {
-      "productKindName": "savingsAccount",
-      "productTypeName": "savings-account",
-      "typeName": "Savings Accounts",
+      "externalProductId": "savings-account",
       "externalProductKindId": "kind2",
-      "externalProductId": "savings-account"
+      "externalProductTypeId": "savings-account",
+      "typeName": "Savings Account"
     }
   ]
 }

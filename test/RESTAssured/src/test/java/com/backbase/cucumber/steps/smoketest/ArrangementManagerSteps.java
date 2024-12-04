@@ -11,7 +11,7 @@ public class ArrangementManagerSteps extends IdentityAuthentication {
 
     @Given("a user has authenticated for arrangement manager")
     public void aUserHasAuthenticatedForArrangementManager() {
-        aUserHasAuthenticatedToRealm(Constants.employeeRealmName, Constants.bbToolingClient);
+        aUserHasAuthenticatedToRealm(Constants.backbaseRealmName, Constants.bbToolingClient);
     }
 
     @When("the User Requests To Get Balances Aggregations")

@@ -12,6 +12,9 @@ mvn clean process-resources -Dbootstrap.job.version="${BOOTSTRAP_JOB_VERSION}" -
 
 cd target/bootstrap-job
 
+mkdir data/src/main/resources/LBS
+cp ../../data/* data/src/main/resources/LBS
+
 mvn clean install -s ../../settings.xml
 
 mvn -ntp -B package -s ../../settings.xml -pl :bootstrap-job -Pdocker-image,local-client,no-latest-tag \
