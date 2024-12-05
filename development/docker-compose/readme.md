@@ -66,22 +66,26 @@ For the setup, you must have the following:
     ```shell
     docker compose --profile=bootstrap up -d
     ```
-5. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
+5. Add the `observable` profile to monitor the application status with prometheus data represented  in grafana:
+    ```shell
+    docker compose --profile=observable up -d
+    ```
+6. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f
     ```
-6. To access your environment, use the following endpoints:
+7. To access your environment, use the following endpoints:
     - **Identity**: http://localhost:8180/auth
         * **Realm Admin Credentials**: `admin` / `admin`
     - **Edge Gateway**: http://localhost:8280/api
     - **Registry**: http://localhost:8761
-7. Verify the health of your environment to ensure services are running:
+8. Verify the health of your environment to ensure services are running:
     ```shell
     docker compose ps
     ```
    For a more detailed check of your environment, use the Postman collection from the `./test` directory. For more information, see [Health check](#health-check).
 
-8. If you want to stop or kill containers, use one of the following:
+9. If you want to stop or kill containers, use one of the following:
     - Stop and remove containers in the Docker Compose file:
         ```shell
         docker compose down

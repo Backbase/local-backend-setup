@@ -21,8 +21,8 @@ x-common-variables: &common-variables
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.env.post.enabled: true
   management.endpoint.configprops.show-values: ALWAYS
+  # Observability - Tracing and Prometheus Configuration
   management.tracing.enabled: false
-  management.endpoint.prometheus.enabled: true
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
@@ -110,7 +110,6 @@ services:
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - token-converter
 
   token-converter:
     image: repo.backbase.com/backbase-docker-releases/oidc-token-converter-service:${BB_VERSION}
@@ -129,7 +128,6 @@ services:
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
   backbase-identity:
     image: auth-server:${BB_VERSION}
@@ -245,7 +243,6 @@ services:
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
   product-catalog-task:
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
