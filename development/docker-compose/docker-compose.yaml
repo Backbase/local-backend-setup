@@ -252,37 +252,20 @@ services:
       spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
       backbase.communication.http.discoverable-access-token-service: true
       backbase.stream.limits.worker.enabled: false
-      backbase.bootstrap.data.data-sets[0].name: minimal
-      backbase.bootstrap.data.data-sets[0].description: Minimal Data Set
-      backbase.bootstrap.data.data-sets[0].product-catalog-files: classpath:LBS/products.json
-      backbase.bootstrap.data.data-sets[0].legal-entity-files: classpath:LBS/LegalEntity.json
-      backbase.bootstrap.data.data-sets[0].remote-config-users-files: classpath:base/remote-config/remote-config-users.json
-      backbase.bootstrap.data.active-data-sets: minimal
+      backbase.bootstrap.data.active-data-sets: local-backend-setup
       backbase.bootstrap.data.legal-entity-prefix.enabled: false
       backbase.bootstrap.identity.realms: backbase
       backbase.bootstrap.identity.admin-realm: backbase
       backbase.bootstrap.identity.admin-username: admin
       backbase.bootstrap.identity.master-admin-password: admin
-      backbase.bootstrap.identity.default-admin-password: Admin1234
+      backbase.bootstrap.identity.default-admin-password: admin
       backbase.bootstrap.identity.defaultUserPassword: Pass1234
       backbase.bootstrap.ingestions.messages.enabled: false
       backbase.bootstrap.ingestions.push-integration.enabled: false
-      backbase.bootstrap.ingestions.permissionSet.enabled: false
-      backbase.bootstrap.ingestions.global-limits.enabled: false
-      backbase.bootstrap.ingestions.fido-applications.enabled: false
       backbase.bootstrap.ingestions.content-repository.enabled: false
-      backbase.bootstrap.ingestions.wealth.enabled: false
-      backbase.bootstrap.ingestions.approvals.enabled: false
-      backbase.bootstrap.ingestions.regions.enabled: false
-      backbase.bootstrap.ingestions.cards: false
-      backbase.communication.services.access-control.directUri: http://access-control:8080
-      backbase.communication.services.usermanager.directUri: http://user-manager:8080
-      backbase.communication.services.identity.integration.directUri: http://identity-integration-service:8080
-      spring.security.oauth2.client.provider.bb.token-uri: http://token-converter:8080/oauth/token
-      backbase.communication.http.access-token-uri: http://token-converter:8080/oauth/token
-      admin.baseUrl: http://backbase-identity:8080
-      backbase.communication.services.arrangement.manager.directUri: http://arrangement-manager:8080
+      backbase.bootstrap.ingestions.fido-applications.enabled: false
       backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
+      admin.baseUrl: http://backbase-identity:8080
     depends_on:
       token-converter:
         condition: service_healthy

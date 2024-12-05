@@ -12,12 +12,9 @@ import io.restassured.response.Response;
 public class ApplicationHttpUtils {
 
     private final String baseUrl;
-    private boolean adminCli = false;
 
-
-    public ApplicationHttpUtils(String baseUrl, boolean adminCli) {
+    public ApplicationHttpUtils(String baseUrl) {
         this.baseUrl = baseUrl;
-        this.adminCli = adminCli;
     }
 
     public static String getResponseBody(Response httpResponse) {
@@ -25,15 +22,13 @@ public class ApplicationHttpUtils {
     }
 
     public Response identityLogin(final String realm, final String clientId) {
-        String identityLoginUrl =
-            Constants.identityUrl + Constants.identityRealmPath + realm + Constants.identityAuthPath;
+        String identityLoginUrl = Constants.identityUrl + Constants.identityRealmPath + realm + Constants.identityAuthPath;
 
         return given()
-            .config(config().encoderConfig(
-                EncoderConfig.encoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(false)))
+            .config(config().encoderConfig(EncoderConfig.encoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(false)))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .formParam("username", "admin")
-            .formParam("password", adminCli ? "admin" : "Admin1234")
+            .formParam("password", "admin")
             .formParam("grant_type", "password")
             .formParam("client_id", clientId)
             .post(identityLoginUrl);

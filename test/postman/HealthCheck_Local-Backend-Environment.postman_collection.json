@@ -288,7 +288,7 @@
 						},
 						{
 							"key": "password",
-							"value": "Admin1234",
+							"value": "admin",
 							"type": "text"
 						},
 						{

@@ -306,7 +306,7 @@
 										},
 										{
 											"key": "password",
-											"value": "Admin1234",
+											"value": "admin",
 											"type": "text"
 										},
 										{
@@ -595,7 +595,7 @@
 										},
 										{
 											"key": "password",
-											"value": "Admin1234",
+											"value": "admin",
 											"type": "text"
 										},
 										{

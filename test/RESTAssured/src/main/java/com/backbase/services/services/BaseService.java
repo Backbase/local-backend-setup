@@ -12,12 +12,7 @@ public class BaseService {
 
     public BaseService(String serviceName, String baseServiceUrl) {
         this.serviceName = serviceName;
-        applicationHttpUtils = new ApplicationHttpUtils(baseServiceUrl, false);
-    }
-
-    public BaseService(String serviceName, String baseServiceUrl, boolean adminCli) {
-        this.serviceName = serviceName;
-        applicationHttpUtils = new ApplicationHttpUtils(baseServiceUrl, adminCli);
+        applicationHttpUtils = new ApplicationHttpUtils(baseServiceUrl);
     }
 
     public void aHealthCheckIsRequested() {

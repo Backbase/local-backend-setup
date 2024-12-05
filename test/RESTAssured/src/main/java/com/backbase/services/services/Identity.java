@@ -22,11 +22,7 @@ public class Identity extends BaseService {
     private final String username = "backender";
 
     public Identity() {
-        super("", Constants.identityUrl, false);
-    }
-
-    public Identity(boolean adminCli) {
-        super("", Constants.identityUrl, adminCli);
+        super("", Constants.identityUrl);
     }
 
     public void aUserHasAuthenticated(final String realm, final String client_id) {
