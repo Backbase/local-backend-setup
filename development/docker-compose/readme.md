@@ -179,11 +179,22 @@ To connect your application to the local environment, you can run it in the IDE 
 
 The following is an example configuration:
 ```
--Deureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
--Dbackbase.communication.http.discoverable-access-token-service=false
--Dbackbase.communication.http.access-token-uri=http://localhost:7779/oauth/token
--Dspring.activemq.broker-url=tcp://localhost:61616
--Deureka.instance.hostname=host.docker.internal
+eureka.client.enabled=true
+eureka.client.order=1
+eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
+eureka.instance.hostname=host.docker.internal
+spring.cloud.discovery.client.simple.order=0
+spring.cloud.discovery.client.simple.instances.token-converter.uri=http://localhost:7779
+spring.cloud.discovery.client.simple.instances.access-control.uri=http://localhost:8040
+spring.activemq.broker-url=tcp://localhost:61616
+spring.activemq.password=admin
+spring.activemq.user=admin
+spring.datasource.url=jdbc:mysql://localhost:3306/custom-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+spring.datasource.password=root
+spring.datasource.username=root
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+sso.jwt.internal.signature.key.type=VALUE
+sso.jwt.internal.signature.key.value=JWTSecretKeyDontUseInProduction!
 ```
 To start an application in debug mode using, for example, IntelliJ IDE, do the following:
 
