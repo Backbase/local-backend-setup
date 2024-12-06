@@ -21,15 +21,6 @@ x-common-variables: &common-variables
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.env.post.enabled: true
   management.endpoint.configprops.show-values: ALWAYS
-  # Observability - Tracing and Prometheus Configuration
-  management.tracing.enabled: true
-  management.tracing.propagation.type: w3c
-  management.tracing.sampling.probability: 1.0
-  management.tracing.baggage.remote-fields: client-id
-  management.tracing.baggage.correlation.fields: client-id
-#  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
-  spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
-  management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
@@ -39,6 +30,15 @@ x-common-variables: &common-variables
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+  # Observability - Tracing and Prometheus Configuration
+  management.tracing.enabled: ${ENABLE_TRACING:-false}
+  management.tracing.propagation.type: w3c
+  management.tracing.sampling.probability: 1.0
+  management.tracing.baggage.remote-fields: client-id
+  management.tracing.baggage.correlation.fields: client-id
+  #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+  spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
+  management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -92,6 +92,8 @@ services:
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
+    profiles:
+      - tracing-tools
     environment:
       - STORAGE_TYPE=mem
     ports:
@@ -99,6 +101,8 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.82.0
     restart: always
+    profiles:
+      - tracing-tools
     command:
       - --config=/etc/otelcol-contrib/otel-collector.yml
     volumes:
@@ -126,7 +130,7 @@ services:
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar" ]
 
   edge:
-    image: harbor.backbase.eu/development/edge:3.5.0-debug-02
+    image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
     ports:
       - "8280:8080"
     environment:
@@ -148,6 +152,7 @@ services:
       - "7779:8080"
     environment:
       <<: *common-variables
+      spring.application.name: "token-converter"
       backbase.security.public.paths: /oauth/token,/convert
       backbase.oidc-token-converter.whitelistedDomains[0].internalHostScheme: http
       backbase.oidc-token-converter.whitelistedDomains[0].internalHost: backbase-identity:8080
@@ -201,7 +206,7 @@ services:
       - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.application.name: access-control
+      spring.application.name: "access-control"
       spring.datasource.url: jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -221,6 +226,7 @@ services:
       - "8050:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
+      spring.application.name: "arrangement-manager"
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -240,7 +246,7 @@ services:
       - "8060:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.application.name: user-manager
+      spring.application.name: "user-manager"
       spring.datasource.url: jdbc:mysql://mysql:3306/user-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
