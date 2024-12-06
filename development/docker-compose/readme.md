@@ -25,6 +25,8 @@ For the setup, you must have the following:
 
 - Any Docker runtime.
 - Backbase repository credentials.
+- Java(In case you need to bootstrap the Local Backend Setup with data).
+- Maven(In case you need to bootstrap the Local Backend Setup with data).
 
 ## Set up the Backbase local environment
 
@@ -44,6 +46,8 @@ For the setup, you must have the following:
     ```shell
     docker login repo.backbase.com
     ```
+3. Install java using instruction from [here](https://docs.oracle.com/en/java/javase/21/install/overview-jdk-installation.html).
+4. Install Maven using instruction from [here](https://maven.apache.org/install.html).
 
 ### Set up the local environment
 
@@ -62,10 +66,15 @@ For the setup, you must have the following:
     ```
    > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
 
-4. Add the `bootstrap` profile on the first run to ingest data into Banking Services:
+4. Bootstrap the environment:
+   1. Run the following script and follow the instruction to build bootstrap image locally:
     ```shell
-    docker compose --profile=bootstrap up -d
-    ```
+   bootstrap/creat-bootstrap-image.sh
+   ``` 
+   2. Add the `bootstrap` profile on the first run to ingest data into Banking Services 
+     ```shell
+     docker compose --profile=bootstrap up -d
+     ```
 5. Add the `observable` profile to monitor the application status with prometheus data represented  in grafana:
     ```shell
     docker compose --profile=observable up -d
@@ -144,11 +153,11 @@ The following is an example configuration:
 
 ### Ingest data
 
-The following tasks ingest data:
-- Product catalog task
-- Legal entity bootstrap task
+The bootstrap-job ingests the following data:
+- [Product catalog](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/product-catalog/products.json)
+- [Legal Entity](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/legal-entities/LegalEntity.json)
 
-  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` profiles are [enabled and pre-configured](https://github.com/Backbase/stream-services/blob/master/stream-legal-entity/legal-entity-bootstrap-task/src/main/resources/application.yml#L24) in the Stream services.
+  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, you can do it from here: `development/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup` and build the docker image again: `bootstrap/creat-bootstrap-image.sh`
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
@@ -171,7 +180,7 @@ To upgrade a service in the environment, change the Docker image tag to the new 
 
 To upgrade all services to a specific Backbase BOM version, change the `BB_VERSION` value in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.
 
-To upgrade to stream version compatible with BB_VERSION, please refer this [link](https://github.com/Backbase/stream-services/blob/master/README.md)
+To upgrade to bootstrap-job version(BOOTSTRAP_JOB_VERSION) compatible with BB_VERSION, please refer to [here](https://repo.backbase.com/repo/com/backbase/accelerators/bootstrap-job/)
 
 ## Debug custom applications
 
@@ -257,6 +266,20 @@ If the environment is not working, or if some or all of its services are not in 
 - Check the Registry service in the browser [http://localhost:8761](http://localhost:8761).
 - Check the Edge routes [http://localhost:8280/actuator/gateway/routes](http://localhost:8280/actuator/gateway/routes).
 - If the health check task fails and you are operating in a new environment, ensure that you include `--profile=bootstrap` in your command.
+
+### bootstrap-job
+- Check if Maven is installed:
+  ```shell
+  mvn -v
+  ```
+- Check if your java version is compatible with bootstrap-job:
+    - Extract the minimum required version in bootstrap-job:
+        - Open `development/bootstrap/target/bootstrap-job/pom.xml`
+        - Look for `java.version` property
+    - Check you local java version:
+        ```shell
+        java -version
+        ```
 
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker.
