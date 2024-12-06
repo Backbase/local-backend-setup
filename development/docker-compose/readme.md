@@ -75,10 +75,16 @@ For the setup, you must have the following:
      ```shell
      docker compose --profile=bootstrap up -d
      ```
-5. Add the `observable` profile to monitor the application status with prometheus data represented  in grafana:
-    ```shell
-    docker compose --profile=observable up -d
-    ```
+5. To monitor the application status with prometheus data represented  in grafana:
+   1. Configuration changes in docker-compose
+      ````
+       # Observability - Prometheus Configuration(SET to true)
+         management.endpoint.prometheus.enabled: true
+      ````
+   2. Add the `observable` profile while running docker compose
+       ```shell
+       docker compose --profile=observable up -d
+       ```
 6. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f

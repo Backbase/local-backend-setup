@@ -19,9 +19,10 @@ x-common-variables: &common-variables
   management.security.roles: ANONYMOUS,ACTUATOR,USER
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.configprops.show-values: ALWAYS
-  # Observability - Tracing and Prometheus Configuration
+  # Observability - Tracing Configuration(SET to true)
   management.tracing.enabled: false
-  management.endpoint.prometheus.enabled: true
+  # Observability - Prometheus Configuration(SET to true)
+  management.endpoint.prometheus.enabled: false
 
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
