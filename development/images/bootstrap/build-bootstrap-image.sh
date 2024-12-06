@@ -14,5 +14,3 @@ mvn -ntp -B package -pl :bootstrap-job -Pdocker-image,local-client,no-latest-tag
     -Dskip.unit.tests=true -Dskip.integration.tests=true -Dimage=bootstrap-job \
     -Djib.to.tags="$BOOTSTRAP_JOB_VERSION"
 echo "Building Bootstrap job docker image succeeded."
-
-echo "Bootstrap job preparation completed successfully!"
