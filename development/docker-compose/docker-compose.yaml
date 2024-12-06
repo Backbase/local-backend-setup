@@ -1,9 +1,10 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -Dlogging.level.com.backbase=INFO
-  SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
+  sso.jwt.internal.signature.key.type: VALUE
+  sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
   server.shutdown: graceful
   server.max-http-header-size: 64KB
   server.forward-headers-strategy: framework
@@ -18,13 +19,15 @@ x-common-variables: &common-variables
   management.endpoints.enabled-by-default: true
   management.security.roles: ANONYMOUS,ACTUATOR
   management.endpoint.env.show-values: ALWAYS
+  management.endpoint.env.post.enabled: true
   management.endpoint.configprops.show-values: ALWAYS
+  # Observability - Tracing and Prometheus Configuration
   management.tracing.enabled: false
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
   backbase.audit.enabled: false
-  backbase.security.public.paths: /integration-api/**,/oauth/token,/convert
+  backbase.security.public.paths: /integration-api/**
   backbase.security.mtls.enabled: false
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
@@ -45,7 +48,7 @@ x-message-broker-variables: &message-broker-variables
 x-healthcheck-defaults: &healthcheck-defaults
   start_period: 60s
   interval: 15s
-  timeout: 15s
+  timeout: 3s
   retries: 15
 
 name: backbase
@@ -90,11 +93,13 @@ services:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
       - "8761:8080"
+    environment:
+      management.tracing.enabled: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar" ]
 
   edge:
     image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
@@ -108,10 +113,9 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/edge", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - token-converter
 
   token-converter:
     image: repo.backbase.com/backbase-docker-releases/oidc-token-converter-service:${BB_VERSION}
@@ -119,6 +123,7 @@ services:
       - "7779:8080"
     environment:
       <<: *common-variables
+      backbase.security.public.paths: /oauth/token,/convert
       backbase.oidc-token-converter.whitelistedDomains[0].internalHostScheme: http
       backbase.oidc-token-converter.whitelistedDomains[0].internalHost: backbase-identity:8080
       backbase.oidc-token-converter.whitelistedDomains[0].issuerHost: localhost
@@ -126,10 +131,9 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
   backbase-identity:
     image: auth-server:${BB_VERSION}
@@ -177,7 +181,7 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -198,7 +202,7 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -221,7 +225,7 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -244,10 +248,9 @@ services:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
   product-catalog-task:
     image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
@@ -255,6 +258,7 @@ services:
       - bootstrap
     environment:
       <<: *common-variables
+      eureka.client.register-with-eureka: false
       spring.config.additional-location: file:/tmp/ingestion.yml
     volumes:
       - ../config/stream/ingestion.yml:/tmp/ingestion.yml
@@ -270,6 +274,7 @@ services:
       - bootstrap
     environment:
       <<: *common-variables
+      eureka.client.register-with-eureka: false
       spring.config.additional-location: file:/tmp/ingestion.yml
     volumes:
       - ../config/stream/ingestion.yml:/tmp/ingestion.yml
@@ -332,9 +337,33 @@ services:
   #     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
   #   healthcheck:
   #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
+  #    test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
   #   links:
   #     - registry
+
+  prometheus:
+    image: prom/prometheus
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
   business-app:
     image: harbor.backbase.eu/reference/business-universal:2024.07
