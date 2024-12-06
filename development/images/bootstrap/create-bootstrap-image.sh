@@ -5,7 +5,7 @@ set -e  # Exit immediately if a command exits with a non-zero status
 trap 'unset ARTIFACTS_CREDS_USR; unset ARTIFACTS_CREDS_PSW' EXIT
 
 # Load environment variables
-source ../docker-compose/.env
+source ../../docker-compose/.env
 
 # Prompt for Artifactory credentials
 read -p "Enter your Artifactory 'Username' (you can take the 'User Profile' from https://repo.backbase.com/ui/user_profile): " artifacts_creds_usr
