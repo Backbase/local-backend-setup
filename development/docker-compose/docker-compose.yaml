@@ -366,7 +366,7 @@ services:
       - prometheus
 
   business-app:
-    image: harbor.backbase.eu/reference/business-universal:2024.07
+    image: harbor.backbase.eu/reference/business-universal:2024.10
     platform: linux/amd64
     profiles:
       - web
