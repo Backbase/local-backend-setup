@@ -239,7 +239,7 @@ services:
       identity.masterAdmin.username: admin
       identity.masterAdmin.password: admin
       identity.realmConfiguration.fallbackOptions.enableUser: true
-      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: false
+      identity.realmConfiguration.fallbackOptions.useTemporaryPassword: true
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -259,12 +259,7 @@ services:
       backbase.stream.limits.worker.enabled: false
       backbase.bootstrap.data.active-data-sets: local-backend-setup
       backbase.bootstrap.data.legal-entity-prefix.enabled: false
-      backbase.bootstrap.identity.realms: backbase
-      backbase.bootstrap.identity.admin-realm: backbase
-      backbase.bootstrap.identity.admin-username: admin
-      backbase.bootstrap.identity.master-admin-password: admin
-      backbase.bootstrap.identity.default-admin-password: admin
-      backbase.bootstrap.identity.defaultUserPassword: Pass1234
+      backbase.bootstrap.ingestions.identity-users.enabled: false
       backbase.bootstrap.ingestions.messages.enabled: false
       backbase.bootstrap.ingestions.push-integration.enabled: false
       backbase.bootstrap.ingestions.content-repository.enabled: false

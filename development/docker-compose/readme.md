@@ -47,7 +47,7 @@ For the setup, you must have the following:
     docker login repo.backbase.com
     ```
 3. Install java using instruction from [here](https://docs.oracle.com/en/java/javase/21/install/overview-jdk-installation.html).
-4. Install Maven using instruction from [here](https://maven.apache.org/install.html).
+4. Install Maven using instruction from [here](https://maven.apache.org/install.html) and configure [settings](https://backbase.io/documentation/backend-devkit/18.0.1/getting-started/configure-maven).
 
 ### Set up the local environment
 
@@ -67,9 +67,9 @@ For the setup, you must have the following:
    > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
 
 4. Bootstrap the environment:
-   1. Run the following script and follow the instruction to build bootstrap image locally:
+   1. Run the following script:
     ```shell
-   images/bootstrap/creat-bootstrap-image.sh
+   images/bootstrap/bootstrap-job-setup.sh
    ``` 
    2. Add the `bootstrap` profile on the first run to ingest data into Banking Services 
      ```shell
@@ -160,10 +160,10 @@ The following is an example configuration:
 ### Ingest data
 
 The bootstrap-job ingests the following data:
-- [Product catalog](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/product-catalog/products.json)
-- [Legal Entity](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/legal-entities/LegalEntity.json)
+- [Product catalog](../images/bootstrap/doc/products.json)
+- [Legal Entity](../images/bootstrap/doc/LegalEntity.json)
 
-  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, you can do it from here: `development/images/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup` and build the docker image again using: `images/bootstrap/creat-bootstrap-image.sh`
+  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, First download bootstrap-job using command: `images/bootstrap/download-bootstrap-job.sh`. Then you can manipulate the data files from here: `development/images/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup`. Eventually, you can build the docker image with the manipulated data using command: `images/bootstrap/build-bootstrap-image.sh`
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
