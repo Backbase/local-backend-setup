@@ -69,7 +69,7 @@ For the setup, you must have the following:
 4. Bootstrap the environment:
    1. Run the following script and follow the instruction to build bootstrap image locally:
     ```shell
-   bootstrap/creat-bootstrap-image.sh
+   images/bootstrap/creat-bootstrap-image.sh
    ``` 
    2. Add the `bootstrap` profile on the first run to ingest data into Banking Services 
      ```shell
@@ -163,7 +163,7 @@ The bootstrap-job ingests the following data:
 - [Product catalog](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/product-catalog/products.json)
 - [Legal Entity](https://github.com/baas-devops-reference/bootstrap-job/blob/main/data/src/main/resources/local-backend-setup/legal-entities/LegalEntity.json)
 
-  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, you can do it from here: `development/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup` and build the docker image again: `bootstrap/creat-bootstrap-image.sh`
+  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, you can do it from here: `development/images/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup` and build the docker image again using: `images/bootstrap/creat-bootstrap-image.sh`
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
@@ -280,7 +280,7 @@ If the environment is not working, or if some or all of its services are not in 
   ```
 - Check if your java version is compatible with bootstrap-job:
     - Extract the minimum required version in bootstrap-job:
-        - Open `development/bootstrap/target/bootstrap-job/pom.xml`
+        - Open `development/images/bootstrap/target/bootstrap-job/pom.xml`
         - Look for `java.version` property
     - Check you local java version:
         ```shell
