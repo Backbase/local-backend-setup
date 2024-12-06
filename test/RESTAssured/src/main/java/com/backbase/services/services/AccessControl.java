@@ -24,7 +24,7 @@ public class AccessControl extends BaseService {
     }
 
     public void theUserRequestsToSetUserContextServiceAgreements(String token) {
-        String userContextServiceAgreementsPath = "/v2/accessgroups/usercontext";
+        String userContextServiceAgreementsPath = "/v3/accessgroups/user-context";
         Header authHeader = new Header("Authorization", "Bearer " + token);
         String requestBody =
             "{\n" +
