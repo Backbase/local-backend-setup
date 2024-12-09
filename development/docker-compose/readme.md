@@ -75,8 +75,7 @@ For the setup, you must have the following:
     docker compose --profile=tracing-tools up -d
     ```
    > **NOTE**: 
-   >  To enable tracing set ```ENABLE_TRACING to true```, in the [.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file. .
-   >  Any new service added to environment must configure the property  ```spring.application.name: "<serviceName>"``` to enable tracing logs
+   To enable tracing, set `management.tracing.enabled` in the [docker-compose](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/docker-compose.yaml) file. Moreover, any new service added to environment must configure the property  `spring.application.name: "<SERVICE-NAME>"`.
 
 7. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell

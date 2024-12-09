@@ -31,7 +31,7 @@ x-common-variables: &common-variables
   logging.level.com.backbase: DEBUG
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
   # Observability - Tracing and Prometheus Configuration
-  management.tracing.enabled: ${ENABLE_TRACING:-false}
+  management.tracing.enabled: false
   management.tracing.propagation.type: w3c
   management.tracing.sampling.probability: 1.0
   management.tracing.baggage.remote-fields: client-id
@@ -363,6 +363,7 @@ services:
   #     - "8090:8080"
   #   environment:
   #     <<: *common-variables
+  #     spring.application.name: "<SERVICE-NAME>"
   #     eureka.client.enabled: 'true'
   #   volumes:
   #     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
