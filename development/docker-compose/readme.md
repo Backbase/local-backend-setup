@@ -70,30 +70,38 @@ For the setup, you must have the following:
     ```shell
     docker compose --profile=observable up -d
     ```
-6. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
+6. Add the `tracing-tools` profile to enable tracing logs:
+    ```shell
+    docker compose --profile=tracing-tools up -d
+    ```
+   > **NOTE**: 
+   >  To enable tracing set ```ENABLE_TRACING to true```, in the [.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file. .
+   >  Any new service added to environment must configure the property  ```spring.application.name: "<serviceName>"``` to enable tracing logs
+
+7. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f
     ```
-7. To access your environment, use the following endpoints:
+8. To access your environment, use the following endpoints:
     - **Identity**: http://localhost:8180/auth
         * **Realm Admin Credentials**: `admin` / `admin`
     - **Edge Gateway**: http://localhost:8280/api
     - **Registry**: http://localhost:8761
-8. Verify the health of your environment to ensure services are running:
+9. Verify the health of your environment to ensure services are running:
     ```shell
     docker compose ps
     ```
    For a more detailed check of your environment, use the Postman collection from the `./test` directory. For more information, see [Health check](#health-check).
 
-9. If you want to stop or kill containers, use one of the following:
-    - Stop and remove containers in the Docker Compose file:
-        ```shell
-        docker compose down
-        ```
-    - Kill all running containers in the host:
-        ```shell
-        docker kill $(docker ps -q)
-        ```
+10. If you want to stop or kill containers, use one of the following:
+     - Stop and remove containers in the Docker Compose file:
+         ```shell
+         docker compose down
+         ```
+     - Kill all running containers in the host:
+         ```shell
+         docker kill $(docker ps -q)
+         ```
 
 ### Add services
 
