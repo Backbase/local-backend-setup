@@ -48,6 +48,10 @@ For the setup, you must have the following:
     ```
 3. Install java using instruction from [here](https://docs.oracle.com/en/java/javase/21/install/overview-jdk-installation.html).
 4. Install Maven using instruction from [here](https://maven.apache.org/install.html) and configure [settings](https://backbase.io/documentation/backend-devkit/18.0.1/getting-started/configure-maven).
+5. **Only Windows users** - Install Git Bash for windows from [here](https://git-scm.com/downloads/win) and validate it:
+   ```
+   git version
+   ```
 
 ### Set up the local environment
 
@@ -67,7 +71,8 @@ For the setup, you must have the following:
    > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
 
 4. Bootstrap the environment:
-   1. Run the following script:
+   1. **Only Windows Users** - Open `Git Bash` from your machine. Shell scripts don't work on the windows regular command prompt. 
+   2. Run the following script:
     ```shell
    images/bootstrap/bootstrap-job-setup.sh
    ``` 
@@ -297,7 +302,10 @@ If the environment is not working, or if some or all of its services are not in 
         ```shell
         java -version
         ```
-
+#### Windows
+- try to locate the project in a short path directory such as `c:\projects\local-backend-setup`. Windows has restriction for maximum path length. Hence, locating the project under windows standard folders(such as Documents) might exceed the maximum allowed path.
+- OneDrive or other cloud-based file synchronization tools can cause file system issue. Therefor try to move the project out of OneDrive to prevent synchronization. 
+- Building docker image might fail in the last stage if the `virus & threat protection` is configured for `realtime protection`. Try to temporarily disable it as mitigation to jib build failure.
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker.
     - Symptoms include failed health checks for `Identity`, failed API calls for authentication. However, you should be able to log in using the Admin Console UI.
