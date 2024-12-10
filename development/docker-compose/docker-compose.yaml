@@ -252,6 +252,12 @@ services:
     image: bootstrap-job:${BOOTSTRAP_JOB_VERSION}
     profiles:
       - bootstrap
+    build:
+      context: ../images/bootstrap
+      secrets:
+        - mvnrepo
+      args:
+        JOB_VERSION: ${BOOTSTRAP_JOB_VERSION}
     environment:
       <<: *common-variables
       spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
@@ -350,3 +356,7 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+
+secrets:
+  mvnrepo:
+    file: ${HOME}/.m2/settings.xml
