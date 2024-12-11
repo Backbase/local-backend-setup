@@ -1,0 +1,437 @@
+{
+  "name" : "Moustache Bank",
+  "realmName" : "backbase",
+  "externalId" : "moustache-bank",
+  "legalEntityType" : "BANK",
+  "masterServiceAgreement" : {
+    "externalId" : "moustache-bank",
+    "name" : "Moustache Bank",
+    "description" : "Single Service Agreement for Moustache Bank",
+    "jobProfileUsers" : [
+      {
+        "user" : {
+          "externalId" : "admin",
+          "emailAddress" : {
+            "address" : "bbadmin@email.com"
+          },
+          "mobileNumber" : {
+            "number" : "1234567890"
+          },
+          "fullName" : "Backbase Root Admin",
+          "identityLinkStrategy" : "CREATE_IN_IDENTITY"
+        },
+        "legalEntityReference" : {
+          "externalId" : "moustache-bank"
+        },
+        "referenceJobRoleNames" : [
+          "Entitlements - Manager"
+        ]
+      }
+    ],
+    "participants" : [
+      {
+        "externalId" : "moustache-bank",
+        "sharingUsers" : true,
+        "sharingAccounts" : true,
+        "admins" : [
+          "admin"
+        ]
+      }
+    ],
+    "status" : "ENABLED",
+    "isMaster" : true,
+    "referenceJobRoles" : [
+      {
+        "name" : "Entitlements - Manager",
+        "description" : "Full Entitlements administration.",
+        "functionGroups" : [
+          {
+            "name" : "Manage Entitlements",
+            "functions" : [
+              {
+                "functionId" : "1019",
+                "name" : "Manage Data Groups",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  },
+                  {
+                    "privilege" : "delete"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1020",
+                "name" : "Manage Function Groups",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  },
+                  {
+                    "privilege" : "delete"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1010",
+                "name" : "Manage Users",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1009",
+                "name" : "Assign Permissions",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1028",
+                "name" : "Manage Service Agreements",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  },
+                  {
+                    "privilege" : "delete"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1119",
+                "name" : "Manage Self-approve Permissions",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1007",
+                "name" : "Assign Users",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1035",
+                "name" : "Manage User Profiles",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1011",
+                "name" : "Manage Legal Entities",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  },
+                  {
+                    "privilege" : "delete"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1049",
+                "name" : "Lock User",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1050",
+                "name" : "Unlock User",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "create"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1084",
+                "name" : "Revoke access",
+                "privileges" : [
+                  {
+                    "privilege" : "create"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name" : "Retail User",
+        "description" : "Retail User Permissions",
+        "functionGroups" : [
+          {
+            "name" : "Products and Profile",
+            "functions" : [
+              {
+                "functionId" : "1006",
+                "name" : "Product Summary",
+                "functionCode": "product.summary",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              },
+              {
+                "functionId" : "1035",
+                "name" : "Manage User Profiles",
+                "functionCode": "manage.user.profiles",
+                "privileges" : [
+                  {
+                    "privilege" : "view"
+                  },
+                  {
+                    "privilege" : "edit"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "administrators" : [
+    {
+      "externalId" : "admin",
+      "emailAddress" : {
+        "address" : "bbadmin@email.com"
+      },
+      "mobileNumber" : {
+        "number" : "1234567890"
+      },
+      "fullName" : "Backbase Root Admin",
+      "identityLinkStrategy" : "CREATE_IN_IDENTITY"
+    }
+  ],
+  "users" : [
+    {
+      "externalId" : "admin",
+      "emailAddress" : {
+        "address" : "bbadmin@email.com"
+      },
+      "mobileNumber" : {
+        "number" : "1234567890"
+      },
+      "fullName" : "Backbase Root Admin",
+      "identityLinkStrategy" : "CREATE_IN_IDENTITY"
+    }
+  ],
+  "subsidiaries" : [
+    {
+      "name" : "Moustache Bank USA",
+      "realmName" : "backbase",
+      "externalId" : "moustache-bank-usa",
+      "legalEntityType" : "BANK",
+      "parentExternalId" : "moustache-bank",
+      "subsidiaries" : [
+        {
+          "name" : "sara2",
+          "realmName" : "backbase",
+          "externalId" : "sara",
+          "legalEntityType" : "CUSTOMER",
+          "parentExternalId" : "moustache-bank-usa",
+          "users" : [
+            {
+              "externalId" : "sara2",
+              "fullName" : "Sara Jones",
+              "identityLinkStrategy" : "CREATE_IN_IDENTITY",
+              "emailAddress" : {
+                "address" : "sara@email.com"
+              },
+              "mobileNumber" : {
+                "number" : "1234567890"
+              }
+            }
+          ],
+          "masterServiceAgreement" : {
+            "externalId" : "sara",
+            "name" : "Sara",
+            "description" : "Single Service Agreement for Sara",
+            "participants" : [
+              {
+                "externalId" : "sara",
+                "sharingUsers" : true,
+                "sharingAccounts" : true,
+                "admins" : [
+                  "sara2"
+                ]
+              }
+            ],
+            "status" : "ENABLED",
+            "isMaster" : true,
+            "productGroups" : [
+              {
+                "name" : "sara-arrangements",
+                "description" : "Product group containing user arrangements",
+                "users" : [
+                  {
+                    "user" : {
+                      "externalId" : "sara2",
+                      "fullName" : "Sara Jones",
+                      "identityLinkStrategy" : "CREATE_IN_IDENTITY",
+                      "emailAddress": {
+                        "address": "sara@email.com"
+                      },
+                      "mobileNumber": {
+                        "number": "1234567890"
+                      }
+                    },
+                    "legalEntityReference" : {
+                      "externalId" : "sara"
+                    },
+                    "referenceJobRoleNames" : [
+                      "Retail User"
+                    ]
+                  }
+                ],
+                "currentAccounts" : [
+                  {
+                    "externalId": "021000021",
+                    "BBAN": "021000021",
+                    "name": "Sara's Current Account 1",
+                    "productTypeExternalId": "current-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
+                    "currency": "USD",
+                    "externalTransferAllowed": "true",
+                    "availableBalance": {
+                      "currencyCode": "USD",
+                      "amount": "1055.5"
+                    },
+                    "bookedBalance": {
+                      "currencyCode": "USD",
+                      "amount": "1055.5"
+                    }
+                  }
+                ],
+                "savingAccounts" : [
+                  {
+                    "externalId": "021000022",
+                    "BBAN": "021000022",
+                    "name": "Sara's Savings Account 1",
+                    "productTypeExternalId": "savings-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
+                    "currency": "USD",
+                    "externalTransferAllowed": "false",
+                    "availableBalance": {
+                      "currencyCode": "USD",
+                      "amount": "3820.2"
+                    },
+                    "bookedBalance": {
+                      "currencyCode": "USD",
+                      "amount": "3820.2"
+                    },
+                    "accountInterestRate": "0.05",
+                    "termUnit": "Quarterly"
+                  },
+                  {
+                    "externalId": "021000023",
+                    "BBAN": "021000023",
+                    "name": "Sara's Savings Account 2",
+                    "productTypeExternalId": "savings-account",
+                    "legalEntities" : [
+                      {
+                        "externalId" : "sara"
+                      }
+                    ],
+                    "currency": "USD",
+                    "externalTransferAllowed": "false",
+                    "availableBalance": {
+                      "currencyCode": "USD",
+                      "amount": "155.5"
+                    },
+                    "bookedBalance": {
+                      "currencyCode": "USD",
+                      "amount": "155.5"
+                    },
+                    "accountInterestRate": "0.05",
+                    "termUnit": "Quarterly"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
