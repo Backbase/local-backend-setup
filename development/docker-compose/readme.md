@@ -276,6 +276,16 @@ If the environment is not working, or if some or all of its services are not in 
 - Check the Edge routes [http://localhost:8280/actuator/gateway/routes](http://localhost:8280/actuator/gateway/routes).
 - If the health check task fails and you are operating in a new environment, ensure that you include `--profile=bootstrap` in your command.
 
+### Maven settings
+- To create a standard maven setting, please follow the instruction from [here](https://backbase.io/documentation/backend-devkit/18.0.1/getting-started/configure-maven).
+- If the credentials in `settings.xml` are encrypted by maven, it won't work. Hence, it has to be created with non-maven-encripted password
+- Mounting maven settings on windows might be slightly different. Hence, you may need to align the docker-compose [file](docker-compose.yaml) in case of windows:
+```shell
+secrets:
+  mvnrepo:
+    file: ${HOME}/.m2/settings.xml # change here
+```
+
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker.
     - Symptoms include failed health checks for `Identity`, failed API calls for authentication. However, you should be able to log in using the Admin Console UI.
