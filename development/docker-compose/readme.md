@@ -25,8 +25,6 @@ For the setup, you must have the following:
 
 - Any Docker runtime.
 - Backbase repository credentials.
-- Java(In case you need to bootstrap the Local Backend Setup with data).
-- Maven(In case you need to bootstrap the Local Backend Setup with data).
 
 ## Set up the Backbase local environment
 
@@ -46,12 +44,6 @@ For the setup, you must have the following:
     ```shell
     docker login repo.backbase.com
     ```
-3. Install java using instruction from [here](https://docs.oracle.com/en/java/javase/21/install/overview-jdk-installation.html).
-4. Install Maven using instruction from [here](https://maven.apache.org/install.html) and configure [settings](https://backbase.io/documentation/backend-devkit/18.0.1/getting-started/configure-maven).
-5. **Only Windows users** - Install Git Bash for windows from [here](https://git-scm.com/downloads/win) and validate it:
-   ```
-   git version
-   ```
 
 ### Set up the local environment
 
@@ -70,26 +62,15 @@ For the setup, you must have the following:
     ```
    > **NOTE**: The Postman health check and Newman runs on `docker compose up`. For more information, see [Health check](#health-check).
 
-4. Bootstrap the environment:
-   1. **Only Windows Users** - Open `Git Bash` from your machine. Shell scripts don't work on the windows regular command prompt. 
-   2. Run the following script:
+4. Add the `bootstrap` profile on the first run to ingest data into Banking Services:
     ```shell
-   images/bootstrap/bootstrap-job-setup.sh
-   ``` 
-   2. Add the `bootstrap` profile on the first run to ingest data into Banking Services 
-     ```shell
-     docker compose --profile=bootstrap up -d
-     ```
-5. To monitor the application status with prometheus data represented  in grafana:
-   1. Configuration changes in docker-compose
-      ````
-       # Observability - Prometheus Configuration(SET to true)
-         management.endpoint.prometheus.enabled: true
-      ````
-   2. Add the `observable` profile while running docker compose
-       ```shell
-       docker compose --profile=observable up -d
-       ```
+    docker compose --profile=bootstrap up -d
+    ```
+   > **NOTE**: [Products](../images/bootstrap/doc/products.json) and [LegalEntity](../images/bootstrap/doc/LegalEntity.json) which are located inside the bootstrap-job are ingested by default. In case you need to ingest a custom data, please refer to [here](./data/README.md).  
+5. Add the `observable` profile to monitor the application status with prometheus data represented  in grafana:
+    ```shell
+    docker compose --profile=observable up -d
+    ```
 6. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f
@@ -164,11 +145,11 @@ The following is an example configuration:
 
 ### Ingest data
 
-The bootstrap-job ingests the following data:
-- [Product catalog](../images/bootstrap/doc/products.json)
-- [Legal Entity](../images/bootstrap/doc/LegalEntity.json)
+The following tasks ingest data:
+- Product catalog task
+- Legal entity bootstrap task
 
-  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` are ingested. In case you want to change the data, First download bootstrap-job using command: `images/bootstrap/download-bootstrap-job.sh`. Then you can manipulate the data files from here: `development/images/bootstrap/target/bootstrap-job/data/src/main/resources/local-backend-setup`. Eventually, you can build the docker image with the manipulated data using command: `images/bootstrap/build-bootstrap-image.sh`
+  > **NOTE**: For demonstration purposes, the `moustache-bank` and `moustache-bank-subsidiaries` profiles are [enabled and pre-configured](https://github.com/Backbase/stream-services/blob/master/stream-legal-entity/legal-entity-bootstrap-task/src/main/resources/application.yml#L24) in the Stream services.
 
 ## Health check
 In addition to the default health check that is provided when you use `docker compose up`, the following steps describe how to perform a more comprehensive health check on your environment using Postman:
@@ -191,7 +172,7 @@ To upgrade a service in the environment, change the Docker image tag to the new 
 
 To upgrade all services to a specific Backbase BOM version, change the `BB_VERSION` value in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.
 
-To upgrade to bootstrap-job version(BOOTSTRAP_JOB_VERSION) compatible with BB_VERSION, please refer to [here](https://repo.backbase.com/repo/com/backbase/accelerators/bootstrap-job/)
+To upgrade to stream version compatible with BB_VERSION, please refer this [link](https://github.com/Backbase/stream-services/blob/master/README.md)
 
 ## Debug custom applications
 
@@ -289,23 +270,6 @@ If the environment is not working, or if some or all of its services are not in 
 - Check the Edge routes [http://localhost:8280/actuator/gateway/routes](http://localhost:8280/actuator/gateway/routes).
 - If the health check task fails and you are operating in a new environment, ensure that you include `--profile=bootstrap` in your command.
 
-### bootstrap-job
-- Check if Maven is installed:
-  ```shell
-  mvn -v
-  ```
-- Check if your java version is compatible with bootstrap-job:
-    - Extract the minimum required version in bootstrap-job:
-        - Open `development/images/bootstrap/target/bootstrap-job/pom.xml`
-        - Look for `java.version` property
-    - Check you local java version:
-        ```shell
-        java -version
-        ```
-#### Windows
-- try to locate the project in a short path directory such as `c:\projects\local-backend-setup`. Windows has restriction for maximum path length. Hence, locating the project under windows standard folders(such as Documents) might exceed the maximum allowed path.
-- OneDrive or other cloud-based file synchronization tools can cause file system issue. Therefor try to move the project out of OneDrive to prevent synchronization. 
-- Building docker image might fail in the last stage if the `virus & threat protection` is configured for `realtime protection`. Try to temporarily disable it as mitigation to jib build failure.
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker.
     - Symptoms include failed health checks for `Identity`, failed API calls for authentication. However, you should be able to log in using the Admin Console UI.

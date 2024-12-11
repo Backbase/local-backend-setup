@@ -272,6 +272,8 @@ services:
       backbase.bootstrap.ingestions.fido-applications.enabled: false
       backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
       admin.baseUrl: http://backbase-identity:8080
+    volumes:
+      - ./data/:/opt/resources/
     depends_on:
       token-converter:
         condition: service_healthy
