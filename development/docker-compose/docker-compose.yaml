@@ -21,8 +21,11 @@ x-common-variables: &common-variables
   management.endpoint.env.show-values: ALWAYS
   management.endpoint.env.post.enabled: true
   management.endpoint.configprops.show-values: ALWAYS
-  # Observability - Tracing and Prometheus Configuration
+  # Observability - Tracing Configuration(SET to true)
   management.tracing.enabled: false
+  # Observability - Prometheus Configuration(SET to true)
+  management.endpoint.prometheus.enabled: false
+
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
@@ -213,6 +216,7 @@ services:
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      backbase.users.realms[0].realm-name: "backbase"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -244,32 +248,32 @@ services:
     links:
       - registry
 
-  product-catalog-task:
-    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
+  bootstrap-job:
+    image: bootstrap-job:${BOOTSTRAP_JOB_VERSION}
     profiles:
       - bootstrap
+    build:
+      context: ../images/bootstrap
+      secrets:
+        - mvnrepo
+      args:
+        JOB_VERSION: ${BOOTSTRAP_JOB_VERSION}
     environment:
       <<: *common-variables
-      eureka.client.register-with-eureka: false
-      spring.config.additional-location: file:/tmp/ingestion.yml
+      spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+      backbase.communication.http.discoverable-access-token-service: true
+      backbase.stream.limits.worker.enabled: false
+      backbase.bootstrap.data.active-data-sets: local-backend-setup
+      backbase.bootstrap.data.legal-entity-prefix.enabled: false
+      backbase.bootstrap.ingestions.identity-users.enabled: false
+      backbase.bootstrap.ingestions.messages.enabled: false
+      backbase.bootstrap.ingestions.push-integration.enabled: false
+      backbase.bootstrap.ingestions.content-repository.enabled: false
+      backbase.bootstrap.ingestions.fido-applications.enabled: false
+      backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
+      admin.baseUrl: http://backbase-identity:8080
     volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-    depends_on:
-      token-converter:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-
-  legal-entity-bootstrap-task:
-    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
-    profiles:
-      - bootstrap
-    environment:
-      <<: *common-variables
-      eureka.client.register-with-eureka: false
-      spring.config.additional-location: file:/tmp/ingestion.yml
-    volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
+      - ./data/:/opt/resources/
     depends_on:
       token-converter:
         condition: service_healthy
@@ -283,8 +287,6 @@ services:
         condition: service_healthy
       backbase-identity:
         condition: service_healthy
-      product-catalog-task:
-        condition: service_completed_successfully
 
   wiremock:
     image: wiremock/wiremock:2.32.0
@@ -356,3 +358,7 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+
+secrets:
+  mvnrepo:
+    file: ${HOME}/.m2/settings.xml

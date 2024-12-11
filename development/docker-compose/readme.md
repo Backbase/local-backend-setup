@@ -66,10 +66,17 @@ For the setup, you must have the following:
     ```shell
     docker compose --profile=bootstrap up -d
     ```
-5. Add the `observable` profile to monitor the application status with prometheus data represented  in grafana:
-    ```shell
-    docker compose --profile=observable up -d
-    ```
+   > **NOTE**: [Products](../images/bootstrap/doc/products.json) and [LegalEntity](../images/bootstrap/doc/LegalEntity.json) which are located inside the bootstrap-job are ingested by default. In case you need to ingest a custom data, please refer to [here](./data/README.md).  
+5. To monitor the application status with prometheus data represented  in grafana:
+    1. Configuration changes in docker-compose
+       ````
+        # Observability - Prometheus Configuration(SET to true)
+          management.endpoint.prometheus.enabled: true
+       ````
+    2. Add the `observable` profile while running docker compose
+        ```shell
+        docker compose --profile=observable up -d
+        ```
 6. To display the log output for all services specified in the `docker-compose.yaml` file and continuously update the console with new log entries:
     ```shell
     docker compose logs -f
@@ -268,6 +275,16 @@ If the environment is not working, or if some or all of its services are not in 
 - Check the Registry service in the browser [http://localhost:8761](http://localhost:8761).
 - Check the Edge routes [http://localhost:8280/actuator/gateway/routes](http://localhost:8280/actuator/gateway/routes).
 - If the health check task fails and you are operating in a new environment, ensure that you include `--profile=bootstrap` in your command.
+
+### Maven settings
+- To create a standard maven setting, please follow the instruction from [here](https://backbase.io/documentation/backend-devkit/18.0.1/getting-started/configure-maven).
+- If the credentials in `settings.xml` are encrypted by maven, it won't work. Hence, it has to be created with non-maven-encripted password
+- Mounting maven settings on windows might be slightly different. Hence, you may need to align the docker-compose [file](docker-compose.yaml) in case of windows:
+```shell
+secrets:
+  mvnrepo:
+    file: ${HOME}/.m2/settings.xml # change here
+```
 
 ### Colima
 - If you encounter an error when running `docker compose up` in Colima, this may be caused by a problem with mounts in Docker.
