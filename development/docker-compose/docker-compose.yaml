@@ -374,7 +374,7 @@ services:
       context: ../images/business-universal
       secrets:
         - npm
-        - repo
+        - jfrog
     environment:
       API_ROOT: /api/
       AUTH_URL: http://localhost:8180/auth/
@@ -392,5 +392,5 @@ secrets:
     file: ${HOME}/.m2/settings.xml
   npm:
     file: ${HOME}/.npmrc
-  repo:
+  jfrog:
     file: ${HOME}/.netrc
