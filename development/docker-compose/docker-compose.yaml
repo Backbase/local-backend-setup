@@ -258,6 +258,7 @@ services:
       context: ../images/bootstrap
       secrets:
         - mvnrepo
+        - mvnrepokey
       args:
         JOB_VERSION: ${BOOTSTRAP_JOB_VERSION}
     environment:
@@ -392,6 +393,8 @@ services:
 secrets:
   mvnrepo:
     file: ${HOME}/.m2/settings.xml
+  mvnrepokey:
+    file: ${HOME}/.m2/settings-security.xml
   npm:
     file: ${HOME}/.npmrc
   jfrog:
