@@ -362,7 +362,7 @@ services:
       - prometheus
 
   business-app:
-    image: harbor.backbase.eu/reference/business-universal:2024.10
+    image: harbor.backbase.eu/reference/business-universal:${APP_VERSION}
     platform: linux/amd64
     profiles:
       - web
@@ -372,6 +372,8 @@ services:
           memory: 64M
     build:
       context: ../images/business-universal
+      args:
+        APP_VERSION: ${APP_VERSION}
       secrets:
         - npm
         - jfrog
