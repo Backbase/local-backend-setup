@@ -1,10 +1,7 @@
 FROM maven:3-eclipse-temurin-21 AS builder
 
 ARG JOB_VERSION
-RUN --mount=type=secret,id=mvnrepo,dst=./settings.xml mvn -s settings.xml dependency:copy -Dartifact=com.backbase.accelerators:bootstrap-job:${JOB_VERSION}:zip:src -DoutputDirectory=/tmp/
-
-RUN apt-get update && apt-get install -y unzip
-RUN unzip /tmp/bootstrap-job-${JOB_VERSION}-src.zip -d /usr/src/mymaven
+RUN --mount=type=secret,id=mvnrepo,dst=./settings.xml mvn -s settings.xml dependency:unpack -Dartifact=com.backbase.accelerators:bootstrap-job:${JOB_VERSION}:zip:src -DoutputDirectory=/usr/src/mymaven
 
 WORKDIR /usr/src/mymaven
 
