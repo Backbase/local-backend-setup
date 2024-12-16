@@ -30,7 +30,7 @@ x-common-variables: &common-variables
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-  # Observability - Tracing and Prometheus Configuration
+  # Observability - Tracing Configuration
   management.tracing.enabled: false
   management.tracing.propagation.type: w3c
   management.tracing.sampling.probability: 1.0
