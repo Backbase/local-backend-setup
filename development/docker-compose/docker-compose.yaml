@@ -2,8 +2,9 @@
 
 x-common-variables: &common-variables
   JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
-  SIG_SECRET_KEY: JWTSecretKeyDontUseInProduction!
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
+  sso.jwt.internal.signature.key.type: VALUE
+  sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
   server.shutdown: graceful
   server.max-http-header-size: 64KB
   server.forward-headers-strategy: framework
@@ -18,8 +19,8 @@ x-common-variables: &common-variables
   management.endpoints.enabled-by-default: true
   management.security.roles: ANONYMOUS,ACTUATOR
   management.endpoint.env.show-values: ALWAYS
+  management.endpoint.env.post.enabled: true
   management.endpoint.configprops.show-values: ALWAYS
-  management.tracing.enabled: false
   spring.main.banner-mode: off
   spring.cloud.config.enabled: false
   spring.cloud.kubernetes.enabled: false
@@ -29,6 +30,15 @@ x-common-variables: &common-variables
   backbase.http.request-logging-filter.max-payload-length: 5000
   logging.level.com.backbase: DEBUG
   logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+  # Observability - Tracing Configuration
+  management.tracing.enabled: false
+  management.tracing.propagation.type: w3c
+  management.tracing.sampling.probability: 1.0
+  management.tracing.baggage.remote-fields: client-id
+  management.tracing.baggage.correlation.fields: client-id
+  #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+  spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
+  management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -45,7 +55,7 @@ x-message-broker-variables: &message-broker-variables
 x-healthcheck-defaults: &healthcheck-defaults
   start_period: 60s
   interval: 15s
-  timeout: 5s
+  timeout: 3s
   retries: 15
 
 name: backbase
@@ -53,12 +63,6 @@ name: backbase
 volumes:
   oracle_data:
     driver: local
-
-secrets:
-  npm:
-    file: ${HOME}/.npmrc
-  repo:
-    file: ${HOME}/.netrc
 
 services:
   # Sign-in using oracle's free account first at https://container-registry.oracle.com/ords/ocr/ba/database/enterprise
@@ -85,16 +89,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    profiles:
+      - tracing-tools
+    environment:
+      - STORAGE_TYPE=mem
+    ports:
+      - "9411:9411"
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.82.0
+    restart: always
+    profiles:
+      - tracing-tools
+    command:
+      - --config=/etc/otelcol-contrib/otel-collector.yml
+    volumes:
+      - ./docker/collector/otel-collector.yml:/etc/otelcol-contrib/otel-collector.yml
+    ports:
+      - "1888:1888" # pprof extension
+      - "8888:8888" # Prometheus metrics exposed by the collector
+      - "8889:8889" # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP http receiver
+      - "55679:55679" # zpages extension
+    depends_on:
+      - zipkin
   registry:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
       - "8761:8080"
+    environment:
+      management.tracing.enabled: false
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/HealthCheck.java" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar" ]
 
   edge:
     image: repo.backbase.com/backbase-docker-releases/edge:${BB_VERSION}
@@ -102,16 +135,16 @@ services:
       - "8280:8080"
     environment:
       <<: *common-variables
+      spring.application.name: "edge"
       gateway.actuator.security.enabled: false
       gateway.csrf.enabled: false
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/edge", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - token-converter
 
   token-converter:
     image: repo.backbase.com/backbase-docker-releases/oidc-token-converter-service:${BB_VERSION}
@@ -119,17 +152,18 @@ services:
       - "7779:8080"
     environment:
       <<: *common-variables
+      spring.application.name: "token-converter"
+      backbase.security.public.paths: /oauth/token,/convert
       backbase.oidc-token-converter.whitelistedDomains[0].internalHostScheme: http
       backbase.oidc-token-converter.whitelistedDomains[0].internalHost: backbase-identity:8080
       backbase.oidc-token-converter.whitelistedDomains[0].issuerHost: localhost
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/token-converter", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
   backbase-identity:
     image: auth-server:${BB_VERSION}
@@ -158,10 +192,10 @@ services:
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
     depends_on:
       oracle-db:
         condition: service_healthy
@@ -174,10 +208,10 @@ services:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.username: access_control
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/access-control", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       oracle-db:
         condition: service_healthy
@@ -192,11 +226,13 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
       spring.datasource.username: arrangement_manager
+      spring.config.additional-location: file:/tmp/dashboard.yml
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./config/arrangement-manager.yml:/tmp/dashboard.yml
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/arrangement-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       oracle-db:
         condition: service_healthy
@@ -215,11 +251,12 @@ services:
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
       spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
+      backbase.users.realms[0].realm-name: "backbase"
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/user-manager", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
       oracle-db:
         condition: service_healthy
@@ -239,38 +276,40 @@ services:
       identity.realmConfiguration.fallbackOptions.enableUser: true
       identity.realmConfiguration.fallbackOptions.useTemporaryPassword: true
     volumes:
-      - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/identity-integration-service", "<status>UP</status>" ]
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - registry
-      - backbase-identity
 
-  product-catalog-task:
-    image: repo.backbase.com/backbase-stream-images/product-catalog-task:${STREAM_VERSION}
+  bootstrap-job:
+    image: bootstrap-job:${BOOTSTRAP_JOB_VERSION}
     profiles:
       - bootstrap
+    build:
+      context: ../images/bootstrap
+      secrets:
+        - mvnrepo
+        - mvnrepokey
+      args:
+        JOB_VERSION: ${BOOTSTRAP_JOB_VERSION}
     environment:
       <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
+      spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+      backbase.communication.http.discoverable-access-token-service: true
+      backbase.stream.limits.worker.enabled: false
+      backbase.bootstrap.data.active-data-sets: local-backend-setup
+      backbase.bootstrap.data.legal-entity-prefix.enabled: false
+      backbase.bootstrap.ingestions.identity-users.enabled: false
+      backbase.bootstrap.ingestions.messages.enabled: false
+      backbase.bootstrap.ingestions.push-integration.enabled: false
+      backbase.bootstrap.ingestions.content-repository.enabled: false
+      backbase.bootstrap.ingestions.fido-applications.enabled: false
+      backbase.bootstrap.identity.baseUrl: http://backbase-identity:8080/auth
+      admin.baseUrl: http://backbase-identity:8080
     volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
-    depends_on:
-      token-converter:
-        condition: service_healthy
-      arrangement-manager:
-        condition: service_healthy
-
-  legal-entity-bootstrap-task:
-    image: repo.backbase.com/backbase-stream-images/legal-entity-bootstrap-task:${STREAM_VERSION}
-    profiles:
-      - bootstrap
-    environment:
-      <<: *common-variables
-      spring.config.additional-location: file:/tmp/ingestion.yml
-    volumes:
-      - ../config/stream/ingestion.yml:/tmp/ingestion.yml
+      - ./data/:/opt/resources/
     depends_on:
       token-converter:
         condition: service_healthy
@@ -284,8 +323,6 @@ services:
         condition: service_healthy
       backbase-identity:
         condition: service_healthy
-      product-catalog-task:
-        condition: service_completed_successfully
 
   wiremock:
     image: wiremock/wiremock:2.32.0
@@ -325,27 +362,56 @@ services:
   #     - "8090:8080"
   #   environment:
   #     <<: *common-variables
+  #     spring.application.name: "<SERVICE-NAME>"
   #     eureka.client.enabled: 'true'
   #   volumes:
-  #     - ./scripts/HealthCheck.java:/tmp/HealthCheck.java
+  #     - ./scripts/HealthCheck.jar:/tmp/HealthCheck.jar
   #   healthcheck:
   #     <<: *healthcheck-defaults
-  #     test: [ "CMD", "java", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.java", "http://registry:8080/eureka/apps/<EXAMPLE-SERVICE-NAME>", "<status>UP</status>" ]
+  #    test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
   #   links:
   #     - registry
 
+  prometheus:
+    image: prom/prometheus
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana
+    profiles:
+      - observable
+    volumes:
+      - ./monitor/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
   business-app:
-    image: harbor.backbase.eu/development/business-universal:2024.03.1-LTS
+    image: harbor.backbase.eu/reference/business-universal:${APP_VERSION}
     platform: linux/amd64
+    profiles:
+      - web
     deploy:
       resources:
         limits:
           memory: 64M
     build:
       context: ../images/business-universal
+      args:
+        APP_VERSION: ${APP_VERSION}
       secrets:
         - npm
-        - repo
+        - jfrog
     environment:
       API_ROOT: /api/
       AUTH_URL: http://localhost:8180/auth/
@@ -357,3 +423,13 @@ services:
       - ./nginx/api.conf:/nginx-config/server/15-api.conf
     links:
       - edge
+
+secrets:
+  mvnrepo:
+    file: ${HOME}/.m2/settings.xml
+  mvnrepokey:
+    file: ${HOME}/.m2/settings-security.xml
+  npm:
+    file: ${HOME}/.npmrc
+  jfrog:
+    file: ${HOME}/.netrc
