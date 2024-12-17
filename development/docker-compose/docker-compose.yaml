@@ -65,19 +65,16 @@ volumes:
     driver: local
 
 services:
-  # Sign-in using oracle's free account first at https://container-registry.oracle.com/ords/ocr/ba/database/enterprise
-  # and accept the terms, then login using 'docker login container-registry.oracle.com' to get the image
   oracle-db:
-    image: container-registry.oracle.com/database/enterprise:19.19.0.0 # This tag is compliant with Apple chips (arm64), for Intel chips (amd64) use '19.3.0.0' tag
+    image: container-registry.oracle.com/database/free:latest-lite
     ports:
       - "1521:1521"
-      - "5500:5500" # EM Express at: https://localhost:5500/em
     environment:
       ORACLE_PDB: BACKBASE
       ORACLE_PWD: b4ckb4s3
     volumes:
       - oracle_data:/opt/oracle/oradata
-      - ./initdb:/opt/oracle/scripts/startup # Each service has to have a dedicated user in the create_users.sql script
+      - ./initdb:/opt/oracle/scripts/startup # Each service has to have a dedicated user in the create_databases.sql script
 
   activemq:
     image: apache/activemq-classic
@@ -89,6 +86,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
@@ -98,6 +96,7 @@ services:
       - STORAGE_TYPE=mem
     ports:
       - "9411:9411"
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.82.0
     restart: always
@@ -117,6 +116,7 @@ services:
       - "55679:55679" # zpages extension
     depends_on:
       - zipkin
+
   registry:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
@@ -171,6 +171,7 @@ services:
       context: ../images/auth-server
       args:
         IDENTITY_BUILDER: repo.backbase.com/backbase-docker-releases/auth-server-builder:${BB_VERSION}
+        KC_DB: oracle
     ports:
       - '8180:8080'
     environment:
@@ -326,8 +327,8 @@ services:
 
   wiremock:
     image: wiremock/wiremock:2.32.0
-    ports:
-      - "8888:8080"
+    profiles:
+      - with-mocks
     command:
       - --global-response-templating
       - --verbose
