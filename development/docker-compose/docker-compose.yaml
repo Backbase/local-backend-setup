@@ -43,9 +43,10 @@ x-common-variables: &common-variables
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
   spring.liquibase.enabled: true
-  spring.datasource.url: jdbc:oracle:thin:@oracle-db:1521/BACKBASE
-  spring.datasource.driver-class-name: oracle.jdbc.OracleDriver
-  spring.datasource.password: b4ckb4s3
+  spring.datasource.username: sa
+  spring.datasource.password: MyPass@word
+  spring.datasource.driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.SQLServerDialect
 
 x-message-broker-variables: &message-broker-variables
   spring.activemq.broker-url: tcp://activemq:61616
@@ -61,20 +62,37 @@ x-healthcheck-defaults: &healthcheck-defaults
 name: backbase
 
 volumes:
-  oracle_data:
+  mssql_data:
     driver: local
 
 services:
-  oracle-db:
-    image: container-registry.oracle.com/database/free:latest-lite
+  mssql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    privileged: true
     ports:
-      - "1521:1521"
+      - "1433:1433"
     environment:
-      ORACLE_PDB: BACKBASE
-      ORACLE_PWD: b4ckb4s3
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: MyPass@word
     volumes:
-      - oracle_data:/opt/oracle/oradata
-      - ./initdb:/opt/oracle/scripts/startup # Each service has to have a dedicated user in the create_users.sql script
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" -b -o /dev/null
+      start_period: 10s
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  mssql-server-init:
+    image: mcr.microsoft.com/mssql-tools
+    platform: linux/amd64
+    command: [ "/opt/mssql-tools/bin/sqlcmd", "-S", "mssql-server", "-U", "SA", "-P", "MyPass@word", "-i", "/initdb/create_databases.sql" ]
+    volumes:
+      - ./initdb:/initdb
+    depends_on:
+      mssql-server:
+        condition: service_healthy
 
   activemq:
     image: apache/activemq-classic
@@ -171,7 +189,8 @@ services:
       context: ../images/auth-server
       args:
         IDENTITY_BUILDER: repo.backbase.com/backbase-docker-releases/auth-server-builder:${BB_VERSION}
-        KC_DB: oracle
+        KC_DB: mssql
+        KC_TRANSACTION_XA_ENABLED: false
     ports:
       - '8180:8080'
     environment:
@@ -180,9 +199,9 @@ services:
       BACKBASE_HTTP_CORS: "true"
       BACKBASE_HTTP_CORS_EXPOSED_HEADERS: "Location"
       BACKBASE_HTTP_CORS_ORIGINS: "http://localhost:4200,http://localhost:8080"
-      KC_DB_URL: "jdbc:oracle:thin:@oracle-db:1521/BACKBASE"
-      KC_DB_USERNAME: "backbase_identity"
-      KC_DB_PASSWORD: "b4ckb4s3"
+      KC_DB_URL: "jdbc:sqlserver://mssql-server:1433;database=backbase_identity;encrypt=false;trustServerCertificate=true;loginTimeout=30;sendStringParametersAsUnicode=false;"
+      KC_DB_USERNAME: "sa"
+      KC_DB_PASSWORD: "MyPass@word"
       KC_LOG_LEVEL: "INFO"
       KC_LOG_CONSOLE_FORMAT: "%d{yyy:MM:dd HH:mm:ss.SSS} %-5p [%X{traceId},%X{spanId},%X{sampled}] %i --- [%t] %c{2.} : %m%n"
       KC_HOSTNAME_URL: "http://localhost:8180/auth/"
@@ -198,8 +217,8 @@ services:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/auth/realms/backbase/.well-known/openid-configuration", "backbase" ]
     depends_on:
-      oracle-db:
-        condition: service_healthy
+      mssql-server-init:
+        condition: service_completed_successfully
 
   access-control:
     image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
@@ -207,15 +226,15 @@ services:
       - "8040:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.username: access_control
+      spring.datasource.url: jdbc:sqlserver://mssql-server:1433;database=access_control;encrypt=false;trustServerCertificate=true;loginTimeout=30;
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
-      oracle-db:
-        condition: service_healthy
+      mssql-server-init:
+        condition: service_completed_successfully
     links:
       - activemq
       - registry
@@ -226,7 +245,7 @@ services:
       - "8050:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.username: arrangement_manager
+      spring.datasource.url: jdbc:sqlserver://mssql-server:1433;database=arrangement_manager;encrypt=false;trustServerCertificate=true;loginTimeout=30;
       spring.config.additional-location: file:/tmp/dashboard.yml
     volumes:
       - ./config/arrangement-manager.yml:/tmp/dashboard.yml
@@ -235,8 +254,8 @@ services:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
-      oracle-db:
-        condition: service_healthy
+      mssql-server-init:
+        condition: service_completed_successfully
     links:
       - activemq
       - registry
@@ -247,7 +266,7 @@ services:
       - "8060:8080"
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
-      spring.datasource.username: user_manager
+      spring.datasource.url: jdbc:sqlserver://mssql-server:1433;database=user_manager;encrypt=false;trustServerCertificate=true;loginTimeout=30;
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
@@ -259,8 +278,8 @@ services:
       <<: *healthcheck-defaults
       test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     depends_on:
-      oracle-db:
-        condition: service_healthy
+      mssql-server-init:
+        condition: service_completed_successfully
     links:
       - activemq
       - registry

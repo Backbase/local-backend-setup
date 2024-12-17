@@ -19,7 +19,7 @@ ENV KC_DB=$KC_DB
 # If set to true (default), Keycloak uses a XA transactions.
 # If set to false, Keycloak uses a non-XA datasource in case the database does not support XA transactions.
 # If KC_DB=mssql, then you must to disable XA Transactions
-ARG KC_TRANSACTION_XA_ENABLED="false"
+ARG KC_TRANSACTION_XA_ENABLED="true"
 ENV KC_TRANSACTION_XA_ENABLED=$KC_TRANSACTION_XA_ENABLED
 
 # Expose health check endpoints. Must be set to true if using k8s probes
