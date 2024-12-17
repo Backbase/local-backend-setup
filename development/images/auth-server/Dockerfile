@@ -12,9 +12,19 @@ FROM $IDENTITY_BUILDER AS auth-server-builder
 #  - https://www.keycloak.org/server/all-config
 #  - https://quarkus.io/guides/all-config
 
-ENV KC_DB "oracle"
-ENV KC_TRANSACTION_XA_ENABLED "true"
+# The database vendor. Supported values dev-file (default for dev purposes), mssql, mysql, oracle
+ARG KC_DB="mysql"
+ENV KC_DB=$KC_DB
+
+# If set to true (default), Keycloak uses a XA transactions.
+# If set to false, Keycloak uses a non-XA datasource in case the database does not support XA transactions.
+# If KC_DB=mssql, then you must to disable XA Transactions
+ARG KC_TRANSACTION_XA_ENABLED="false"
+ENV KC_TRANSACTION_XA_ENABLED=$KC_TRANSACTION_XA_ENABLED
+
+# Expose health check endpoints. Must be set to true if using k8s probes
 ENV KC_HEALTH_ENABLED "true"
+# If enabled, metrics are available at the '/metrics' endpoint.
 ENV KC_METRICS_ENABLED "false"
 
 # If building an image specifically to run the Liquibase migration and exit (e.g. a Job/initContainer)
