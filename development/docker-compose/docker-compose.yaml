@@ -89,6 +89,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
@@ -98,6 +99,7 @@ services:
       - STORAGE_TYPE=mem
     ports:
       - "9411:9411"
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.82.0
     restart: always
@@ -117,6 +119,7 @@ services:
       - "55679:55679" # zpages extension
     depends_on:
       - zipkin
+
   registry:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
