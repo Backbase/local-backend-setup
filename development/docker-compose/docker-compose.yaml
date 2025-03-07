@@ -166,11 +166,11 @@ services:
       - registry
 
   backbase-identity:
-    image: auth-server:${BB_VERSION}
-    build:
-      context: ../images/auth-server
-      args:
-        IDENTITY_BUILDER: repo.backbase.com/backbase-docker-releases/auth-server-builder:${BB_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/auth-server-builder:${BB_VERSION}
+    entrypoint: /opt/keycloak/bin/auth-server-buildconfig-and-run.sh
+    command:
+      - start-dev
+      - --import-realm
     ports:
       - '8180:8080'
     environment:
@@ -179,9 +179,11 @@ services:
       BACKBASE_HTTP_CORS: "true"
       BACKBASE_HTTP_CORS_EXPOSED_HEADERS: "Location"
       BACKBASE_HTTP_CORS_ORIGINS: "http://localhost:4200,http://localhost:8080"
+      KC_DB: "mysql"
       KC_DB_URL: "jdbc:mysql://mysql:3306/backbase_identity?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
       KC_DB_USERNAME: "root"
       KC_DB_PASSWORD: "root"
+      KC_TRANSACTION_XA_ENABLED: "true"
       KC_LOG_LEVEL: "INFO"
       KC_LOG_CONSOLE_FORMAT: "%d{yyy:MM:dd HH:mm:ss.SSS} %-5p [%X{traceId},%X{spanId},%X{sampled}] %i --- [%t] %c{2.} : %m%n"
       KC_HOSTNAME_URL: "http://localhost:8180/auth/"
@@ -192,6 +194,7 @@ services:
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
+      - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
       <<: *healthcheck-defaults
@@ -292,6 +295,7 @@ services:
       context: ../images/bootstrap
       secrets:
         - mvnrepo
+#        - mvnrepokey # Optional: In case your maven credentials are encrypted with `mvn --encrypt-password`
       args:
         JOB_VERSION: ${BOOTSTRAP_JOB_VERSION}
     environment:
@@ -336,7 +340,6 @@ services:
 
   postman-health-check:
     image: postman/newman
-    platform: linux/amd64
     command:
       run /etc/newman/postman_collection.json --environment="/etc/newman/postman_environment.json"
     volumes:
@@ -399,3 +402,5 @@ services:
 secrets:
   mvnrepo:
     file: ${HOME}/.m2/settings.xml
+  mvnrepokey:
+    file: ${HOME}/.m2/settings-security.xml # Optional: In case your maven credentials are encrypted with `mvn --encrypt-password`
