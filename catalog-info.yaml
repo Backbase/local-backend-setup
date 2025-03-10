@@ -1,0 +1,18 @@
+# nonk8s
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: local-backend-setup
+  description: All required files for backend developers to create a basic local environment.
+  annotations:
+    jira/maint-component: Backend DevKit
+    jira/maint-subcomponent: Local Backend Setup
+    jira/project-key: BEFOUND
+    slack/conversation-id: C04PZ4N0CJF
+  tags:
+    - docker
+    - development
+spec:
+  type: internal
+  lifecycle: experimental
+  owner: DE - Backend Foundation
