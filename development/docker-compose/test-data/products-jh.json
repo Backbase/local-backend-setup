@@ -1,0 +1,78 @@
+{
+  "productKinds": [
+    {
+      "externalKindId": "kind9",
+      "kindName": "Pocket",
+      "kindUri": "pocket"
+    },
+    {
+      "externalKindId" : "kind8",
+      "kindName" : "Pocket Parent",
+      "kindUri" : "pocket-parent"
+    },
+    {
+      "externalKindId": "kind4",
+      "kindName": "Credit Card",
+      "kindUri": "credit-card"
+    },
+    {
+      "externalKindId": "kind1",
+      "kindName": "Current Account",
+      "kindUri": "current-account"
+    },
+    {
+      "externalKindId": "kind3",
+      "kindName": "Debit Card",
+      "kindUri": "debit-card"
+    },
+    {
+      "externalKindId": "kind2",
+      "kindName": "Savings Account",
+      "kindUri": "savings-account"
+    }
+  ],
+  "productTypes": [
+    {
+      "externalProductId": "savings-account",
+      "externalProductKindId": "kind2",
+      "externalProductTypeId": "savings-account",
+      "typeName": "Savings Account",
+      "insuredStatus": "yes"
+    },
+    {
+      "externalProductId": "default-pocket-parent-external-id",
+      "externalProductKindId": "kind8",
+      "externalProductTypeId": "NULL",
+      "typeName": "Pocket Parent",
+      "insuredStatus": "n/a"
+    },
+    {
+      "externalProductId": "credit-card",
+      "externalProductKindId": "kind4",
+      "externalProductTypeId": "credit-card",
+      "typeName": "Credit Card",
+      "insuredStatus": "no"
+    },
+    {
+      "externalProductId": "default-pocket-external-id",
+      "externalProductKindId": "kind9",
+      "externalProductTypeId": "NULL",
+      "typeName": "Pocket",
+      "insuredStatus": "n/a"
+    },
+    {
+      "externalProductId": "debit-card",
+      "externalProductKindId": "kind3",
+      "externalProductTypeId": "debit-card",
+      "typeName": "Debit Card",
+      "insuredStatus": "n/a"
+    },
+    {
+      "externalProductId": "current-account",
+      "externalProductKindId": "kind1",
+      "externalProductTypeId": "current-account",
+      "typeName": "Current Account",
+      "insuredStatus": "yes"
+    }
+  ]
+}
