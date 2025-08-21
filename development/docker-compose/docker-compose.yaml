@@ -8,6 +8,7 @@ x-common-variables: &common-variables
   server.shutdown: graceful
   server.max-http-header-size: 64KB
   server.forward-headers-strategy: framework
+  eureka.client.enabled: true
   eureka.client.serviceUrl.defaultZone: http://registry:8080/eureka
   eureka.client.registry-fetch-interval-seconds: 15
   eureka.client.instance-info-replication-interval-seconds: 15
@@ -57,6 +58,30 @@ x-healthcheck-defaults: &healthcheck-defaults
   interval: 15s
   timeout: 3s
   retries: 15
+
+x-gc-api-config: &gc-api-config
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API.PAYMENT-ACCOUNT-TYPE": "DEPOSIT"
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API_SUPPORTED-PRODUCT-KINDS_0": "kind1"
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API_SUPPORTED-PRODUCT-KINDS_1": "kind2"
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API_SUPPORTED-PRODUCT-KINDS_2": "kind6"
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API_SUPPORTED-PRODUCT-KINDS_3": "kind8"
+  "BACKBASE_GC_API-CONFIG_DEPOSIT-API_SUPPORTED-PRODUCT-KINDS_4": "kind9"
+  "BACKBASE_GC_API-CONFIG_LOAN-API.PAYMENT-ACCOUNT-TYPE": "LOAN"
+  "BACKBASE_GC_API-CONFIG_LOAN-API_SUPPORTED-PRODUCT-KINDS_0": "kind4"
+  "BACKBASE_GC_API-CONFIG_LOAN-API_SUPPORTED-PRODUCT-KINDS_1": "kind5"
+
+x-gc-http-config: &gc-http-config
+  "backbase.gc.http.readTimeout": "0"
+  "backbase.gc.http.connectTimeout": "0"
+  "backbase.gc.http.retryCount": "1"
+  "backbase.gc.http.backoff": "1000"
+
+x-gc-credentials: &gc-credentials
+  backbase.gc.party-base-url: "http://caboose:8080"
+  backbase.gc.payment-base-url: "http://caboose:8080"
+  backbase.gc.deposit-base-url: "http://caboose:8080"
+  backbase.gc.loan-base-url: "http://caboose:8080"
+  backbase.gc.subscriptionKey: ""
 
 name: backbase
 
@@ -223,6 +248,31 @@ services:
       - activemq
       - registry
 
+  arrangement-integration:
+    image: repo.backbase.com/backbase-docker-releases/arrangement-integration:${BB_VERSION}
+    ports:
+      - "9050:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
+      eureka.instance.appname: arrangement-integration
+      logging.level.root: INFO
+      logging.level.org.springframework.web.client.RestTemplate: INFO
+      backbase.gc.http.readTimeout: 0
+      backbase.gc.http.connectTimeout: 0
+      backbase.gc.http.retryCount: 0
+      backbase.gc.http.backoff: 1000
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
   arrangement-manager:
     image: repo.backbase.com/backbase-docker-releases/arrangement-manager:${BB_VERSION}
     ports:
@@ -230,6 +280,8 @@ services:
     environment:
       <<: [*common-variables, *message-broker-variables, *database-variables]
 #      backbase.arrangement.arrangement-views.views: arrangement-views
+      backbase.communication.services.account.integration.serviceId: "arrangement-integration"
+      backbase.arrangement.pull-latest-balance: true
       backbase.arrangement.product-kinds.use-db: false
       backbase.arrangement.product-kinds.kinds.kind10.name: Investment Portfolio
       backbase.arrangement.product-kinds.kinds.kind10.id: 10
@@ -241,6 +293,105 @@ services:
       backbase.arrangement.product-kinds.kinds.kind10.translations.localeTranslations.fieldValue: Investment Portfolio
       spring.application.name: "arrangement-manager"
       spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      SPRING_CONFIG_ADDITIONAL_LOCATION: /tmp/application.yml
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+      - ./arrangement-manager/application.yml:/tmp/application.yml
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  transaction-manager:
+    image: repo.backbase.com/backbase-docker-releases/transaction-manager:${BB_VERSION}
+    ports:
+      - "8052:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/transaction-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "backbase.communication.http.autowire-object-mapper": "true"
+      "backbase.security.csrf.enabled": "false"
+      "backbase.security.mtls.enabled": "false"
+      "backbase.transaction.enrichment.enabled": "false"
+      "backbase.transaction.refresh.triggers.payment.enabled": "true"
+      "backbase.transaction.refresh.pull.daysRefreshWindow": "0"
+      "backbase.transaction.csv.export.dateFormat": "MM/dd/YYYY"
+      "backbase.transaction.csv.export.fields": "BBAN,name,counterPartyAccountNumber,counterPartyName,currency,amount,creditDebitIndicator,bookingDate,type,typeGroup,reference,instructedCurrency,currencyExchangeRate,instructedAmount,description,category,checkSerialNumber"
+      "backbase.transaction.csv.export.headers": "Account number(BBAN),Account name,Counter party account number,Counter party name,Currency,Amount,Credit/debit indicator,Book date,Transaction type,Transaction group,Transaction reference,Instructed currency,currency exchange rate,Instructed amount,Description,Category,Check number"
+      "backbase.transaction.pdf.export.maxItems": "10000"
+      "backbase.communication.services.integration.transaction.external.pull.service-id": "transaction-integration"
+      "backbase.pfm.common.base-currency": "USD"
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  transaction-integration:
+    image: repo.backbase.com/backbase-docker-releases/transaction-integration:${BB_VERSION}
+    ports:
+      - "9051:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
+      eureka.instance.appname: transaction-integration
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  payment-order-service:
+    image: repo.backbase.com/backbase-docker-releases/payment-order-service:${BB_VERSION}
+    ports:
+      - "8053:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      spring.datasource.url: jdbc:mysql://mysql:3306/payment-order-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      "backbase.communication.http.autowire-object-mapper": "true"
+      "backbase.communication.services.dbs.integration.external.outbound.paymentorder.serviceId": "payment-integration"
+      "backbase.security.csrf.enabled": "false"
+      "backbase.security.mtls.enabled": "false"
+      "backbase.payments.types": "INTERNAL_TRANSFER"
+      "backbase.payments.types.INTERNAL_TRANSFER.business-function": "A2A Transfer"
+      "backbase.payments.types.INTERNAL_TRANSFER.confirmation.enabled": "false"
+      "backbase.payments.limits.enabled": false
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  payment-integration:
+    image: repo.backbase.com/backbase-docker-releases/payment-integration:${BB_VERSION}
+    ports:
+      - "9061:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
+      server.port: 8080
+      eureka.instance.appname: payment-integration
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -300,7 +451,7 @@ services:
       - registry
 
   bootstrap-job:
-    image: crreference914.azurecr.io/stable/bootstrap-job:${BOOTSTRAP_JOB_VERSION}
+    image: local/staging/bootstrap-job:${BOOTSTRAP_JOB_VERSION}
     profiles:
       - bootstrap
     environment:
@@ -330,6 +481,7 @@ services:
       backbase.bootstrap.ingestions.approvals.enabled: false
       backbase.bootstrap.ingestions.regions.enabled: false
       backbase.bootstrap.ingestions.cards: false
+      caboose.baseUrl: "http://caboose-spring:8080"
       backbase.communication.services.access-control.directUri: http://access-control:8080
       backbase.communication.services.limit.directUri: http://limits-service:8080
       backbase.communication.services.usermanager.directUri: http://user-manager:8080
@@ -355,6 +507,9 @@ services:
       backbase.bootstrap.ingestions.permissionSet.datasource.driver-class-name: "com.mysql.cj.jdbc.Driver"
       backbase.bootstrap.ingestions.permissionSet.datasource.url: "jdbc:mysql://mysql:3306/access-control?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
       backbase.bootstrap.ingestions.permissionSet.database-update.enabled: true
+      backbase.bootstrap.ingestions.plugins.mambu.enabled: false
+      backbase.bootstrap.ingestions.plugins.caboose.enabled: true
+      backbase.stream.audiences.segmentation.user-kind.defaultCustomerCategory: BUSINESS
 #    volumes:
 #      # example where you can test your own files
 #      - ./test-data/products-jh.json:/app/resources/modelbank/core-data/base/product-catalog/products-jh.json
@@ -371,6 +526,22 @@ services:
         condition: service_healthy
       backbase-identity:
         condition: service_healthy
+      caboose:
+        condition: service_healthy
+
+  caboose:
+    image: caboose-spring:2.1.0-SNAPSHOT
+    ports:
+      - "9001:8080"
+    environment:
+      <<: [*common-variables]
+      SPRING_PROFILES_ACTIVE: local
+      server.port: 8080
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
 
   wiremock:
     image: wiremock/wiremock:2.32.0
@@ -420,7 +591,7 @@ services:
 
   employee-app:
 #    image: repo.backbase.com/backbase-docker-releases/employee-app:2023.08-no-production/
-    image: crreference914.azurecr.io/employee-app:2025.03-LTS
+    image: crreference914.azurecr.io/employee-app:2025.03.3-LTS
     environment:
       PORT: 8080
       AUTH_URL: http://localhost:8180/auth/

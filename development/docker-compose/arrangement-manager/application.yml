@@ -1,0 +1,1311 @@
+global-mappings:
+  - &user-preferences-mapping
+    alias: userPreferences.alias
+    favorite: userPreferences.favorite
+    visible: userPreferences.visible
+
+  - &basic-mapping
+    '[currency]': currency
+    '[displayName]': displayName
+    '[insuredStatus]': product.productProperties.insuredStatus
+    '[productKindUri]': productKind.uri
+    '[productKindName]': productKind.name
+    '[state]': state.state
+    '[legalEntities]':
+      id: id
+      name: name
+
+  - &basic-retail-mapping
+    <<: *user-preferences-mapping
+    <<: *basic-mapping
+    '[accountHolderNames]': accountHolderName
+    '[financialInstitutionId]': financialInstitutionId
+    '[lastSyncDate]': lastSyncDate
+
+  - &children-mappings
+    '[debitCards]':
+      id: cardId
+      suffix: number
+      expiration:
+        attribute: expiryDate
+        key: expiration.key
+      addition-prop0: additions.prop0
+      virtual: additions.virtual
+    '[legalEntities]':
+      id: id
+      name: name
+    subscriptions:
+      identifier: id
+
+  - &latest-transactions-tile-mapping
+    '[displayName]': displayName
+    '[financialInstitutionId]': financialInstitutionId
+    '[productKindName]': productKind.name
+    '[accountNumber]':
+      attribute: bban
+      key: BBAN
+
+global-categorizers:
+  - &cat-savings-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'savings-account'
+        - userPreferences.visible != false
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-current-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'current-account'
+        - userPreferences.visible != false
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-debit-card-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'debit-card'
+        - userPreferences.visible != false
+    mappings:
+      <<: *basic-retail-mapping
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-credit-card-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'credit-card'
+        - userPreferences.visible != false
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: remainingCredit
+        key: remainingCredit
+      '[accountNumber]':
+        attribute: panSuffix
+        key: number
+
+  - &cat-loan-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'loan'
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: outstandingPrincipalAmount
+        key: outstandingPrincipalAmount
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-term-deposit-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'term-deposit'
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-investment-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri == 'investment-account'
+    mappings:
+      <<: *basic-retail-mapping
+      '[primaryBalance]':
+        attribute: currentInvestmentValue
+        key: currentInvestmentValue
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-custom-product-kind-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite == true
+        - productKind.uri != 'savings-account'
+        - productKind.uri != 'current-account'
+        - productKind.uri != 'debit-card'
+        - productKind.uri != 'credit-card'
+        - productKind.uri != 'loan'
+        - productKind.uri != 'term-deposit'
+        - productKind.uri != 'investment-account'
+        - productKind.uri != 'investment-portfolio'
+        - productKind.uri != 'pocket'
+        - productKind.uri != 'pocket-parent'
+    mappings:
+      <<: *basic-retail-mapping
+
+  - &cat-savings-account-non-favorites-ref
+    <<: *cat-savings-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'savings-account'
+
+  - &cat-current-account-non-favorites-ref
+    <<: *cat-current-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'current-account'
+
+  - &cat-debit-card-non-favorites-ref
+    <<: *cat-debit-card-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'debit-card'
+
+  - &cat-credit-card-non-favorites-ref
+    <<: *cat-credit-card-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'credit-card'
+
+  - &cat-loan-non-favorites-ref
+    <<: *cat-loan-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'loan'
+
+  - &cat-term-deposit-non-favorites-ref
+    <<: *cat-term-deposit-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'term-deposit'
+
+  - &cat-investment-account-non-favorites-ref
+    <<: *cat-investment-account-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri == 'investment-account'
+
+  - &cat-custom-product-kind-non-favorites-ref
+    expression:
+      kind: all
+      rules:
+        - userPreferences.favorite != true
+        - productKind.uri != 'savings-account'
+        - productKind.uri != 'current-account'
+        - productKind.uri != 'debit-card'
+        - productKind.uri != 'credit-card'
+        - productKind.uri != 'loan'
+        - productKind.uri != 'term-deposit'
+        - productKind.uri != 'investment-account'
+        - productKind.uri != 'investment-portfolio'
+        - productKind.uri != 'pocket'
+        - productKind.uri != 'pocket-parent'
+    mappings:
+      <<: *basic-retail-mapping
+
+  - &cat-savings-account-ref
+    expression: productKind.uri == 'savings-account'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-current-account-ref
+    expression: productKind.uri == 'current-account'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+      '[ibanNumber]':
+        attribute: iban
+        key: IBAN
+
+  - &cat-debit-card-ref
+    expression: productKind.uri == 'debit-card'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-credit-card-ref
+    expression: productKind.uri == 'credit-card'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: remainingCredit
+        key: remainingCredit
+      '[accountNumber]':
+        attribute: panSuffix
+        key: number
+
+  - &cat-loan-ref
+    expression: productKind.uri == 'loan'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: outstandingPrincipalAmount
+        key: outstandingPrincipalAmount
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-term-deposit-ref
+    expression: productKind.uri == 'term-deposit'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-investment-account-ref
+    expression: productKind.uri == 'investment-account'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: currentInvestmentValue
+        key: currentInvestmentValue
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-custom-product-kind-ref
+    expression:
+      kind: all
+      rules:
+        - productKind.uri != 'savings-account'
+        - productKind.uri != 'current-account'
+        - productKind.uri != 'debit-card'
+        - productKind.uri != 'credit-card'
+        - productKind.uri != 'loan'
+        - productKind.uri != 'term-deposit'
+        - productKind.uri != 'investment-account'
+        - productKind.uri != 'pocket'
+        - productKind.uri != 'pocket-parent'
+
+  - &cat-retail-current-account-ref
+    expression: productKind.uri == 'current-account'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[secondaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[tertiaryBalance]':
+        attribute: creditLimitUsage
+        key: creditLimitUsage
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-retail-savings-account-ref
+    expression: productKind.uri == 'savings-account'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[secondaryBalance]':
+        attribute: accruedInterest
+        key: accruedInterest
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-retail-debit-card-ref
+    expression: productKind.uri == 'debit-card'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+
+  - &cat-retail-loan-ref
+    expression: productKind.uri == 'loan'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: outstandingPrincipalAmount
+        key: outstandingPrincipalAmount
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-retail-term-deposit-ref
+    expression: productKind.uri == 'term-deposit'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[secondaryBalance]':
+        attribute: accruedInterest
+        key: accruedInterest
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-retail-credit-card-ref
+    expression: productKind.uri == 'credit-card'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: remainingCredit
+        key: remainingCredit
+      '[secondaryBalance]':
+        attribute: creditLimitUsage
+        key: creditLimitUsage
+      '[tertiaryBalance]':
+        attribute: creditLimit
+        key: creditLimit
+      '[accountNumber]':
+        attribute: panSuffix
+        key: number
+
+  - &cat-retail-investment-account-ref
+    expression: productKind.uri == 'investment-account'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[primaryBalance]':
+        attribute: currentInvestmentValue
+        key: currentInvestmentValue
+      '[secondaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[tertiaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[accountNumber]':
+        attribute: bban
+        key: BBAN
+
+  - &cat-retail-investment-portfolio-ref
+    expression: productKind.uri == 'investment-portfolio'
+    mappings:
+      <<: *basic-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+      '[financialInstitutionId]': financialInstitutionId
+      '[lastSyncDate]': lastSyncDate
+      '[primaryBalance]':
+        attribute: currentInvestmentValue
+        key: currentInvestmentValue
+      '[secondaryBalance]':
+        attribute: bookedBalance
+        key: bookedBalance
+      '[tertiaryBalance]':
+        attribute: availableBalance
+        key: availableBalance
+      '[productType]':
+        attribute: product.typeName
+        key: productType
+      '[externalId]': externalId
+
+  - &cat-retail-custom-product-kind-ref
+    expression:
+      kind: all
+      rules:
+        - productKind.uri != 'savings-account'
+        - productKind.uri != 'current-account'
+        - productKind.uri != 'debit-card'
+        - productKind.uri != 'credit-card'
+        - productKind.uri != 'loan'
+        - productKind.uri != 'term-deposit'
+        - productKind.uri != 'investment-account'
+        - productKind.uri != 'investment-portfolio'
+        - productKind.uri != 'pocket'
+        - productKind.uri != 'pocket-parent'
+    mappings:
+      <<: *basic-retail-mapping
+      <<: *user-preferences-mapping
+      <<: *children-mappings
+
+arrangement-views: &arrangement-views
+  dashboard:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account-favorites: *cat-savings-account-favorites-ref
+      cat-current-account-favorites: *cat-current-account-favorites-ref
+      cat-debit-card-favorites: *cat-debit-card-favorites-ref
+      cat-credit-card-favorites: *cat-credit-card-favorites-ref
+      cat-loan-favorites: *cat-loan-favorites-ref
+      cat-term-deposit-favorites: *cat-term-deposit-favorites-ref
+      cat-investment-account-favorites: *cat-investment-account-favorites-ref
+      cat-custom-product-kind-favorites: *cat-custom-product-kind-favorites-ref
+      cat-savings-account-non-favorites: *cat-savings-account-non-favorites-ref
+      cat-current-account-non-favorites: *cat-current-account-non-favorites-ref
+      cat-debit-card-non-favorites: *cat-debit-card-non-favorites-ref
+      cat-credit-card-non-favorites: *cat-credit-card-non-favorites-ref
+      cat-loan-non-favorites: *cat-loan-non-favorites-ref
+      cat-term-deposit-non-favorites: *cat-term-deposit-non-favorites-ref
+      cat-investment-account-non-favorites: *cat-investment-account-non-favorites-ref
+      cat-custom-product-kind-non-favorites: *cat-custom-product-kind-non-favorites-ref
+    groups:
+      favorites:
+        categories:
+          - cat-savings-account-favorites
+          - cat-current-account-favorites
+          - cat-debit-card-favorites
+          - cat-credit-card-favorites
+          - cat-loan-favorites
+          - cat-term-deposit-favorites
+          - cat-investment-account-favorites
+          - cat-custom-product-kind-favorites
+        limit: 5
+        sort-by:
+          - displayName
+      non-favorites:
+        categories:
+          - cat-savings-account-non-favorites
+          - cat-current-account-non-favorites
+          - cat-debit-card-non-favorites
+          - cat-credit-card-non-favorites
+          - cat-loan-non-favorites
+          - cat-term-deposit-non-favorites
+          - cat-investment-account-non-favorites
+          - cat-custom-product-kind-non-favorites
+        limit: 5
+        sort-by:
+          - displayName
+    balance-aggregations:
+      all:
+        cat-current-account-favorites: availableBalance
+        cat-savings-account-favorites: availableBalance
+        cat-credit-card-favorites: remainingCredit
+        cat-loan-favorites: outstandingPrincipalAmount
+        cat-term-deposit-favorites: bookedBalance
+        cat-investment-account-favorites: currentInvestmentValue
+        cat-custom-product-kind-favorites: bookedBalance
+        cat-current-account-non-favorites: availableBalance
+        cat-savings-account-non-favorites: availableBalance
+        cat-credit-card-non-favorites: remainingCredit
+        cat-loan-non-favorites: outstandingPrincipalAmount
+        cat-term-deposit-non-favorites: bookedBalance
+        cat-investment-account-non-favorites: currentInvestmentValue
+        cat-custom-product-kind-non-favorites: bookedBalance
+      savings:
+        cat-savings-account-favorites: availableBalance
+        cat-savings-account-non-favorites: availableBalance
+      loans:
+        cat-loan-favorites: outstandingPrincipalAmount
+        cat-loan-non-favorites: outstandingPrincipalAmount
+      current-accounts:
+        cat-current-account-favorites: availableBalance
+        cat-current-account-non-favorites: availableBalance
+      credit-cards:
+        cat-credit-card-favorites: remainingCredit
+        cat-credit-card-non-favorites: remainingCredit
+      investments:
+        cat-investment-account-favorites: currentInvestmentValue
+        cat-investment-account-non-favorites: currentInvestmentValue
+      term-deposits:
+        cat-term-deposit-favorites: bookedBalance
+        cat-term-deposit-non-favorites: bookedBalance
+      custom-product-kinds:
+        cat-custom-product-kind-favorites: bookedBalance
+        cat-custom-product-kind-non-favorites: bookedBalance
+
+  retail-overview:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account: *cat-retail-savings-account-ref
+      cat-current-account: *cat-retail-current-account-ref
+      cat-debit-card: *cat-retail-debit-card-ref
+      cat-credit-card: *cat-retail-credit-card-ref
+      cat-loan: *cat-retail-loan-ref
+      cat-term-deposit: *cat-retail-term-deposit-ref
+      cat-investment-account: *cat-retail-investment-account-ref
+      cat-investment-portfolio: *cat-retail-investment-portfolio-ref
+      cat-custom-product-kind: *cat-retail-custom-product-kind-ref
+      cat-overdue-current-account:
+        expression:
+          kind: all
+          rules:
+            - bookedBalance < 0 || overdueSince != null
+            - productKind.uri == 'current-account'
+      cat-overdue-credit-card:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null
+            - productKind.uri == 'credit-card'
+      cat-overdue-loan:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null
+            - productKind.uri == 'loan'
+      cat-overdue-custom-account:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null || bookedBalance < 0
+            - productKind.uri != 'current-account'
+            - productKind.uri != 'credit-card'
+            - productKind.uri != 'loan'
+            - productKind.uri != 'savings-account'
+            - productKind.uri != 'debit-card'
+            - productKind.uri != 'term-deposit'
+            - productKind.uri != 'investment-account'
+            - productKind.uri != 'investment-portfolio'
+            - productKind.uri != 'pocket'
+            - productKind.uri != 'pocket-parent'
+    groups:
+      '[currentAccounts]':
+        categories:
+          - cat-current-account
+        limit: 15
+        sort-by:
+          - displayName
+      '[savingsAccounts]':
+        categories:
+          - cat-savings-account
+        limit: 15
+        sort-by:
+          - displayName
+      '[termDeposits]':
+        categories:
+          - cat-term-deposit
+        limit: 15
+        sort-by:
+          - displayName
+      '[loans]':
+        categories:
+          - cat-loan
+        limit: 15
+        sort-by:
+          - displayName
+      '[creditCards]':
+        categories:
+          - cat-credit-card
+        limit: 15
+        sort-by:
+          - displayName
+      '[debitCards]':
+        categories:
+          - cat-debit-card
+        limit: 15
+        sort-by:
+          - displayName
+      '[investmentAccounts]':
+        categories:
+          - cat-investment-account
+        limit: 15
+        sort-by:
+          - displayName
+      '[investmentPortfolios]':
+        categories:
+          - cat-investment-portfolio
+        limit: 15
+        sort-by:
+          - displayName
+      '[customAccounts]':
+        categories:
+          - cat-custom-product-kind
+        mappings:
+          <<: *basic-retail-mapping
+          '[primaryBalance]': bookedBalance
+        limit: 15
+        sort-by:
+          - displayName
+      '[overdueAccounts]':
+        categories:
+          - cat-overdue-current-account
+          - cat-overdue-credit-card
+          - cat-overdue-loan
+          - cat-overdue-custom-account
+        mappings:
+          <<: *basic-retail-mapping
+          '[primaryBalance]': bookedBalance
+          '[secondaryBalance]': amountInArrear
+          '[overdueSince]': overdueSince
+        category-mappings:
+          cat-overdue-credit-card:
+            '[paymentsPastDue]': paymentsPastDue
+          cat-overdue-loan:
+            '[paymentsPastDue]': paymentsPastDue
+          cat-overdue-custom-account:
+            '[paymentsPastDue]': paymentsPastDue
+        sort-by:
+          - -paymentsPastDue
+          - -amountInArrear
+          - primaryBalance
+        limit: 100
+    projections:
+      currencies: $collect($rows.![currency], $distinct(), $asc())
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-current-account: availableBalance
+        cat-savings-account: availableBalance
+        cat-credit-card: remainingCredit
+        cat-loan: outstandingPrincipalAmount
+        cat-term-deposit: bookedBalance
+        cat-investment-account: currentInvestmentValue
+        cat-investment-portfolio: currentInvestmentValue
+        cat-custom-product-kind: bookedBalance
+      '[savingsAccounts]':
+        cat-savings-account: availableBalance
+      '[currentAccounts]':
+        cat-current-account: availableBalance
+      '[creditCards]':
+        cat-credit-card: remainingCredit
+      '[loans]':
+        cat-loan: outstandingPrincipalAmount
+      '[termDeposits]':
+        cat-term-deposit: bookedBalance
+      '[investmentAccounts]':
+        cat-investment-account: currentInvestmentValue
+      '[investmentPortfolios]':
+        cat-investment-portfolio: currentInvestmentValue
+      '[customAccounts]':
+        cat-custom-product-kind: bookedBalance
+
+  retail-overview-nested:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account: *cat-retail-savings-account-ref
+      cat-current-account: *cat-retail-current-account-ref
+      cat-debit-card: *cat-retail-debit-card-ref
+      cat-credit-card: *cat-retail-credit-card-ref
+      cat-loan: *cat-retail-loan-ref
+      cat-term-deposit: *cat-retail-term-deposit-ref
+      cat-investment-account: *cat-retail-investment-account-ref
+      cat-investment-portfolio: *cat-retail-investment-portfolio-ref
+      cat-custom-product-kind: *cat-retail-custom-product-kind-ref
+      cat-overdue-current-account:
+        expression:
+          kind: all
+          rules:
+            - bookedBalance < 0 || overdueSince != null
+            - productKind.uri == 'current-account'
+      cat-overdue-credit-card:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null
+            - productKind.uri == 'credit-card'
+      cat-overdue-loan:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null
+            - productKind.uri == 'loan'
+      cat-overdue-custom-account:
+        expression:
+          kind: all
+          rules:
+            - amountInArrear > 0 || overdueSince != null || bookedBalance < 0
+            - productKind.uri != 'current-account'
+            - productKind.uri != 'credit-card'
+            - productKind.uri != 'loan'
+            - productKind.uri != 'savings-account'
+            - productKind.uri != 'debit-card'
+            - productKind.uri != 'term-deposit'
+            - productKind.uri != 'investment-account'
+            - productKind.uri != 'investment-portfolio'
+            - productKind.uri != 'pocket'
+            - productKind.uri != 'pocket-parent'
+    dynamic-bucket:
+      group-on:
+        expression: legalEntities.![id]
+        label-extractor: "[0].legalEntities?.?[id == #groupKey].![name]"
+      sort-on:
+        strategy: top_match_legal_entity
+      groups:
+        '[currentAccounts]':
+          categories:
+            - cat-current-account
+          limit: 15
+          sort-by:
+            - displayName
+        '[savingsAccounts]':
+          categories:
+            - cat-savings-account
+          limit: 15
+          sort-by:
+            - displayName
+        '[termDeposits]':
+          categories:
+            - cat-term-deposit
+          limit: 15
+          sort-by:
+            - displayName
+        '[loans]':
+          categories:
+            - cat-loan
+          limit: 15
+          sort-by:
+            - displayName
+        '[creditCards]':
+          categories:
+            - cat-credit-card
+          limit: 15
+          sort-by:
+            - displayName
+        '[debitCards]':
+          categories:
+            - cat-debit-card
+          limit: 15
+          sort-by:
+            - displayName
+        '[investmentAccounts]':
+          categories:
+            - cat-investment-account
+          limit: 15
+          sort-by:
+            - displayName
+        '[investmentPortfolios]':
+          categories:
+            - cat-investment-portfolio
+          limit: 15
+          sort-by:
+            - displayName
+        '[customAccounts]':
+          categories:
+            - cat-custom-product-kind
+          mappings:
+            <<: *basic-retail-mapping
+            '[primaryBalance]': bookedBalance
+          limit: 15
+          sort-by:
+            - displayName
+        '[overdueAccounts]':
+          categories:
+            - cat-overdue-current-account
+            - cat-overdue-credit-card
+            - cat-overdue-loan
+            - cat-overdue-custom-account
+          mappings:
+            <<: *basic-retail-mapping
+            '[primaryBalance]': bookedBalance
+            '[secondaryBalance]': amountInArrear
+            '[overdueSince]': overdueSince
+          category-mappings:
+            cat-overdue-credit-card:
+              '[paymentsPastDue]': paymentsPastDue
+            cat-overdue-loan:
+              '[paymentsPastDue]': paymentsPastDue
+            cat-overdue-custom-account:
+              '[paymentsPastDue]': paymentsPastDue
+          sort-by:
+            - -paymentsPastDue
+            - -amountInArrear
+            - primaryBalance
+          limit: 100
+    projections:
+      currencies: $collect($rows.![currency], $distinct(), $asc())
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-current-account: availableBalance
+        cat-savings-account: availableBalance
+        cat-credit-card: remainingCredit
+        cat-loan: outstandingPrincipalAmount
+        cat-term-deposit: bookedBalance
+        cat-investment-account: currentInvestmentValue
+        cat-investment-portfolio: currentInvestmentValue
+        cat-custom-product-kind: bookedBalance
+      '[savingsAccounts]':
+        cat-savings-account: availableBalance
+      '[currentAccounts]':
+        cat-current-account: availableBalance
+      '[creditCards]':
+        cat-credit-card: remainingCredit
+      '[loans]':
+        cat-loan: outstandingPrincipalAmount
+      '[termDeposits]':
+        cat-term-deposit: bookedBalance
+      '[investmentAccounts]':
+        cat-investment-account: currentInvestmentValue
+      '[investmentPortfolios]':
+        cat-investment-portfolio: currentInvestmentValue
+      '[customAccounts]':
+        cat-custom-product-kind: bookedBalance
+
+  latest-transactions-tile:
+    categorizers:
+      cat-savings-account:
+        expression: productKind.uri == 'savings-account'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-current-account:
+        expression: productKind.uri == 'current-account'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-debit-card:
+        expression: productKind.uri == 'debit-card'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-credit-card:
+        expression: productKind.uri == 'credit-card'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+          '[accountNumber]':
+            attribute: panSuffix
+            key: number
+      cat-loan:
+        expression: productKind.uri == 'loan'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-term-deposit:
+        expression: productKind.uri == 'term-deposit'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-investment-account:
+        expression: productKind.uri == 'investment-account'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-pocket-parent:
+        expression: productKind.uri == 'pocket-parent'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+      cat-custom-product-kind:
+        expression:
+          kind: all
+          rules:
+            - productKind.uri != 'savings-account'
+            - productKind.uri != 'current-account'
+            - productKind.uri != 'debit-card'
+            - productKind.uri != 'credit-card'
+            - productKind.uri != 'loan'
+            - productKind.uri != 'term-deposit'
+            - productKind.uri != 'investment-account'
+            - productKind.uri != 'pocket'
+            - productKind.uri != 'pocket-parent'
+        mappings:
+          <<: *latest-transactions-tile-mapping
+
+  all:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account: *cat-savings-account-ref
+      cat-current-account: *cat-current-account-ref
+      cat-debit-card: *cat-debit-card-ref
+      cat-credit-card: *cat-credit-card-ref
+      cat-loan: *cat-loan-ref
+      cat-term-deposit: *cat-term-deposit-ref
+      cat-investment-account: *cat-investment-account-ref
+      cat-custom-product-kind: *cat-custom-product-kind-ref
+      cat-pocket-parent:
+        expression: productKind.uri == 'pocket-parent'
+    single-group:
+      enable-if-below: 12
+      sort-by:
+        - displayName
+    groups:
+      current-accounts:
+        categories:
+          - cat-current-account
+        limit: 5
+        sort-by:
+          - displayName
+      savings-accounts: &group-savings-account-ref
+        categories:
+          - cat-savings-account
+        limit: 5
+        sort-by:
+          - displayName
+      term-deposits:
+        categories:
+          - cat-term-deposit
+        limit: 5
+        sort-by:
+          - displayName
+      loans:
+        categories:
+          - cat-loan
+        limit: 5
+        sort-by:
+          - displayName
+      credit-cards:
+        categories:
+          - cat-credit-card
+        limit: 5
+        sort-by:
+          - displayName
+      debit-cards:
+        categories:
+          - cat-debit-card
+        limit: 5
+        sort-by:
+          - displayName
+      investment-accounts:
+        categories:
+          - cat-investment-account
+        limit: 5
+        sort-by:
+          - displayName
+      custom-accounts:
+        categories:
+          - cat-custom-product-kind
+      pocket-parents:
+        categories:
+          - cat-pocket-parent
+        limit: 5
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      productKindUris: $collect($rows.![productKind.uri], $distinct(), $asc())
+      savings-accounts: $cat_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $cat_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $cat_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $cat_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $cat_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $cat_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $cat_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-current-account: availableBalance
+        cat-savings-account: availableBalance
+        cat-credit-card: remainingCredit
+        cat-loan: outstandingPrincipalAmount
+        cat-term-deposit: bookedBalance
+        cat-investment-account: currentInvestmentValue
+        cat-custom-product-kind: bookedBalance
+
+  credit-cards:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-credit-card: *cat-credit-card-ref
+    groups:
+      credit-cards:
+        categories:
+          - cat-credit-card
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-credit-card: remainingCredit
+
+  current-accounts:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-current-account: *cat-current-account-ref
+    groups:
+      current-accounts:
+        categories:
+          - cat-current-account
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-current-account: availableBalance
+
+  term-deposits:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-term-deposit: *cat-term-deposit-ref
+    groups:
+      term-deposits:
+        categories:
+          - cat-term-deposit
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-term-deposit: bookedBalance
+
+  debit-cards:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-debit-card: *cat-debit-card-ref
+    groups:
+      debit-cards:
+        categories:
+          - cat-debit-card
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+
+  savings-accounts:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account: *cat-savings-account-ref
+    groups:
+      savings-accounts:
+        categories:
+          - cat-savings-account
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-savings-account: availableBalance
+
+  investment-accounts:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-investment-account: *cat-investment-account-ref
+    groups:
+      investment-accounts:
+        categories:
+          - cat-investment-account
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-investment-account: currentInvestmentValue
+
+  loans:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-loan: *cat-loan-ref
+    groups:
+      loans:
+        categories:
+          - cat-loan
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+    balance-aggregations:
+      all:
+        cat-loan: outstandingPrincipalAmount
+
+  favorite-accounts:
+    includeLiveDetail: false
+    retrieveLiveData: "BEFORE"
+    categorizers:
+      cat-savings-account-favorites: *cat-savings-account-favorites-ref
+      cat-current-account-favorites: *cat-current-account-favorites-ref
+      cat-debit-card-favorites: *cat-debit-card-favorites-ref
+      cat-credit-card-favorites: *cat-credit-card-favorites-ref
+      cat-loan-favorites: *cat-loan-favorites-ref
+      cat-term-deposit-favorites: *cat-term-deposit-favorites-ref
+      cat-investment-account-favorites: *cat-investment-account-favorites-ref
+      cat-custom-product-kind-favorites: *cat-custom-product-kind-favorites-ref
+    groups:
+      favorites:
+        categories:
+          - cat-savings-account-favorites
+          - cat-current-account-favorites
+          - cat-debit-card-favorites
+          - cat-credit-card-favorites
+          - cat-loan-favorites
+          - cat-term-deposit-favorites
+          - cat-investment-account-favorites
+          - cat-custom-product-kind-favorites
+        limit: 12
+        sort-by:
+          - displayName
+    projections:
+      currencies: $collect($cat_rows.![currency], $distinct(), $asc())
+      productKindUris: $collect($rows.![productKind.uri], $distinct(), $asc())
+      savings-accounts: $all_rows.?[productKind.uri == 'savings-account'].size()
+      current-accounts: $all_rows.?[productKind.uri == 'current-account'].size()
+      debit-cards: $all_rows.?[productKind.uri == 'debit-card'].size()
+      credit-cards: $all_rows.?[productKind.uri == 'credit-card'].size()
+      loans: $all_rows.?[productKind.uri == 'loan'].size()
+      term-deposits: $all_rows.?[productKind.uri == 'term-deposit'].size()
+      investment-accounts: $all_rows.?[productKind.uri == 'investment-account'].size()
+      favorite-accounts: $all_rows.?[userPreferences.favorite == true].size()
+    projection-pairs:
+      legal-entities: $collect($rows.![legalEntities.![{$this.id:$this.name}]], $distinct(), $asc())
+
+backbase:
+  communication:
+    services:
+      account@sid(investment):
+        integration:
+          service-id: investment
+  arrangement:
+    arrangement-views:
+      views: *arrangement-views
+    product-kinds:
+      use-db: false
+      kinds:
+        kind10:
+          name: Investment Portfolio
+          id: 10
+          uri: investment-portfolio
+          custom-order: 10
+          balance-aggregation-amount: current-investment-value
+          translations:
+            - locale: en
+              localeTranslations:
+                - fieldName: kind_name
+                  fieldValue: Investment Portfolio
