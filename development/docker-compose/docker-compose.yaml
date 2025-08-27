@@ -257,10 +257,6 @@ services:
       eureka.instance.appname: arrangement-integration
       logging.level.root: INFO
       logging.level.org.springframework.web.client.RestTemplate: INFO
-      backbase.gc.http.readTimeout: 0
-      backbase.gc.http.connectTimeout: 0
-      backbase.gc.http.retryCount: 0
-      backbase.gc.http.backoff: 1000
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -281,7 +277,7 @@ services:
       <<: [*common-variables, *message-broker-variables, *database-variables]
 #      backbase.arrangement.arrangement-views.views: arrangement-views
       backbase.communication.services.account.integration.serviceId: "arrangement-integration"
-      backbase.arrangement.pull-latest-balance: true
+      backbase.integration.outbound.pull-latest-balance: true
       backbase.arrangement.product-kinds.use-db: false
       backbase.arrangement.product-kinds.kinds.kind10.name: Investment Portfolio
       backbase.arrangement.product-kinds.kinds.kind10.id: 10
@@ -308,7 +304,7 @@ services:
       - registry
 
   transaction-manager:
-    image: repo.backbase.com/backbase-docker-releases/transaction-manager:${BB_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/transaction-manager:5.5.0
     ports:
       - "8052:8080"
     environment:
@@ -326,6 +322,11 @@ services:
       "backbase.transaction.pdf.export.maxItems": "10000"
       "backbase.communication.services.integration.transaction.external.pull.service-id": "transaction-integration"
       "backbase.pfm.common.base-currency": "USD"
+      "backbase.transaction.refresh.pull.defaultRefreshDate": "2025-01-01"
+      "backbase.communication.services.integration.transaction.external.pull.version": "v3"
+      "backbase.transaction.domain.types": "PAY"
+      "backbase.transaction.domain.typeGroups": "PAY"
+      "backbase.transaction.domain.typeGroupMapping.PAY": "PAY"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -451,20 +452,12 @@ services:
       - registry
 
   bootstrap-job:
-    image: local/staging/bootstrap-job:${BOOTSTRAP_JOB_VERSION}
+    image: local/staging/bootstrap-job:2025.04
     profiles:
       - bootstrap
     environment:
       <<: *common-variables
-      backbase.bootstrap.data.active-data-sets: test
-      backbase.bootstrap.data.data-sets[0].name: test
-      backbase.bootstrap.data.data-sets[0].description: test data set
-      backbase.bootstrap.data.data-sets[0].legal-entity-files: classpath:modelbank/core-data/base/legal-entities/0001-le-structure-le2.json,classpath:modelbank/core-data/digital-banking/retail-usa/legal-entities/super/emily.json,classpath:modelbank/core-data/digital-banking/retail-usa/legal-entities/super/paolo.json
-      backbase.bootstrap.data.data-sets[0].product-catalog-files: classpath:modelbank/core-data/base/product-catalog/0003-products.json
-      backbase.bootstrap.data.data-sets[0].remote-config-users-files: classpath:modelbank/core-data/base/remote-config/remote-config-users.json
-      backbase.bootstrap.data.data-sets[0].permission-set-files: classpath:modelbank/core-data/base/permission-sets/0004-aps1.json,classpath:modelbank/core-data/base/permission-sets/0004-aps2.json,classpath:modelbank/core-data/base/permission-sets/0004-aps3.json,classpath:modelbank/core-data/base/permission-sets/0004-aps4.json,classpath:modelbank/core-data/base/permission-sets/0004-aps5.json
-      backbase.bootstrap.data.data-sets[0].permission-set-sql-files: classpath:modelbank/core-data/base/permission-sets/Admin_and_Regular_user_APS_update.sql
-      backbase.bootstrap.data.data-sets[0].cards-files: classpath:modelbank/core-data/base/cards/cards.json
+      backbase.bootstrap.data.active-data-sets: minimal-base
       backbase.bootstrap.identity.admin-realm: employee
       backbase.bootstrap.identity.admin-username: admin
       backbase.bootstrap.identity.master-admin-password: admin
@@ -498,8 +491,7 @@ services:
       "backbase.bootstrap.ingestions.plugins.marqeta.password": "59301adf-7a6b-43b1-95ee-99d7408a3754"
       "backbase.bootstrap.ingestions.plugins.marqeta.baseUrl": "https://sandbox-api.marqeta.com/v3"
       "backbase.bootstrap.ingestions.plugins.marqeta.imageBaseUrl": "http://cards-assets-management:4300/assets/"
-      "backbase.bootstrap.data.legal-entity-prefix.value": "localhost-jh"
-      "backbase.bootstrap.data.legal-entity-prefix.enabled": "true"
+      "backbase.bootstrap.data.legal-entity-prefix.enabled": "false"
       backbase.bootstrap.ingestions.plugins.marqeta.debugEnabled: true
       #Permission set related DB settings
       backbase.bootstrap.ingestions.permissionSet.datasource.username: "root"
@@ -509,7 +501,7 @@ services:
       backbase.bootstrap.ingestions.permissionSet.database-update.enabled: true
       backbase.bootstrap.ingestions.plugins.mambu.enabled: false
       backbase.bootstrap.ingestions.plugins.caboose.enabled: true
-      backbase.stream.audiences.segmentation.user-kind.defaultCustomerCategory: BUSINESS
+      backbase.stream.audiences.segmentation.user-kind.defaultCustomerCategory: RETAIL
 #    volumes:
 #      # example where you can test your own files
 #      - ./test-data/products-jh.json:/app/resources/modelbank/core-data/base/product-catalog/products-jh.json
@@ -609,90 +601,6 @@ services:
       - edge
       - backbase-identity
 
-  entrust-card-connector:
-    image: harbor.backbase.eu/development/entrust-card-connector:NVCTS-4080-1
-#    image: repo.backbase.com/backbase-docker-releases/entrust-card-connector:2025.04.3
-    ports:
-      - "8172:8080"
-    environment:
-      <<: [*common-variables, *message-broker-variables]
-      "backbase.entrust.issuerId": "backbase"
-      "backbase.entrust.binPrefix": "511234"
-      "backbase.entrust.baseUrl": "https://api.antelop.net/"
-      "backbase.entrust.apiToken": "c0c71c80-f667-4002-aa5c-d29b47eaf9a9"
-      "backbase.entrust.apiUserId": "backbase"
-      "backbase.entrust.wallet.settingsProfile": "backbase"
-      "backbase.entrust.wallet.preparationType": "default"
-      "backbase.entrust.wallet.currencyCode": "EUR"
-      "backbase.entrust.stepUpAcr": "bb-su:cards-external"
-      "backbase.communication.services.card-manager.serviceId": "cards-presentation-service"
-      "backbase.communication.services.card-management-system.serviceId": "cards-entrust-integration-service"
-      "backbase.communication.services.token-converter.scheme": "http"
-      "backbase.communication.services.token-converter.service-port": "8080"
-      "management.health.jms.enabled": "false"
-      "backbase.security.public.paths": "/integration-api/api/v1/cards/**"
-
-      #audit client settngs
-      "backbase.audit.enabled": "true"
-      "backbase.audit.mode": "ASYNC"
-      "backbase.audit.time-to-live": "30000"
-      "backbase.audit.receive-timeout": "31000"
-
-      #spring cloud stream settings
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardCreatedEvent].content-type: application/json
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardCreatedEvent].destination: com.backbase.card.manager.events.event.spec.v1.CardCreatedEvent
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardCreatedEvent].group: entrust-card-connector.CardCreatedEvent
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardStatusUpdatedEvent].content-type: application/json
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardStatusUpdatedEvent].destination: com.backbase.card.manager.events.event.spec.v1.CardStatusUpdatedEvent
-      spring.cloud.stream.bindings[com.backbase.card.manager.events.event.spec.v1.CardStatusUpdatedEvent].group: entrust-card-connector.CardStatusUpdatedEvent
-
-      "LOGGING_LEVEL_COM_BACKBASE": "DEBUG"
-      logging.level.com.backbase.buildingblocks.backend.communication.event.scs.SpringCloudStreamEventBus: DEBUG
-    volumes:
-      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
-    links:
-      - activemq
-      - registry
-
-  cards-entrust-integration-service:
-    image: crreference914.azurecr.io/cards-entrust-integration-service:3.2.0
-    #    image: repo.backbase.com/backbase-docker-releases/entrust-card-connector:2025.04.3
-    ports:
-      - "8173:8080"
-    environment:
-      <<: [*common-variables, *message-broker-variables]
-      "backbase.card.entrustKeyId": "d7725f08-2dcd-4648-8288-5c236e3fe56a"
-      "backbase.card.keyStore.password": "password"
-      "backbase.card.entrustBinPrefix": "511234"
-      "backbase.card.entrustPanPrefix": "511234567890"
-      "backbase.card.keyStore.entry": "Entrust Test Env"
-      "backbase.card.keyStore.location": "file:/tmp/keystore.jks"
-    volumes:
-      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
-      - ./entrust/keystore.jks:/tmp/keystore.jks
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
-    links:
-      - registry
-
-  cards-assets-management:
-    image: crreference914.azurecr.io/cards-assets-management:2025.04-0.4.0-14
-    environment:
-      PORT: 4300
-      API_ROOT: http://localhost:4300/api/
-      AUTH_URL: http://localhost:8180/auth/
-      AUTH_REALM: "backbase"
-      AUTH_SCOPE: "openid"
-      AUTH_CLIENT_ID: "bb-web-client"
-    ports:
-      - "4300:4300"
-    volumes:
-      - ./nginx/api.conf:/nginx-config/server/15-api.conf
-
   # <EXAMPLE-SERVICE-NAME>:
   #   image: <DOCKER-REGISTRY>/<REPOSITORY-NAME>:<TAG>
   #   ports:
@@ -708,78 +616,6 @@ services:
   #    test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
   #   links:
   #     - registry
-
-  cards-presentation-service:
-    #    image: local/cards-presentation-service:4.6.0-SNAPSHOT-0
-    image: harbor.backbase.eu/development/cards-presentation-service:NVCTS-4031-02
-    ports:
-      - "8170:8080"
-    environment:
-      <<: [*common-variables, *message-broker-variables]
-      "marqeta.baseUrl": "https://sandbox-api.marqeta.com/v3"
-      "marqeta.username": "a6af7aec-c973-461d-8044-67c25e7af1f0"
-      "marqeta.password": "59301adf-7a6b-43b1-95ee-99d7408a3754"
-      "marqeta.card-products.cardProductTokens": "su, mu, st, gr, go, ju"
-      "environment.installation": "localhost"
-      "environment.runtime": "jh"
-      "eureka.client.enabled": "true"
-      "eureka.instance.metadata-map.public": "true"
-      "eureka.instance.metadata-map.role": "live"
-      "eureka.instance.appname": "cards-presentation-service"
-      "eureka.instance.healthCheckUrlPath": "/production-support/health"
-      "eureka.instance.statusPageUrlPath": "/production-support/info"
-    volumes:
-      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
-    links:
-      - registry
-      - edge
-      - activemq
-
-
-  card-manager:
-    image: repo.backbase.com/backbase-docker-releases/card-manager:2025.03-LTS
-    ports:
-      - "8171:8080"
-    environment:
-      <<: [ *common-variables, *message-broker-variables ]
-      "eureka.client.enabled": "true"
-      "eureka.instance.metadata-map.public": "true"
-      "eureka.instance.metadata-map.role": "live"
-      "eureka.instance.appname": "card-manager"
-      "eureka.instance.healthCheckUrlPath": "/production-support/health"
-      "eureka.instance.statusPageUrlPath": "/production-support/info"
-      "backbase.token.configuration.baseUrl": "http://token-converter:8080"
-      "backbase.token.configuration.scope": "bb-su:cards-external"
-      "backbase.communication.services.cardintegration.serviceId": "cards-entrust-integration-service"
-      "backbase.card.issuerId": "backbase"
-      "backbase.wallet.entrust.base-url": https://api.antelop.net
-      "backbase.wallet.entrust.issuer-id": "backbase_us"
-      "backbase.wallet.entrust.settings-profile": backbase
-      "backbase.wallet.entrust.api-user-id": "backbase"
-      "backbase.wallet.entrust.api-token": "a45fe815-808f-46cf-8592-e29d62816c04"
-      "logging.level.com.backbase": "DEBUG"
-      "logging.level.org.springframework.boot.ssl": "DEBUG"
-      "server.ssl.key-store": file:/stores/keystore.jks
-      "server.ssl.key-store-password": "password"
-      "server.ssl.keyAlias: server": "server"
-      "server.ssl.trust-store": file:/stores/truststore.p12
-      "server.ssl.trust-store-password": "password"
-      "server.ssl.client-auth": "need"
-      "backbase.security.mtls.enabled": true
-#      "backbase.security.mtls.validate-client": false
-#      "backbase.security.mtls.trusted-clients": "backbase"
-    volumes:
-      - ./scripts/HealthCheck.java:/tmp/h/HealthCheck.java
-      - ./tls:/stores
-    healthcheck:
-      <<: *healthcheck-defaults
-      test: [ "CMD", "java", "/tmp/h/HealthCheck.java", "http://registry:8080/eureka/apps/card-manager", "<status>UP</status>" ]
-    links:
-      - registry
-      - activemq
 
   prometheus:
     image: prom/prometheus
