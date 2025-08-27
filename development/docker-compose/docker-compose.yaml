@@ -452,7 +452,7 @@ services:
       - registry
 
   bootstrap-job:
-    image: local/staging/bootstrap-job:2025.04
+    image: bootstrap-job/staging/bootstrap-job:test19
     profiles:
       - bootstrap
     environment:
@@ -502,6 +502,7 @@ services:
       backbase.bootstrap.ingestions.plugins.mambu.enabled: false
       backbase.bootstrap.ingestions.plugins.caboose.enabled: true
       backbase.stream.audiences.segmentation.user-kind.defaultCustomerCategory: RETAIL
+      logging.level.com.backbase.bootstrap: DEBUG
 #    volumes:
 #      # example where you can test your own files
 #      - ./test-data/products-jh.json:/app/resources/modelbank/core-data/base/product-catalog/products-jh.json
@@ -522,7 +523,7 @@ services:
         condition: service_healthy
 
   caboose:
-    image: caboose-spring:2.1.0-SNAPSHOT
+    image: crreference914.azurecr.io/staging/caboose-spring:2.1.0-SNAPSHOT-20250822
     ports:
       - "9001:8080"
     environment:
