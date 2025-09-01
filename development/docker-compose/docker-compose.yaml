@@ -455,7 +455,7 @@ services:
       - registry
 
   bootstrap-job:
-    image: bootstrap-job/staging/bootstrap-job:test19
+    image: crreference914.azurecr.io/staging/bootstrap-job:3.2.0-SNAPSHOT-20250901115152
     profiles:
       - bootstrap
     environment:
@@ -526,7 +526,7 @@ services:
         condition: service_healthy
 
   caboose:
-    image: crreference914.azurecr.io/staging/caboose-spring:2.1.0-SNAPSHOT-20250822
+    image: crreference914.azurecr.io/staging/caboose-spring:2.1.0-SNAPSHOT-20250829153501
     ports:
       - "9001:8080"
     environment:
