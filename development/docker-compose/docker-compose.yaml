@@ -257,10 +257,6 @@ services:
       eureka.instance.appname: arrangement-integration
       logging.level.root: INFO
       logging.level.org.springframework.web.client.RestTemplate: INFO
-      backbase.gc.http.readTimeout: 0
-      backbase.gc.http.connectTimeout: 0
-      backbase.gc.http.retryCount: 0
-      backbase.gc.http.backoff: 1000
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -308,7 +304,7 @@ services:
       - registry
 
   transaction-manager:
-    image: repo.backbase.com/backbase-docker-releases/transaction-manager:${BB_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/transaction-manager:5.5.0
     ports:
       - "8052:8080"
     environment:
@@ -326,6 +322,7 @@ services:
       "backbase.transaction.pdf.export.maxItems": "10000"
       "backbase.communication.services.integration.transaction.external.pull.service-id": "transaction-integration"
       "backbase.pfm.common.base-currency": "USD"
+      "backbase.transaction.refresh.pull.defaultRefreshDate": "2025-01-01"
       "backbase.communication.services.integration.transaction.external.pull.version": "v3"
       "backbase.transaction.domain.types": "PAY"
       "backbase.transaction.domain.typeGroups": "PAY"
