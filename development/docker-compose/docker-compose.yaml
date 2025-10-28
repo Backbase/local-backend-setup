@@ -1,7 +1,8 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -XX:UseSVE=0
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   sso.jwt.internal.signature.key.type: VALUE
   sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
@@ -40,12 +41,12 @@ x-common-variables: &common-variables
   #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
-  JAVA_OPTS: "-XX:UseSVE=0"
 
+# Silicon specific variables for services which do not use common variables and still need to run on M4 chips
 x-silicon-specific-variables: &silicon-specific-variables
-  JAVA_OPTS: "-XX:UseSVE=0"
-  JAVA_OPTS_APPEND: "-XX:UseSVE=0"
-  JAVA_TOOL_OPTIONS: "-XX:UseSVE=0"
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS_APPEND: ${EXTRA_JAVA_OPTS}
+  JAVA_TOOL_OPTIONS: ${EXTRA_JAVA_OPTS}
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -226,8 +227,7 @@ services:
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
-                          -XX:UseSVE=0"
-      EXTRA_JAVA_OPTS: "-XX:UseSVE=0"
+                          ${EXTRA_JAVA_OPTS}"
     volumes:
       - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -455,7 +455,7 @@ services:
     ports:
       - "8070:8080"
     environment:
-      <<: [*common-variables, *silicon-specific-variables]
+      <<: *common-variables
       identity.serverUrl: http://backbase-identity:8080/auth
       identity.masterAdmin.username: admin
       identity.masterAdmin.password: admin
