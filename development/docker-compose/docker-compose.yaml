@@ -1,7 +1,7 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 -XX:UseSVE=0
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   sso.jwt.internal.signature.key.type: VALUE
   sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
@@ -40,6 +40,12 @@ x-common-variables: &common-variables
   #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
+  JAVA_OPTS: "-XX:UseSVE=0"
+
+x-silicon-specific-variables: &silicon-specific-variables
+  JAVA_OPTS: "-XX:UseSVE=0"
+  JAVA_OPTS_APPEND: "-XX:UseSVE=0"
+  JAVA_TOOL_OPTIONS: "-XX:UseSVE=0"
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -147,6 +153,7 @@ services:
     ports:
       - "8761:8080"
     environment:
+      <<: *silicon-specific-variables
       management.tracing.enabled: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -199,6 +206,7 @@ services:
     ports:
       - '8180:8080'
     environment:
+      <<: *silicon-specific-variables
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       BACKBASE_HTTP_CORS: "true"
@@ -217,7 +225,9 @@ services:
       KC_SPI_CONNECTIONS_JPA_LEGACY_INITIALIZE_EMPTY: "true"
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
-                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
+                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
+                          -XX:UseSVE=0"
+      EXTRA_JAVA_OPTS: "-XX:UseSVE=0"
     volumes:
       - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -445,7 +455,7 @@ services:
     ports:
       - "8070:8080"
     environment:
-      <<: *common-variables
+      <<: [*common-variables, *silicon-specific-variables]
       identity.serverUrl: http://backbase-identity:8080/auth
       identity.masterAdmin.username: admin
       identity.masterAdmin.password: admin
