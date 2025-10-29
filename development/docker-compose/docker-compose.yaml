@@ -545,7 +545,8 @@ services:
     ports:
       - "9001:8080"
     environment:
-      <<: [*common-variables]
+      <<: *common-variables
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 # Caboose uses JVM which does not support -XX:UseSVE option
       SPRING_PROFILES_ACTIVE: local
       server.port: 8080
     volumes:
