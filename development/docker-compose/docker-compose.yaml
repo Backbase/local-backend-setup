@@ -66,7 +66,7 @@ volumes:
 
 services:
   oracle-db:
-    image: container-registry.oracle.com/database/free:latest-lite
+    image: container-registry.oracle.com/database/free:23.9.0.0-lite
     ports:
       - "1521:1521"
     environment:
