@@ -424,7 +424,8 @@ services:
     ports:
       - "8052:8080"
     environment:
-      <<: [ *common-variables, *message-broker-variables, *database-variables ]
+      <<: [ *common-variables, *message-broker-variables, *database-variables, *mambu-creds ]
+      spring.application.name: "transaction-manager"
       spring.datasource.url: jdbc:mysql://mysql:3306/transaction-manager?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       "backbase.communication.http.autowire-object-mapper": "true"
       "backbase.security.csrf.enabled": "false"
@@ -666,7 +667,7 @@ services:
         condition: service_healthy
 
   caboose:
-    image: crreference914.azurecr.io/development/caboose-spring:2.1.0-SNAPSHOT-20251104144125
+    image: crreference914.azurecr.io/development/caboose-spring:2.1.0-SNAPSHOT-20251104164312
     ports:
       - "9001:8080"
       #- "5005:5005"
@@ -699,9 +700,10 @@ services:
 #      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0 -Djava.security.egd=file:/dev/urandom"
 
   event-listener-service:
-    image: repo.backbase.com/backbase-docker-releases/event-listener-service:2023.01.1-0.27.0-RC2
+    image: crreference914.azurecr.io/event-listener-service:1.10.0
     ports:
       - "9082:8080"
+      - "5005:5005"
     environment:
       <<: [ *common-variables, *message-broker-variables, *database-variables ]
       BACKBASE_SECURITY_CSRF_ENABLED: "false"
@@ -713,6 +715,7 @@ services:
       SPRING_PROFILES_INCLUDE: "json-logging"
       backbase.events.enabled: "true"
       logging.level.com.backbase.buildingblocks.backend.security.auth.config.MtlsAuthenticationFilter: "WARN"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
