@@ -586,7 +586,7 @@ services:
       - registry
 
   bootstrap-job:
-    image: bootstrap-job/development/bootstrap-job:202510291
+    image: crreference914.azurecr.io/development/bootstrap-job:4.0.0-SNAPSHOT-20251104192143
     profiles:
       - bootstrap
     environment:
