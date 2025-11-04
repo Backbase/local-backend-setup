@@ -1,7 +1,8 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   sso.jwt.internal.signature.key.type: VALUE
   sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
@@ -40,6 +41,12 @@ x-common-variables: &common-variables
   #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
+
+# Silicon specific variables for services which do not use common variables and still need to run on M4 chips
+x-silicon-specific-variables: &silicon-specific-variables
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS_APPEND: ${EXTRA_JAVA_OPTS}
+  JAVA_TOOL_OPTIONS: ${EXTRA_JAVA_OPTS}
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -82,6 +89,31 @@ x-gc-credentials: &gc-credentials
   backbase.gc.deposit-base-url: "http://caboose:8080"
   backbase.gc.loan-base-url: "http://caboose:8080"
   backbase.gc.subscriptionKey: ""
+
+x-mambu-creds: &mambu-creds
+  mambu.basePath: "http://caboose:8080/api/mambu/v2"
+  mambu.baseUrl: "http://caboose:8080/api/mambu/v2"
+  mambu.branchId: ""
+  mambu.branchKey: ""
+  mambu.username: "mock"
+  mambu.password: "mock"
+  mambu.ghostAccountId: "ZQGS770"
+  mambu.ghostAccountIds.USD: "ZQGS770"
+  mambu.ghostAccountIds.EUR: "ZQGS771"
+  mambu.pocketProductKey: "8a19d8937a753ef9017a76d183eb3a6c"
+  mambu.transactionsBeneficiaryAccountKey: "ZQGS770"
+  mambu.transactionsBeneficiaryAccountKeys.USD: "ZQGS770"
+  mambu.transactionsBeneficiaryAccountKeys.EUR: "ZQGS771"
+  mambu.currentAccountProductKeys.USD: "pr-current-account-usd"
+  mambu.currentAccountProductKeys.EUR: "pr-current-account-eur"
+  mambu.savingsAccountProductKeys.USD: "pr-saving-account-usd"
+  mambu.savingsAccountProductKeys.EUR: "pr-saving-account-eur"
+  mambu.line-of-credit-product-keys.USD: "pr-saving-account-usd"
+  mambu.line-of-credit-product-keys.EUR: "pr-saving-account-eur"
+  mambu.term-loan-product-keys.USD: "pr-term-loan-usd"
+  mambu.term-loan-product-keys.EUR: "pr-term-loan-eur"
+  mambu.mortgage-product-keys.USD: "pr-mortgage-usd"
+  mambu.mortgage-product-keys.EUR: "pr-mortgage-eur"
 
 name: backbase
 
@@ -147,6 +179,7 @@ services:
     ports:
       - "8761:8080"
     environment:
+      <<: *silicon-specific-variables
       management.tracing.enabled: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -199,7 +232,7 @@ services:
     ports:
       - '8180:8080'
     environment:
-      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config, *silicon-specific-variables]
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       BACKBASE_HTTP_CORS: "true"
@@ -220,11 +253,12 @@ services:
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
       keycloak.backbase.event-listeners.audit.endpoint: "http://audit-service:8080"
       KC_SPI_EVENTS_LISTENER_AUDIT_INTEGRATION_SERVICE_URL: "http://audit-service:8080"
-      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_NO_AUTH_LOCALHOST: "true"
-      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://localhost:8090"
+      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_NO_AUTH_LOCALHOST: "false"
+      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8090"
     #  KC_SPI_MOBILE_AUTHENTICATION_CLIENT_DEFAULT_URL: "http://mobile-authentication:8080"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
-                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
+                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
+                          ${EXTRA_JAVA_OPTS}"
     volumes:
       - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -236,7 +270,7 @@ services:
         condition: service_healthy
 
   access-control:
-    image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
+    image: repo.backbase.com/backbase-docker-releases/access-control:2025.09-LTS
     ports:
       - "8040:8080"
     environment:
@@ -516,7 +550,6 @@ services:
       backbase.users.identity-endpoints-enabled: true
       backbase.users.identity-integration-enabled: true
       backbase.users.sync-primary-to-identity-enabled: true
-      spring.cloud.discovery.client.simple.instances.user-integration-outbound-service[0].uri: http://wiremock:8080
       backbase.users.realms[0].realm-name: "employee"
       backbase.users.realms[1].realm-name: "retail"
       backbase.users.realms[2].realm-name: "business"
@@ -552,7 +585,7 @@ services:
       - registry
 
   bootstrap-job:
-    image: bootstrap-job/development/bootstrap-job:20251007
+    image: bootstrap-job/development/bootstrap-job:202510291
     profiles:
       - bootstrap
     environment:
@@ -633,14 +666,15 @@ services:
         condition: service_healthy
 
   caboose:
-    image: caboose-spring/development/caboose-spring:202510074
+    image: crreference914.azurecr.io/development/caboose-spring:2.1.0-SNAPSHOT-20251104144125
     ports:
       - "9001:8080"
+      #- "5005:5005"
     environment:
       <<: [*common-variables]
       SPRING_PROFILES_ACTIVE: local
       server.port: 8080
-
+      #JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -707,6 +741,62 @@ services:
       backbase.audit.indexedMetadata.userId: "User ID,External User ID,User,Username,Sender User ID,Recipient ID,Owner ID"
       backbase.audit.timeline.eventCategories.no-read: "Identity and Access,Device Management,Message Center,Employee Actions,Comments,Payments,Employee,Push,Email,RTC,SMS,Card Management,Personal Finance Management,Identity User Management"
       spring.datasource.url: "jdbc:mysql://mysql:3306/audit?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true"
+    volumes:
+      - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  arrangement-pull-integration:
+    image: crreference914.azurecr.io/arrangement-pull-integration-service:2.6.0
+    ports:
+      - "9052:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config, *database-variables, *mambu-creds ]
+      spring.application.name: "arrangement-pull-integration"
+      spring.datasource.url: jdbc:mysql://mysql:3306/arrangement-pull-integration-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      eureka.instance.appname: arrangement-pull-integration
+      logging.level.root: INFO
+      logging.level.org.springframework.web.client.RestTemplate: INFO
+      "backbase.communication.http.client-id": "bb-client"
+      "backbase.communication.http.client-secret": "bb-secret"
+      "enableExperimentalUniversalSupport": "true"
+      "SPRING_PROFILES_INCLUDE": ""
+      "backbase.stream.legalentity.sink.serviceAgreementPurposes": "FAMILY_BANKING"
+    volumes:
+       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - activemq
+      - registry
+
+  transaction-pull-integration:
+    image: crreference914.azurecr.io/transaction-pull-integration-service:1.9.0
+    ports:
+      - "9053:8080"
+    environment:
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config, *database-variables, *mambu-creds ]
+      spring.application.name: "transaction-pull-integration"
+      spring.datasource.url: jdbc:mysql://mysql:3306/transaction-pull-integration-service?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
+      eureka.instance.appname: transaction-pull-integration
+      logging.level.root: INFO
+      logging.level.org.springframework.web.client.RestTemplate: INFO
+      "backbase.communication.http.client-id": "bb-client"
+      "backbase.communication.http.client-secret": "bb-secret"
+      "enableExperimentalUniversalSupport": "true"
+      "SPRING_PROFILES_INCLUDE": ""
+      "backbase.stream.legalentity.sink.serviceAgreementPurposes": "FAMILY_BANKING"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -788,63 +878,22 @@ services:
   event-bridge:
     image: repo.backbase.com/backbase-docker-releases/event-bridge:2025.09.7-LTS
     ports:
-      - "9094:8090"
+      - "8090:8090"
     environment:
-      BACKBASE_ENABLE_NO_AUTH_LOCALHOST_ENDPOINTS: "true"
-      BACKBASE_SECURITY_CSRF_ENABLED: "false"
-      BACKBASE_SECURITY_MTLS_ENABLED: "false"
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
+      backbase.enable-no-auth-localhost-endpoints: false
+      "BACKBASE_EVENTS_ENABLED": "true"
+      SERVER_PORT: 8090
       BUILDINGBLOCKS_SECURITY_CSRF_ENABLED: "false"
-      EUREKA_CLIENT_ENABLED: "false"
-      INSTALLATION: "reference"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=45 -Djava.security.egd=file:/dev/urandom -XX:+CrashOnOutOfMemoryError -XX:+AlwaysPreTouch -XX:InitialRAMPercentage=45 -XX:SurvivorRatio=30 -XX:NewRatio=1 -XX:C1MaxInlineLevel=18 -XX:C1MaxInlineSize=102 -XX:MaxInlineLevel=30 -XX:MaxInlineSize=102"
-      LOGGING_LEVEL_COM_BACKBASE: "WARN"
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "WARN"
-      LOGGING_LEVEL_ROOT: "WARN"
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,metrics,prometheus"
-      MANAGEMENT_METRICS_TAGS_APPLICATION: "event-bridge"
-      MANAGEMENT_SECURITY_ROLES: "ACTUATOR,USER"
-      RELEASE_NAME: "event-bridge"
-      SERVER_PORT: "8090"
-      SERVER_SHUTDOWN: "graceful"
-      SERVER_TOMCAT_MBEANREGISTRY_ENABLED: "true"
-      SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_MAIN_CLOUDPLATFORM: "KUBERNETES"
-      SPRING_PROFILES_INCLUDE: "json-logging"
-      backbase.lifecycle.delayed-shutdown.delay: "15s"
-      backbase.lifecycle.delayed-shutdown.enabled: "true"
-      management.metrics.distribution.percentiles: "0.95, 0.99, 1"
-      management.metrics.distribution.percentiles.domain.service: "0.95, 0.99, 1"
-      management.metrics.distribution.percentiles.hikaricp.connections: "0.95, 0.99, 1"
-      management.metrics.distribution.percentiles.http.client.requests: "0.95, 0.99, 1"
-      management.metrics.distribution.percentiles.http.server.requests: "0.95, 0.99, 1"
-      management.metrics.distribution.percentiles.spring.data.repository.invocations: "0.95, 0.99, 1"
-      management.metrics.distribution.sla.http.client.requests: "30ms,250ms,1000ms"
-      management.metrics.distribution.sla.http.server.requests: "30ms,250ms,1000ms"
-      management.security.roles: "ACTUATOR,USER"
-      resilience4j.bulkhead.metrics.enabled: "true"
-      resilience4j.bulkhead.metrics.legacy.enabled: "true"
-      resilience4j.circuitbreaker.metrics.enabled: "true"
-      resilience4j.circuitbreaker.metrics.legacy.enabled: "true"
-      resilience4j.ratelimiter.metrics.enabled: "true"
-      resilience4j.ratelimiter.metrics.legacy.enabled: "true"
-      resilience4j.retry.metrics.enabled: "true"
-      resilience4j.retry.metrics.legacy.enabled: "true"
-      resilience4j.thread-pool-bulkhead.metrics.enabled: "true"
-      resilience4j.thread-pool-bulkhead.metrics.legacy.enabled: "true"
-      resilience4j.timelimiter.metrics.enabled: "true"
-      resilience4j.timelimiter.metrics.legacy.enabled: "true"
-      spring.cloud.azure.eventhubs.kafka.enabled: "false"
-      spring.cloud.stream.binders.servicebus.environment.spring.main.sources: "com.azure.spring.cloud.stream.binder.servicebus.implementation.config.ServiceBusBinderConfiguration"
-      spring.lifecycle.timeout-per-shutdown-phase: "50s"
-      spring_cloud_stream_binders_servicebus_environment_spring_main_sources: "com.azure.spring.cloud.stream.binder.servicebus.implementation.config.ServiceBusBinderConfiguration"
+      "backbase.security.csrf.enabled": "false"
+      "backbase.security.mtls.enabled": "false"
+
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
       # - ./jwt/keystore_pub.p12:/jwt/public/keystore_pub.p12:ro # Uncomment if needed
-    healthcheck:
-      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/health/liveness" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+    links:
+      - activemq
+      - registry
 
   prometheus:
     image: prom/prometheus
