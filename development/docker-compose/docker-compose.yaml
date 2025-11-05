@@ -1,7 +1,8 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   sso.jwt.internal.signature.key.type: VALUE
   sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
@@ -40,6 +41,12 @@ x-common-variables: &common-variables
   #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
+
+# Silicon specific variables for services which do not use common variables and still need to run on M4 chips
+x-silicon-specific-variables: &silicon-specific-variables
+  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
+  JAVA_OPTS_APPEND: ${EXTRA_JAVA_OPTS}
+  JAVA_TOOL_OPTIONS: ${EXTRA_JAVA_OPTS}
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -147,6 +154,7 @@ services:
     ports:
       - "8761:8080"
     environment:
+      <<: *silicon-specific-variables
       management.tracing.enabled: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -199,6 +207,7 @@ services:
     ports:
       - '8180:8080'
     environment:
+      <<: *silicon-specific-variables
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       BACKBASE_HTTP_CORS: "true"
@@ -217,7 +226,8 @@ services:
       KC_SPI_CONNECTIONS_JPA_LEGACY_INITIALIZE_EMPTY: "true"
       KC_SPI_CONNECTIONS_JPA_LEGACY_MIGRATION_STRATEGY: "update"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
-                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
+                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
+                          ${EXTRA_JAVA_OPTS}"
     volumes:
       - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -535,7 +545,8 @@ services:
     ports:
       - "9001:8080"
     environment:
-      <<: [*common-variables]
+      <<: *common-variables
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 # Caboose uses JVM which does not support -XX:UseSVE option
       SPRING_PROFILES_ACTIVE: local
       server.port: 8080
     volumes:
