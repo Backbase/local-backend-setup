@@ -1,8 +1,7 @@
 # https://docs.docker.com/compose/compose-file/
 
 x-common-variables: &common-variables
-  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0 ${EXTRA_JAVA_OPTS}
-  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60.0
   USERCTX_KEY: JWTSecretKeyDontUseInProduction!
   sso.jwt.internal.signature.key.type: VALUE
   sso.jwt.internal.signature.key.value: JWTSecretKeyDontUseInProduction!
@@ -41,12 +40,6 @@ x-common-variables: &common-variables
   #  management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
   spring.autoconfigure.exclude: org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
   management.otlp.tracing.endpoint: http://otel-collector:4318/v1/traces
-
-# Silicon specific variables for services which do not use common variables and still need to run on M4 chips
-x-silicon-specific-variables: &silicon-specific-variables
-  JAVA_OPTS: ${EXTRA_JAVA_OPTS}
-  JAVA_OPTS_APPEND: ${EXTRA_JAVA_OPTS}
-  JAVA_TOOL_OPTIONS: ${EXTRA_JAVA_OPTS}
 
 x-database-variables: &database-variables
   logging.level.liquibase: INFO
@@ -146,6 +139,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   zipkin:
     image: openzipkin/zipkin
     container_name: zipkin
@@ -155,6 +149,7 @@ services:
       - STORAGE_TYPE=mem
     ports:
       - "9411:9411"
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.82.0
     restart: always
@@ -174,12 +169,12 @@ services:
       - "55679:55679" # zpages extension
     depends_on:
       - zipkin
+
   registry:
     image: repo.backbase.com/backbase-docker-releases/registry:${BB_VERSION}
     ports:
       - "8761:8080"
     environment:
-      <<: *silicon-specific-variables
       management.tracing.enabled: false
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -232,7 +227,7 @@ services:
     ports:
       - '8180:8080'
     environment:
-      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config, *silicon-specific-variables]
+      <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
       BACKBASE_HTTP_CORS: "true"
@@ -257,8 +252,7 @@ services:
       KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8090"
     #  KC_SPI_MOBILE_AUTHENTICATION_CLIENT_DEFAULT_URL: "http://mobile-authentication:8080"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
-                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
-                          ${EXTRA_JAVA_OPTS}"
+                          -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
     volumes:
       - ./identity:/opt/keycloak/data/import
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
@@ -270,7 +264,7 @@ services:
         condition: service_healthy
 
   access-control:
-    image: repo.backbase.com/backbase-docker-releases/access-control:2025.09-LTS
+    image: repo.backbase.com/backbase-docker-releases/access-control:${BB_VERSION}
     ports:
       - "8040:8080"
     environment:
@@ -420,7 +414,7 @@ services:
       - registry
 
   transaction-manager:
-    image: repo.backbase.com/backbase-docker-releases/transaction-manager:2025.08.5
+    image: repo.backbase.com/backbase-docker-releases/transaction-manager:${BB_VERSION}
     ports:
       - "8052:8080"
     environment:
@@ -461,7 +455,6 @@ services:
       "backbase.transaction.export.qbo.supportedProductTypes": "current-account,savings-account,loan,debit-card,credit-card"
       "backbase.transaction.export.qfx.supportedProductTypes": "current-account,savings-account,loan,debit-card,credit-card"
       "backbase.transaction.partition.bookingDateSearchMaxDateRange": "91"
-
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -475,7 +468,7 @@ services:
       - registry
 
   transaction-integration:
-    image: repo.backbase.com/backbase-docker-releases/transaction-integration:2025.08.5
+    image: repo.backbase.com/backbase-docker-releases/transaction-integration:${BB_VERSION}
     ports:
       - "9051:8080"
     environment:
@@ -844,7 +837,8 @@ services:
         condition: service_healthy
 
   retail-app:
-    image: crreference914.azurecr.io/retail-usa:2025.07
+    image: crreference914.azurecr.io/retail-usa:2025.07.3
+#    image: backbaseregistry.azurecr.io/docker/retail-usa:2025.10-rc.0-20251107T0855Z-10d7a5e
     environment:
       AUTH_REALM: "retail"
       AUTH_URL: http://localhost:8180/auth/
@@ -879,7 +873,7 @@ services:
       - backbase-identity
 
   event-bridge:
-    image: repo.backbase.com/backbase-docker-releases/event-bridge:2025.09.7-LTS
+    image: repo.backbase.com/backbase-docker-releases/event-bridge:${BB_VERSION}
     ports:
       - "8090:8090"
     environment:
@@ -890,10 +884,12 @@ services:
       BUILDINGBLOCKS_SECURITY_CSRF_ENABLED: "false"
       "backbase.security.csrf.enabled": "false"
       "backbase.security.mtls.enabled": "false"
-
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
       # - ./jwt/keystore_pub.p12:/jwt/public/keystore_pub.p12:ro # Uncomment if needed
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "java", "-jar", "-Xms5M", "-Xmx10M", "/tmp/HealthCheck.jar", "http://localhost:8080/actuator/serviceregistry" ]
     links:
       - activemq
       - registry
