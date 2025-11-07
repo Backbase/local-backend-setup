@@ -87,7 +87,7 @@ x-mambu-creds: &mambu-creds
   mambu.basePath: "http://caboose:8080/api/mambu/v2"
   mambu.baseUrl: "http://caboose:8080/api/mambu/v2"
   mambu.branchId: ""
-  mambu.branchKey: ""
+  mambu.branchKey: "mock"
   mambu.username: "mock"
   mambu.password: "mock"
   mambu.ghostAccountId: "ZQGS770"
