@@ -696,7 +696,7 @@ services:
     image: crreference914.azurecr.io/event-listener-service:1.10.0
     ports:
       - "9082:8080"
-      - "5005:5005"
+#     - "5005:5005"
     environment:
       <<: [ *common-variables, *message-broker-variables, *database-variables ]
       BACKBASE_SECURITY_CSRF_ENABLED: "false"
@@ -708,7 +708,7 @@ services:
       SPRING_PROFILES_INCLUDE: "json-logging"
       backbase.events.enabled: "true"
       logging.level.com.backbase.buildingblocks.backend.security.auth.config.MtlsAuthenticationFilter: "WARN"
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+#      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -875,12 +875,12 @@ services:
   event-bridge:
     image: repo.backbase.com/backbase-docker-releases/event-bridge:${BB_VERSION}
     ports:
-      - "8090:8090"
+      - "8090:8080"
     environment:
       <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
       backbase.enable-no-auth-localhost-endpoints: false
       "BACKBASE_EVENTS_ENABLED": "true"
-      SERVER_PORT: 8090
+      SERVER_PORT: 8080
       BUILDINGBLOCKS_SECURITY_CSRF_ENABLED: "false"
       "backbase.security.csrf.enabled": "false"
       "backbase.security.mtls.enabled": "false"
