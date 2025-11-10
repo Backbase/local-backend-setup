@@ -77,10 +77,10 @@ x-gc-http-config: &gc-http-config
   "backbase.gc.http.backoff": "1000"
 
 x-gc-credentials: &gc-credentials
-  backbase.gc.party-base-url: "http://caboose:8080"
-  backbase.gc.payment-base-url: "http://caboose:8080"
-  backbase.gc.deposit-base-url: "http://caboose:8080"
-  backbase.gc.loan-base-url: "http://caboose:8080"
+  backbase.gc.party-base-url: "http://caboose:8080/api"
+  backbase.gc.payment-base-url: "http://caboose:8080/api"
+  backbase.gc.deposit-base-url: "http://caboose:8080/api"
+  backbase.gc.loan-base-url: "http://caboose:8080/api"
   backbase.gc.subscriptionKey: ""
 
 x-mambu-creds: &mambu-creds
@@ -601,7 +601,7 @@ services:
       backbase.bootstrap.ingestions.approvals.enabled: false
       backbase.bootstrap.ingestions.regions.enabled: false
       backbase.bootstrap.ingestions.cards: false
-      caboose.baseUrl: "http://caboose-spring:8080"
+      caboose.baseUrl: "http://caboose:8080/api"
       backbase.communication.services.access-control.directUri: http://access-control:8080
       backbase.communication.services.limit.directUri: http://limits-service:8080
       backbase.communication.services.usermanager.directUri: http://user-manager:8080
@@ -660,14 +660,13 @@ services:
         condition: service_healthy
 
   caboose:
-    image: crreference914.azurecr.io/development/caboose-spring:2.1.0-SNAPSHOT-20251104164312
+    image: crreference914.azurecr.io/development/caboose:2.1.0-SNAPSHOT-20251110135526
     ports:
       - "9001:8080"
       #- "5005:5005"
     environment:
-      <<: [*common-variables]
-      SPRING_PROFILES_ACTIVE: local
-      server.port: 8080
+      <<: [*common-variables, *database-variables]
+      spring.datasource.url: jdbc:mysql://mysql:3306/caboose?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       #JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
