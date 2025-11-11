@@ -660,7 +660,7 @@ services:
         condition: service_healthy
 
   caboose:
-    image: crreference914.azurecr.io/staging/caboose:2.1.0-SNAPSHOT-20251111092923
+    image: crreference914.azurecr.io/staging/caboose:2.1.0-SNAPSHOT-20251111125607
     ports:
       - "9001:8080"
       #- "5005:5005"
