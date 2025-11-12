@@ -249,7 +249,7 @@ services:
       keycloak.backbase.event-listeners.audit.endpoint: "http://audit-service:8080"
       KC_SPI_EVENTS_LISTENER_AUDIT_INTEGRATION_SERVICE_URL: "http://audit-service:8080"
       KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_NO_AUTH_LOCALHOST: "false"
-      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8090"
+      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8080"
     #  KC_SPI_MOBILE_AUTHENTICATION_CLIENT_DEFAULT_URL: "http://mobile-authentication:8080"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE"
