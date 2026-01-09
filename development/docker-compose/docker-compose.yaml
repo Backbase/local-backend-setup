@@ -249,7 +249,7 @@ services:
       keycloak.backbase.event-listeners.audit.endpoint: "http://audit-service:8080"
       KC_SPI_EVENTS_LISTENER_AUDIT_INTEGRATION_SERVICE_URL: "http://audit-service:8080"
       KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_NO_AUTH_LOCALHOST: "false"
-      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8090"
+      KC_SPI_EVENTS_LISTENER_EVENT_BRIDGE_AUDIT_URL: "http://event-bridge:8080"
     #  KC_SPI_MOBILE_AUTHENTICATION_CLIENT_DEFAULT_URL: "http://mobile-authentication:8080"
       JAVA_TOOL_OPTIONS: "-Dquarkus.log.category.'\"com.backbase\"'.level=DEBUG \
                           -Dquarkus.log.category.'\"org.keycloak.protocol.oidc\"'.level=TRACE \
@@ -699,8 +699,8 @@ services:
       #- "5005:5005"
     environment:
       <<: [*common-variables]
-      SPRING_PROFILES_ACTIVE: local
-      server.port: 8080
+      <<: [*common-variables, *database-variables]
+      spring.datasource.url: jdbc:mysql://mysql:3306/caboose?useSSL=false&allowPublicKeyRetrieval=true&cacheServerConfiguration=true&createDatabaseIfNotExist=true
       caboose.webhook.balance-history.url: http://balance-history-event-publisher:8080/webhook
       caboose.webhook.balance-history.username: "mock"
       caboose.webhook.balance-history.password: "mock"
@@ -732,7 +732,7 @@ services:
     image: crreference914.azurecr.io/event-listener-service:1.10.0
     ports:
       - "9082:8080"
-      - "5005:5005"
+      #- "5005:5005"
     environment:
       <<: [ *common-variables, *message-broker-variables, *database-variables ]
       BACKBASE_SECURITY_CSRF_ENABLED: "false"
@@ -741,7 +741,7 @@ services:
       SPRING_PROFILES_INCLUDE: "json-logging"
       backbase.events.enabled: "true"
       logging.level.com.backbase.buildingblocks.backend.security.auth.config.MtlsAuthenticationFilter: "WARN"
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      #JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
     healthcheck:
@@ -908,16 +908,15 @@ services:
   event-bridge:
     image: repo.backbase.com/backbase-docker-releases/event-bridge:${BB_VERSION}
     ports:
-      - "8090:8090"
+      - "8090:8080"
     environment:
       <<: [ *common-variables, *message-broker-variables, *gc-credentials, *gc-api-config, *gc-http-config]
       backbase.enable-no-auth-localhost-endpoints: false
       "BACKBASE_EVENTS_ENABLED": "true"
-      SERVER_PORT: 8090
+      SERVER_PORT: 8080
       BUILDINGBLOCKS_SECURITY_CSRF_ENABLED: "false"
       "backbase.security.csrf.enabled": "false"
       "backbase.security.mtls.enabled": "false"
-
     volumes:
       - ./exe/HealthCheck.jar:/tmp/HealthCheck.jar
       # - ./jwt/keystore_pub.p12:/jwt/public/keystore_pub.p12:ro # Uncomment if needed
