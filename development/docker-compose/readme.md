@@ -51,9 +51,9 @@ For the setup, you must have the following:
     ```shell
     docker ps
     ```
-2. To set the Docker image for the version of Edge you are running, replace `2025.04` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.:
+2. To set the Docker image for the version of Edge you are running, replace `2025.09.36-LTS` with the value of `BB_VERSION` in the [development/docker-compose/.env](https://github.com/backbase/local-backend-setup/blob/main/development/docker-compose/.env) file.:
     ```shell
-    docker pull repo.backbase.com/backbase-docker-releases/edge:`2025.04`
+    docker pull repo.backbase.com/backbase-docker-releases/edge:`2025.09.36-LTS`
     ```
 
 3. From the Docker Compose directory, start up the environment:
