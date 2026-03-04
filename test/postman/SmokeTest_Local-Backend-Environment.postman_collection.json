@@ -484,7 +484,12 @@
 										"key": "Authorization",
 										"value": "Bearer {{authToken}}",
 										"type": "text"
-									}
+									},
+				                    {
+				                      "key": "x-user-context",
+				                      "value": "{{MSA_ID}}",
+				                      "type": "text"
+				                    }
 								],
 								"body": {
 									"mode": "raw",
@@ -656,7 +661,12 @@
 								"key": "Authorization",
 								"value": "Bearer {{authToken}}",
 								"type": "text"
-							}
+							},
+							{
+			                    "key": "x-user-context",
+			                    "value": "{{MSA_ID}}",
+			                    "type": "text"
+			                }
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/arrangement-manager/client-api/v2/balances/aggregations",
@@ -703,7 +713,12 @@
 								"key": "Authorization",
 								"value": "Bearer {{authToken}}",
 								"type": "text"
-							}
+							},
+							{
+			                    "key": "x-user-context",
+			                    "value": "{{MSA_ID}}",
+			                    "type": "text"
+			                }
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/arrangement-manager/client-api/v2/product-kinds",
