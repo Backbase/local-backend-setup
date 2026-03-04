@@ -186,7 +186,7 @@ services:
       KC_TRANSACTION_XA_ENABLED: "true"
       KC_LOG_LEVEL: "INFO"
       KC_LOG_CONSOLE_FORMAT: "%d{yyy:MM:dd HH:mm:ss.SSS} %-5p [%X{traceId},%X{spanId},%X{sampled}] %i --- [%t] %c{2.} : %m%n"
-      KC_HOSTNAME_URL: "http://localhost:8180/auth/"
+      KC_HOSTNAME: "http://localhost:8180/auth/"
       KC_SPI_SERVICE_TOKEN_DEFAULT_URL: "http://token-converter:8080"
       KC_SPI_USER_MANAGER_CLIENT_DEFAULT_URL: "http://user-manager:8080"
       KC_SPI_CONNECTIONS_JPA_LEGACY_INITIALIZE_EMPTY: "true"
