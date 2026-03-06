@@ -230,23 +230,23 @@
 							"});",
 							"",
 							"pm.test(\"XSRF Token Cookie returned\", function () {",
-							"    var cookie = postman.getResponseCookie(\"XSRF-TOKEN\");",
+							"    var cookie = pm.response.cookies.get(\"XSRF-TOKEN\");",
 							"    pm.expect(cookie).to.be.not.null;",
 							"    if (cookie && cookie.value) {",
-							"        postman.setGlobalVariable(\"X-CSRF-TOKEN\", cookie.value);",
+							"        pm.environment.set(\"X-CSRF-TOKEN\", cookie.value);",
 							"    }",
 							"});",
 							"",
 							"//for auth read cookie",
-							"var authCookie = postman.getResponseCookie(\"AuthToken\");",
+							"var authCookie = pm.response.cookies.get(\"access_token\");",
 							"if (authCookie && authCookie.value) {",
-							"  postman.setGlobalVariable(\"authToken\", authCookie.value);",
+							"  pm.environment.set(\"access_token\", authCookie.value);",
 							"}",
 							"",
 							"//for identity read json",
-							"if (responseBody) {",
-							"  var jsonData = JSON.parse(responseBody);",
-							"  postman.setGlobalVariable(\"authToken\", jsonData.access_token);",
+							"const jsonData = pm.response.json();",
+							"if (jsonData) {",
+							"  pm.environment.set(\"access_token\", jsonData.access_token);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -257,7 +257,7 @@
 					"script": {
 						"exec": [
 							"//clear Auth and CSRF",
-							"postman.setGlobalVariable(\"authToken\"); "
+							"pm.environment.set(\"access_token\"); "
 						],
 						"type": "text/javascript"
 					}
@@ -344,7 +344,7 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "Bearer {{authToken}}",
+						"value": "Bearer {{access_token}}",
 						"type": "text"
 					}
 				],
